@@ -1,0 +1,2352 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale1.0">
+    <title>Aura Premium - Sistema de Carnês</title>
+    <!-- Carrega o Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Fonte Poppins -->
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap');
+        body {
+            font-family: 'Poppins', sans-serif;
+            background-color: #111827; /* bg-gray-900 */
+            color: #f3f4f6; /* text-gray-100 */
+        }
+        /* Estilo para spinner de carregamento */
+        .spinner {
+            border: 4px solid rgba(255, 255, 255, .1);
+            border-left-color: #f59e0b; /* amber-500 */
+            border-radius: 50%;
+            width: 24px;
+            height: 24px;
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+        /* Classe para aba ativa */
+        .tab-active {
+            border-bottom-color: #f59e0b; /* amber-500 */
+            color: #f59e0b; /* amber-500 */
+            font-weight: 600;
+        }
+        /* Estilo para Inputs e Selects no tema escuro */
+        .form-input, .form-select {
+            background-color: #374151; /* bg-gray-700 */
+            border: 1px solid #4b5563; /* border-gray-600 */
+            color: #f3f4f6; /* text-gray-100 */
+            border-radius: 0.5rem; /* rounded-lg */
+            padding: 0.5rem; /* p-2 */
+            width: 100%;
+        }
+        .form-input:focus, .form-select:focus {
+            outline: none;
+            border-color: #f59e0b; /* border-amber-500 */
+            box-shadow: 0 0 0 2px #f59e0b33;
+        }
+        /* Estilo customizado para input date (calendário) */
+        .form-input[type="date"] {
+            color-scheme: dark;
+        }
+        .form-input-with-icon {
+            position: relative;
+        }
+        .form-input-with-icon .form-input {
+            padding-right: 2.5rem; /* Espaço para o ícone */
+        }
+        .form-input-with-icon .input-icon {
+            position: absolute;
+            top: 50%;
+            right: 0.5rem;
+            transform: translateY(-50%);
+            color: #9ca3af; /* text-gray-400 */
+        }
+        /* Placeholder para inputs escuros */
+        .form-input::placeholder {
+            color: #9ca3af; /* text-gray-400 */
+        }
+        
+        /* --- ESTILOS DO CUSTOM SELECT (Reutilizado) --- */
+        .custom-select-trigger {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            cursor: pointer;
+        }
+        .custom-select-options {
+            background-color: #374151; /* bg-gray-700 */
+            border: 1px solid #4b5563; /* border-gray-600 */
+            border-radius: 0.5rem; /* rounded-lg */
+            max-height: 200px;
+            overflow-y: auto;
+            width: 100%;
+            margin-top: 4px;
+        }
+        .custom-select-option {
+            padding: 0.5rem;
+            cursor: pointer;
+            color: #f3f4f6; /* text-gray-100 */
+        }
+        .custom-select-option:hover, .custom-select-option.selected {
+            background-color: #4b5563; /* bg-gray-600 */
+        }
+        .custom-select-option.selected {
+            font-weight: 600;
+        }
+        .custom-select-value {
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+        .chevron-icon {
+            width: 20px;
+            height: 20px;
+            stroke: #9ca3af; /* text-gray-400 */
+            flex-shrink: 0;
+        }
+        
+        /* --- ESTILOS DO MODAL DE CALENDÁRIO (Reutilizado) --- */
+        #calendarModal .calendar-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        #calendarModal .calendar-grid {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            gap: 4px;
+            text-align: center;
+        }
+        #calendarModal .calendar-day, #calendarModal .calendar-dow {
+            padding: 8px;
+            border-radius: 50%;
+            width: 36px;
+            height: 36px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.875rem;
+        }
+        #calendarModal .calendar-dow {
+            font-weight: 600;
+            color: #9ca3af; /* text-gray-400 */
+        }
+        #calendarModal .calendar-day {
+            cursor: pointer;
+        }
+        #calendarModal .calendar-day:not(.empty):hover {
+            background-color: #374151; /* bg-gray-700 */
+        }
+        #calendarModal .calendar-day.today {
+            border: 1px solid #f59e0b; /* border-amber-500 */
+        }
+        #calendarModal .calendar-day.selected {
+            background-color: #f59e0b; /* bg-amber-500 */
+            color: #111827; /* text-black */
+            font-weight: 600;
+        }
+
+        /* Cor de fundo para Autocomplete do browser */
+        input:-webkit-autofill,
+        input:-webkit-autofill:hover, 
+        input:-webkit-autofill:focus, 
+        input:-webkit-autofill:active  {
+            -webkit-box-shadow: 0 0 0 30px #374151 inset !important; /* bg-gray-700 */
+            -webkit-text-fill-color: #f3f4f6 !important; /* text-gray-100 */
+        }
+
+        /* --- ESTILOS DE IMPRESSÃO (Canhotos e Recibos) --- */
+        @media print {
+            body * {
+                visibility: hidden;
+            }
+            .printable-section, .printable-section * {
+                visibility: visible;
+            }
+            .printable-section {
+                position: absolute;
+                left: 0;
+                top: 0;
+                width: 100%;
+                max-width: 100%;
+                height: 100%;
+                border: none;
+                box-shadow: none;
+                padding: 0;
+                margin: 0;
+                overflow: visible;
+                background: #fff;
+            }
+            #printCanhotoContent, #printReciboContent {
+                color: #000 !important;
+                max-height: none;
+                overflow: visible;
+                background: #fff;
+            }
+            .print-hide {
+                display: none;
+            }
+            /* Estilo do Canhoto */
+            .canhoto-slip {
+                width: 100%;
+                border: 1px dashed #000;
+                padding: 12px;
+                margin-bottom: 15px;
+                page-break-inside: avoid;
+                font-family: 'Courier New', Courier, monospace;
+            }
+            .canhoto-header {
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+                border-bottom: 1px solid #000;
+                padding-bottom: 8px;
+            }
+            .canhoto-header h3 {
+                font-size: 1.2rem;
+                font-weight: bold;
+            }
+            .canhoto-body {
+                padding-top: 8px;
+            }
+            .canhoto-body p {
+                font-size: 0.9rem;
+                margin: 4px 0;
+            }
+            .canhoto-body .valor {
+                font-size: 1.1rem;
+                font-weight: bold;
+                text-align: right;
+                margin-top: 10px;
+            }
+            /* Estilo do Recibo de Pagamento */
+            #printReciboContent .receipt-logo h1 {
+                color: #000 !important;
+            }
+            #printReciboContent .receipt-logo p {
+                color: #333 !important;
+            }
+        }
+    </style>
+    <!-- Configuração do Firebase -->
+    <script type="module">
+      // ATENÇÃO: Usando a mesma configuração do vendas.html
+      import { initializeApp } from "https://www.gstatic.com/firebasejs/12.5.0/firebase-app.js";
+      import { 
+          getAuth, 
+          onAuthStateChanged, 
+          signInWithEmailAndPassword, 
+          signOut
+          // REMOVIDO: setLogLevel não é exportado deste módulo
+      } from "https://www.gstatic.com/firebasejs/12.5.0/firebase-auth.js";
+      import { 
+          getFirestore, 
+          collection, 
+          addDoc, 
+          onSnapshot, 
+          query, 
+          serverTimestamp, 
+          doc, 
+          updateDoc, 
+          deleteDoc, 
+          getDocs, 
+          getDoc, 
+          arrayUnion,
+          where,
+          writeBatch,
+          Timestamp
+      } from "https://www.gstatic.com/firebasejs/12.5.0/firebase-firestore.js";
+      
+      // Configuração do Firebase (copiada do vendas.html)
+      const firebaseConfig = {
+        apiKey: "AIzaSyC7_OEoz9p1TpLhQEFu9M7Nh3UtbBQbqNE",
+        authDomain: "sistema-de-vendas-17583.firebaseapp.com",
+        projectId: "sistema-de-vendas-17583",
+        storageBucket: "sistema-de-vendas-17583.firebasestorage.app",
+        messagingSenderId: "809093367439",
+        appId: "1:809093367439:web:bc03a5aae5a638735252fa"
+      };
+
+      // Inicializa Firebase
+      const app = initializeApp(firebaseConfig);
+      const db = getFirestore(app);
+      const auth = getAuth(app); 
+
+      // REMOVIDO: Esta linha causava o erro de importação
+      // setLogLevel('debug');
+
+      // Disponibiliza no 'window' para o script principal
+      window.firebase = {
+          db,
+          auth, 
+          collection,
+          addDoc,
+          onSnapshot,
+          query,
+          serverTimestamp,
+          doc,
+          updateDoc,
+          deleteDoc,
+          getDocs,
+          getDoc, 
+          arrayUnion,
+          where,
+          writeBatch,
+          Timestamp,
+          onAuthStateChanged,
+          signInWithEmailAndPassword,
+          signOut
+      };
+    </script>
+</head>
+<body class="bg-gray-900 text-gray-100">
+    <!-- ======================= -->
+    <!--     TELA DE LOGIN -->
+    <!-- ======================= -->
+    <div id="authScreen" class="flex items-center justify-center min-h-screen hidden">
+        <div class="bg-gray-800 p-8 rounded-lg shadow-xl w-full max-w-md border border-gray-700">
+            
+            <!-- Logo Aura Premium -->
+            <div class="text-center mb-8">
+                <h1 class="text-5xl font-bold text-amber-400" style="font-family: 'Times New Roman', serif;">AURA</h1>
+                <p class="text-2xl font-light text-gray-200" style="letter-spacing: 0.2em;">PREMIUM</p>
+                <p class="text-lg text-amber-400 mt-2">Sistema de Carnês</p>
+            </div>
+            <!-- Mensagem de Erro -->
+            <div id="authMessage" class="hidden p-3 rounded-lg mb-4 text-sm bg-red-900 text-red-100"></div>
+            <!-- Formulário de Login (Email e Senha) -->
+            <form id="loginForm" class="space-y-4">
+                <div>
+                    <label for="authEmail" class="block text-sm font-medium text-gray-300 mb-1">E-mail</label>
+                    <input type="email" id="authEmail" class="form-input" required>
+                </div>
+                <div>
+                    <label for="authPassword" class="block text-sm font-medium text-gray-300 mb-1">Senha</label>
+                    <input type="password" id="authPassword" class="form-input" required>
+                </div>
+                <button id="loginBtn" type="submit" class="w-full bg-amber-500 text-black px-5 py-3 rounded-lg shadow-md hover:bg-amber-600 transition flex items-center justify-center font-semibold">
+                    <span id="loginBtnText">Entrar</span>
+                    <div id="loginSpinner" class="spinner hidden"></div>
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <!-- ======================= -->
+    <!--     CONTEÚDO PRINCIPAL (APP) -->
+    <!-- ======================= -->
+    <div id="appContainer" class="hidden container mx-auto p-4 md:p-8"> <!-- Começa oculto -->
+        <!-- Cabeçalho -->
+        <header class="flex flex-col md:flex-row justify-between md:items-center mb-6 gap-4">
+            <!-- Logo Aura Premium -->
+            <div>
+                <h1 class="text-4xl font-bold text-amber-400" style="font-family: 'Times New Roman', serif;">AURA</h1>
+                <p class="text-xl font-light text-gray-200" style="letter-spacing: 0.15em;">PREMIUM</p>
+                <p class="text-sm text-amber-400">Sistema de Carnês</p>
+            </div>
+            <!-- Seção de Logout -->
+            <div class="flex items-center gap-4">
+                <span id="userName" class="text-sm text-gray-300"></span>
+                <button id="logoutBtn" class="text-sm text-red-500 hover:text-red-400 font-medium">Sair</button>
+            </div>
+        </header>
+
+        <!-- Navegação por Abas -->
+        <nav class="flex border-b border-gray-700 mb-6">
+            <button id="navAba1" class="nav-tab py-3 px-6 border-b-2 tab-active">Registrar Novo Carnê</button>
+            <button id="navAba2" class="nav-tab py-3 px-6 border-b-2 border-transparent text-gray-400 hover:text-amber-400">Gerenciar Carnês</button>
+        </nav>
+
+        <!-- ============================= -->
+        <!--     ABA 1: REGISTRAR CARNÊ    -->
+        <!-- ============================= -->
+        <div id="pageAba1">
+            <form id="carneForm" class="space-y-4 max-h-[75vh] overflow-y-auto pr-2">
+                
+                <!-- Cliente -->
+                <div class="relative bg-gray-800 p-4 rounded-lg border border-gray-700">
+                    <h3 class="text-lg font-semibold text-gray-200 mb-3">1. Cliente</h3>
+                    <label for="customerSearchInput" class="block text-sm font-medium text-gray-300 mb-1">Buscar Cliente (Nome ou CPF)</label>
+                    <input type="text" id="customerSearchInput" class="form-input" placeholder="Digite nome ou CPF..." autocomplete="off">
+                    <div id="customerResults" class="absolute z-30 w-full bg-gray-700 border border-gray-600 rounded-lg shadow-lg mt-1 max-h-48 overflow-y-auto hidden">
+                        <!-- Resultados da busca de clientes -->
+                    </div>
+                </div>
+
+                <!-- Produtos -->
+                <div class="bg-gray-800 p-4 rounded-lg border border-gray-700 space-y-4">
+                    <h3 class="text-lg font-semibold text-gray-200">2. Produtos</h3>
+                    <!-- Sub-Formulário: Adicionar Item -->
+                    <div class="relative">
+                        <label for="productSearchInput" class="block text-sm font-medium text-gray-300 mb-1">Buscar Produto (Nome ou Cód.)</label>
+                        <input type="text" id="productSearchInput" class="form-input" placeholder="Digite nome ou código..." autocomplete="off">
+                        <div id="productResults" class="absolute z-20 w-full bg-gray-700 border border-gray-600 rounded-lg shadow-lg mt-1 max-h-48 overflow-y-auto hidden">
+                            <!-- Resultados da busca de produtos -->
+                        </div>
+                    </div>
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                        <div>
+                            <label for="itemQuantity" class="block text-sm font-medium text-gray-300 mb-1">Qtd.</label>
+                            <input type="number" id="itemQuantity" min="1" value="1" class="form-input">
+                        </div>
+                        <div>
+                            <label for="itemUnitPrice" class="block text-sm font-medium text-gray-300 mb-1">Preço Unit.</label>
+                            <input type="text" id="itemUnitPrice" class="form-input bg-gray-600" placeholder="R$ 0,00" disabled>
+                            <input type="hidden" id="itemUnitPriceNumeric">
+                        </div>
+                         <div class="flex items-end">
+                            <button type="button" id="addItemToSaleBtn" class="w-full bg-blue-600 text-white px-4 py-2 rounded-lg shadow-md hover:bg-blue-700 transition duration-300 font-semibold">
+                                Adicionar
+                            </button>
+                         </div>
+                    </div>
+                    
+                    <!-- Itens Adicionados (Carrinho) -->
+                    <h4 class="text-md font-semibold text-gray-200 pt-2">Itens do Carnê</h4>
+                    <div id="saleItemsList" class="space-y-2 max-h-40 overflow-y-auto border p-2 rounded-lg bg-gray-700 border-gray-600">
+                        <p id="emptyCartMessage" class="text-gray-400 text-center text-sm">Nenhum produto adicionado.</p>
+                        <!-- Itens do carrinho são injetados aqui -->
+                    </div>
+                     <div class="flex justify-between text-lg font-bold border-t border-gray-700 pt-2">
+                        <span>Subtotal:</span>
+                        <span id="summarySubtotal" class="font-semibold">R$ 0,00</span>
+                    </div>
+                </div>
+                
+                <!-- Pagamento -->
+                <div class="bg-gray-800 p-4 rounded-lg border border-gray-700 space-y-4">
+                    <h3 class="text-lg font-semibold text-gray-200">3. Pagamento e Parcelamento</h3>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                            <label for="downPayment" class="block text-sm font-medium text-gray-300 mb-1">Valor de Entrada (R$)</label>
+                            <input type="text" id="downPayment" class="form-input" placeholder="R$ 0,00" value="0">
+                            <input type="hidden" id="downPaymentNumeric" value="0">
+                        </div>
+                        <!-- Período (CUSTOM SELECT) -->
+                        <div class="relative" id="periodoSelect">
+                            <label class="block text-sm font-medium text-gray-300 mb-1">Período</label>
+                            <input type="hidden" id="periodoValue" value="Mensal">
+                            <button type="button" class="custom-select-trigger form-input">
+                                <span id="periodoDisplay" class="custom-select-value">Mensal</span>
+                                <svg class="chevron-icon" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 20 20"><path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M6 8l4 4 4-4"/></svg>
+                            </button>
+                            <div id="periodoOptions" class="custom-select-options absolute z-40 hidden">
+                                <div class="custom-select-option" data-value="Semanal">Semanal</div>
+                                <div class="custom-select-option" data-value="Quinzenal">Quinzenal</div>
+                                <div class="custom-select-option" data-value="Mensal">Mensal</div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                            <label for="numParcelas" class="block text-sm font-medium text-gray-300 mb-1">Nº de Parcelas</label>
+                            <input type="number" id="numParcelas" class="form-input" min="1" value="1">
+                        </div>
+                        <!-- Data 1º Vencimento (CUSTOM CALENDAR) -->
+                        <div>
+                            <label for="primeiroVencimento" class="block text-sm font-medium text-gray-300 mb-1">Data 1º Vencimento</label>
+                            <div class="form-input-with-icon">
+                                <input type="text" id="primeiroVencimento" class="form-input" readonly>
+                                <svg class="input-icon w-5 h-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Resumo da Venda -->
+                <div id="saleSummary" class="mt-4 p-4 border rounded-lg bg-gray-700 text-gray-200 space-y-2 border-gray-600">
+                    <h4 class="font-bold text-lg">Resumo do Carnê</h4>
+                    <div class="flex justify-between text-sm">
+                        <span>Valor a Parcelar (Subtotal - Entrada):</span>
+                        <span id="summaryToFinance" class="font-semibold">R$ 0,00</span>
+                    </div>
+                    <div id="summaryJurosContainer" class="flex justify-between text-sm text-red-400 hidden">
+                        <span>Juros (7% a.m.):</span>
+                        <span id="summaryJurosValue" class="font-semibold">R$ 0,00</span>
+                    </div>
+                    <div class="flex justify-between border-t border-gray-600 pt-1">
+                        <span class="font-bold">Total (Com Juros):</span>
+                        <span id="summaryTotalFinance" class="font-semibold text-lg">R$ 0,00</span>
+                    </div>
+                    <div class="flex justify-between">
+                        <span class="font-medium">Valor da Parcela:</span>
+                        <span id="summaryInstallmentValue" class="font-semibold text-xl text-green-400">R$ 0,00</span>
+                    </div>
+                </div>
+                <!-- Botão de Submit -->
+                <div class="flex justify-end pt-4 mt-4 border-t border-gray-700">
+                    <button id="submitBtn" type="submit" class="w-full bg-amber-500 text-black px-5 py-3 rounded-lg shadow-md hover:bg-amber-600 transition duration-300 ease-in-out flex items-center justify-center font-semibold">
+                        <span id="submitBtnText">Gerar Carnê</span>
+                        <div id="submitSpinner" class="spinner hidden"></div>
+                    </button>
+                </div>
+            </form>
+        </div>
+
+        <!-- ================================== -->
+        <!--     ABA 2: GERENCIAR CARNÊS        -->
+        <!-- ================================== -->
+        <div id="pageAba2" class="hidden">
+            <!-- Filtros -->
+            <div class="bg-gray-800 p-4 rounded-lg shadow-md mb-6 border border-gray-700">
+                <label for="searchCarnes" class="block text-sm font-medium text-gray-300 mb-1">Buscar Carnê (Cliente ou CPF)</label>
+                <input type="search" id="searchCarnes" class="form-input" placeholder="Digite nome ou CPF para filtrar...">
+            </div>
+
+            <!-- Lista de Carnês -->
+            <main id="carneListContainer" class="space-y-4">
+                <p id="loadingMessageCarnes" class="p-4 text-center text-gray-400">Carregando carnês...</p>
+                <!-- Cards de Carnê serão injetados aqui -->
+            </main>
+        </div>
+    </div>
+
+    <!-- =================================================================================== -->
+    <!-- =================================== MODAIS ======================================== -->
+    <!-- =================================================================================== -->
+
+    <!-- ================================== -->
+    <!--    MODAL DE GERENCIAMENTO DO CARNÊ -->
+    <!-- ================================== -->
+    <div id="modalGerenciarCarne" class="fixed inset-0 bg-black bg-opacity-75 flex items-start justify-center p-4 hidden z-50 overflow-y-auto">
+        <div class="bg-gray-800 p-6 rounded-lg shadow-xl w-full max-w-3xl my-8 mt-16 border border-gray-700">
+            <!-- Cabeçalho -->
+            <div class="flex justify-between items-center mb-4">
+                <div>
+                    <h2 class="text-2xl font-bold text-gray-100">Gerenciar Carnê</h2>
+                    <p id="manageCarneCliente" class="text-amber-400"></p>
+                </div>
+                <button id="closeManageCarneModalBtn" class="text-gray-400 hover:text-white text-3xl leading-none">&times;</button>
+            </div>
+            
+            <!-- Resumo Financeiro (CORRIGIDO) -->
+            <div class="bg-gray-700 p-4 rounded-lg border border-gray-600 mb-4">
+                <h3 class="text-lg font-semibold text-gray-200 mb-3">Resumo Financeiro</h3>
+                <!-- (CORREÇÃO 5) - Removida coluna de Multas -->
+                <div class="grid grid-cols-2 md:grid-cols-4 gap-4 text-center">
+                    <div>
+                        <span class="text-sm text-gray-400 block">Valor Total</span>
+                        <span id="resumoValorTotal" class="text-lg font-bold text-gray-100">R$ 0,00</span>
+                    </div>
+                    <div>
+                        <span class="text-sm text-gray-400 block">Total Pago</span>
+                        <span id="resumoTotalPago" class="text-lg font-bold text-green-400">R$ 0,00</span>
+                    </div>
+                    <div>
+                        <span class="text-sm text-gray-400 block">Descontos</span>
+                        <span id="resumoTotalDescontos" class="text-lg font-bold text-yellow-400">R$ 0,00</span>
+                    </div>
+                    <!-- (CORREÇÃO 5) - Campo Multas removido -->
+                    <div class="hidden"> 
+                        <span class="text-sm text-gray-400 block">Multas</span>
+                        <span id="resumoTotalMultas" class="text-lg font-bold text-red-400">R$ 0,00</span>
+                    </div>
+                    <div>
+                        <span class="text-sm text-gray-400 block">Saldo Devedor</span>
+                        <span id="resumoSaldoDevedor" class="text-lg font-bold text-amber-400">R$ 0,00</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Detalhes dos Itens -->
+            <div class="mb-4">
+                <button id="toggleItensBtn" class="text-sm text-blue-400 hover:text-blue-300">Ver Itens da Venda</button>
+                <div id="manageItensList" class="hidden mt-2 p-3 bg-gray-700 rounded-lg border border-gray-600 max-h-40 overflow-y-auto space-y-2">
+                    <!-- Itens serão injetados aqui -->
+                </div>
+            </div>
+
+            <!-- Lista de Parcelas -->
+            <div class="space-y-4 max-h-[40vh] overflow-y-auto pr-2">
+                <h3 class="text-lg font-semibold text-gray-200">Parcelas</h3>
+                <div id="manageParcelasList" class="space-y-3">
+                    <!-- Parcelas injetadas aqui -->
+                </div>
+            </div>
+
+            <!-- Ações -->
+            <div class="flex flex-col md:flex-row justify-end gap-4 pt-4 mt-4 border-t border-gray-700">
+                <button id="imprimirCanhotosBtn" class="w-full md:w-auto bg-gray-600 text-white px-5 py-2 rounded-lg shadow-md hover:bg-gray-700 font-semibold">
+                    Imprimir Canhotos
+                </button>
+                <button id="openRealizarPagamentoBtn" class="w-full md:w-auto bg-amber-500 text-black px-5 py-2 rounded-lg shadow-md hover:bg-amber-600 font-semibold" disabled>
+                    Realizar Pagamento
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ================================== -->
+    <!--    MODAL DE REALIZAR PAGAMENTO     -->
+    <!-- ================================== -->
+    <div id="modalRealizarPagamento" class="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center p-4 hidden z-50">
+        <div class="bg-gray-800 p-6 rounded-lg shadow-xl w-full max-w-lg border border-gray-700">
+            <div class="flex justify-between items-center mb-6">
+                <h2 class="text-2xl font-bold text-gray-100">Realizar Pagamento</h2>
+                <button id="closePagamentoModalBtn" class="text-gray-400 hover:text-white text-3xl leading-none">&times;</button>
+            </div>
+            <form id="pagamentoForm" class="space-y-4">
+                <input type="hidden" id="pagamentoVendaId">
+                
+                <!-- Resumo do Pagamento -->
+                <div class="p-4 border rounded-lg bg-gray-700 text-gray-200 space-y-2 border-gray-600">
+                    <h4 class="font-bold text-lg">Resumo da Baixa</h4>
+                    <p class="text-sm text-gray-300">Parcelas selecionadas: <span id="pagamentoParcelasSelecionadas" class="font-semibold text-amber-400"></span></p>
+                    <div class="flex justify-between text-sm">
+                        <span>Valor Original:</span>
+                        <span id="pagamentoValorOriginal" class="font-semibold">R$ 0,00</span>
+                    </div>
+                    <!-- (CORREÇÃO 5) - Campo Multas removido -->
+                    <div class="flex justify-between text-sm text-red-400 hidden">
+                        <span>Multa por Atraso:</span>
+                        <span id="pagamentoMultaAtraso" class="font-semibold">R$ 0,00</span>
+                    </div>
+                    <div class="flex justify-between border-t border-gray-600 pt-1">
+                        <span class="font-bold">Total Pendente:</span>
+                        <span id="pagamentoTotalPendente" class="font-semibold text-lg">R$ 0,00</span>
+                    </div>
+                </div>
+
+                <!-- Campos de Pagamento -->
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                        <label for="pagamentoDesconto" class="block text-sm font-medium text-gray-300 mb-1">Aplicar Desconto (R$)</label>
+                        <input type="text" id="pagamentoDesconto" class="form-input" placeholder="R$ 0,00" value="0">
+                        <input type="hidden" id="pagamentoDescontoNumeric" value="0">
+                    </div>
+                    <div>
+                        <label for="pagamentoValorPago" class="block text-sm font-medium text-gray-300 mb-1">Valor Pago Hoje (R$)</label>
+                        <input type="text" id="pagamentoValorPago" class="form-input" placeholder="R$ 0,00" required>
+                        <input type="hidden" id="pagamentoValorPagoNumeric" value="0">
+                    </div>
+                </div>
+
+                <!-- Botão de Submit -->
+                <div class="flex justify-end pt-4 mt-4 border-t border-gray-700">
+                    <button id="submitPagamentoBtn" type="submit" class="w-full bg-green-600 text-white px-5 py-3 rounded-lg shadow-md hover:bg-green-700 transition duration-300 ease-in-out flex items-center justify-center font-semibold">
+                        <span id="submitPagamentoBtnText">Confirmar Pagamento</span>
+                        <div id="submitPagamentoSpinner" class="spinner hidden"></div>
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- ================================== -->
+    <!--    MODAL DE HISTÓRICO DA PARCELA   -->
+    <!-- ================================== -->
+    <div id="modalHistoricoParcela" class="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center p-4 hidden z-50">
+        <div class="bg-gray-800 p-6 rounded-lg shadow-xl w-full max-w-md border border-gray-700">
+            <div class="flex justify-between items-center mb-4">
+                <h2 id="historicoModalTitle" class="text-xl font-bold text-gray-100">Histórico da Parcela</h2>
+                <button id="closeHistoricoModalBtn" class="text-gray-400 hover:text-white text-3xl leading-none">&times;</button>
+            </div>
+            <div id="historicoModalContent" class="space-y-3 text-gray-200 max-h-[60vh] overflow-y-auto pr-2">
+                <!-- Conteúdo preenchido por JS -->
+            </div>
+            <div class="flex justify-end mt-4">
+                <button id="closeHistoricoModalBtn2" class="bg-amber-500 text-black px-5 py-2 rounded-lg shadow-md hover:bg-amber-600 font-semibold">
+                    Fechar
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ================================== -->
+    <!--    MODAL DE IMPRESSÃO (Canhotos)   -->
+    <!-- ================================== -->
+    <div id="modalImprimirCanhotos" class="printable-section fixed inset-0 bg-black bg-opacity-75 flex items-start justify-center p-4 hidden z-50 overflow-y-auto">
+        <div class="bg-gray-800 p-6 rounded-lg shadow-xl w-full max-w-2xl my-8 mt-16 border border-gray-700 print-hide">
+            <!-- Cabeçalho (Apenas na tela) -->
+            <div class="flex justify-between items-center mb-4">
+                <h2 class="text-2xl font-bold text-gray-100">Imprimir Carnê</h2>
+                <button id="closeCanhotoModalBtn" class="text-gray-400 hover:text-white text-3xl leading-none">&times;</button>
+            </div>
+            <div class="flex justify-end gap-4">
+                <button id="printCanhotoBtn" class="w-full bg-amber-500 text-black px-4 py-2 rounded-lg hover:bg-amber-600 font-semibold">
+                    Imprimir
+                </button>
+            </div>
+        </div>
+
+        <!-- Conteúdo de Impressão -->
+        <div id="printCanhotoContentWrapper" class="bg-white text-black p-6 rounded-lg w-full max-w-2xl mt-4">
+            <div id="printCanhotoContent" class="max-h-[70vh] overflow-y-auto">
+                <!-- Canhotos preenchidos por JS -->
+            </div>
+        </div>
+    </div>
+
+    <!-- =========================== -->
+    <!--    MODAL DE RECIBO (Pagamento)  -->
+    <!-- =========================== -->
+    <div id="modalReciboPagamento" class="printable-section fixed inset-0 bg-black bg-opacity-75 flex items-start justify-center p-4 hidden z-50 overflow-y-auto">
+        <div class="bg-gray-800 p-6 rounded-lg shadow-xl w-full max-w-sm my-8 mt-16 border border-gray-700 print-hide">
+            <div class="flex justify-between items-center mb-4">
+                <h2 class="text-2xl font-bold text-gray-100">Comprovante de Pagamento</h2>
+                <button id="closeReciboModalBtn" class="text-gray-400 hover:text-white text-3xl leading-none">&times;</button>
+            </div>
+            <div class="flex justify-end gap-4">
+                <button id="printReciboBtn" class="w-full bg-amber-500 text-black px-4 py-2 rounded-lg hover:bg-amber-600 font-semibold">
+                    Imprimir Recibo
+                </button>
+            </div>
+        </div>
+        <!-- Conteúdo de Impressão -->
+        <div id="printReciboContentWrapper" class="bg-white text-black p-4 rounded-lg w-full max-w-sm" style="font-family: 'Courier New', Courier, monospace;">
+            <div id="printReciboContent" class="max-h-[70vh] overflow-y-auto">
+                <!-- Conteúdo do Recibo preenchido por JS -->
+            </div>
+        </div>
+    </div>
+
+
+    <!-- ================================== -->
+    <!--    MODAL DE CALENDÁRIO             -->
+    <!-- ================================== -->
+    <div id="calendarModal" class="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center p-4 hidden z-50">
+        <div class="bg-gray-800 p-4 rounded-lg shadow-xl w-full max-w-xs border border-gray-700">
+            <div class="calendar-header mb-4">
+                <button id="calendarPrevBtn" class="p-2 rounded-full hover:bg-gray-700">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path></svg>
+                </button>
+                <h3 id="calendarMonthYear" class="text-lg font-semibold text-amber-400"></h3>
+                <button id="calendarNextBtn" class="p-2 rounded-full hover:bg-gray-700">
+                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path></svg>
+                </button>
+            </div>
+            <div class="calendar-grid">
+                <!-- Dias da Semana (DOM) -->
+                <div class="calendar-dow">D</div><div class="calendar-dow">S</div><div class="calendar-dow">T</div><div class="calendar-dow">Q</div><div class="calendar-dow">Q</div><div class="calendar-dow">S</div><div class="calendar-dow">S</div>
+            </div>
+            <div id="calendarDaysGrid" class="calendar-grid mt-2">
+                <!-- Dias do Mês (JS) -->
+            </div>
+            <button id="calendarCloseBtn" class="mt-4 w-full bg-gray-600 text-gray-100 px-4 py-2 rounded-lg hover:bg-gray-700 text-sm">
+                Fechar
+            </button>
+        </div>
+    </div>
+
+    <!-- ================================== -->
+    <!--    MODAL DE INFORMAÇÃO (AVISO)     -->
+    <!-- ================================== -->
+    <div id="infoModal" class="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center p-4 hidden z-50">
+        <div class="bg-gray-800 p-6 rounded-lg shadow-xl w-full max-w-sm border border-gray-700">
+            <h2 id="infoModalTitle" class="text-xl font-bold text-amber-400 mb-4">Aviso</h2>
+            <p id="infoModalText" class="text-gray-300 mb-6"></p>
+            <div class="flex justify-end">
+                <button id="closeInfoModalBtn" class="bg-amber-500 text-black px-5 py-2 rounded-lg shadow-md hover:bg-amber-600 font-semibold">
+                    Entendido
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script type="module">
+        document.addEventListener('DOMContentLoaded', () => {
+            
+            // --- Acesso ao Firebase (disponibilizado via 'window') ---
+            const { 
+                db, auth, collection, addDoc, onSnapshot, query, serverTimestamp, 
+                doc, updateDoc, deleteDoc, getDocs, getDoc, arrayUnion, where,
+                writeBatch, Timestamp,
+                onAuthStateChanged, signInWithEmailAndPassword, signOut
+            } = window.firebase;
+            
+            // --- REFERÊNCIAS DE COLEÇÃO ---
+            // Lidas do sistema principal
+            const clientsCollection = collection(db, "clientes");
+            const productsCollection = collection(db, "produtos");
+            // Novas coleções deste sistema
+            const vendasCarneCollection = collection(db, "vendasCarne");
+            const parcelasCarneCollection = collection(db, "parcelasCarne");
+            const pagamentosHistoricoCollection = collection(db, "pagamentosHistorico");
+            
+            // --- Constantes de Regras de Negócio ---
+            const JUROS_VENDA_MES = 0.07; // 7% a.m. composto
+            // (CORREÇÃO 1) - Constantes de multa removidas
+            // const MULTA_ATRASO_MES = 0.02; 
+            // const DIAS_CARENCIA_MULTA = 5; 
+
+            // --- Ícones SVG ---
+            const trashIconSVG = `<svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-red-500 hover:text-red-400" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 6h6v10H7V6z" clip-rule="evenodd" /></svg>`;
+            const historyIconSVG = `<svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-blue-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>`;
+
+            // --- Estado Global da Aplicação ---
+            let allClients = []; 
+            let allProducts = [];
+            let allVendasCarne = [];
+            let allParcelas = [];
+            let allPagamentos = [];
+            
+            let currentCarneCode = 0; 
+            
+            let firebaseListenersAttached = false; 
+            
+            // --- Estado do Formulário (Aba 1) ---
+            let selectedCustomerId = null;
+            let tempSaleItems = []; 
+            let tempSelectedProduct = null; 
+
+            // --- Estado do Gerenciamento (Aba 2) ---
+            let currentManagingVendaId = null;
+            let currentManagingParcelas = []; // parcelas do carnê selecionado
+            let selectedParcelasParaPagar = []; // IDs das parcelas selecionadas
+
+            // --- Estado do Calendário Customizado ---
+            let calendarTargetInput = null;
+            let calendarCurrentDate = new Date();
+
+            // --- Seletores do DOM (Auth) ---
+            const authScreen = document.getElementById('authScreen');
+            const authMessage = document.getElementById('authMessage');
+            const loginForm = document.getElementById('loginForm');
+            const authEmail = document.getElementById('authEmail');
+            const authPassword = document.getElementById('authPassword');
+            const loginBtn = document.getElementById('loginBtn');
+            const loginBtnText = document.getElementById('loginBtnText');
+            const loginSpinner = document.getElementById('loginSpinner');
+            const logoutBtn = document.getElementById('logoutBtn');
+            const userName = document.getElementById('userName');
+
+            // --- Seletores do DOM (App) ---
+            const appContainer = document.getElementById('appContainer');
+            const navAba1 = document.getElementById('navAba1');
+            const navAba2 = document.getElementById('navAba2');
+            const pageAba1 = document.getElementById('pageAba1');
+            const pageAba2 = document.getElementById('pageAba2');
+            const allNavTabs = [navAba1, navAba2];
+            const allPages = [pageAba1, pageAba2];
+            
+            // --- Seletores (Aba 1: Registrar) ---
+            const carneForm = document.getElementById('carneForm');
+            const customerSearchInput = document.getElementById('customerSearchInput');
+            const customerResults = document.getElementById('customerResults');
+            const productSearchInput = document.getElementById('productSearchInput');
+            const productResults = document.getElementById('productResults');
+            const itemQuantity = document.getElementById('itemQuantity');
+            const itemUnitPrice = document.getElementById('itemUnitPrice');
+            const itemUnitPriceNumeric = document.getElementById('itemUnitPriceNumeric');
+            const addItemToSaleBtn = document.getElementById('addItemToSaleBtn');
+            const saleItemsList = document.getElementById('saleItemsList');
+            const emptyCartMessage = document.getElementById('emptyCartMessage'); 
+            const summarySubtotal = document.getElementById('summarySubtotal');
+            const downPayment = document.getElementById('downPayment');
+            const downPaymentNumeric = document.getElementById('downPaymentNumeric');
+            const periodoSelect = document.getElementById('periodoSelect');
+            const periodoValue = document.getElementById('periodoValue');
+            const periodoDisplay = document.getElementById('periodoDisplay');
+            const periodoOptions = document.getElementById('periodoOptions');
+            const numParcelas = document.getElementById('numParcelas');
+            const primeiroVencimento = document.getElementById('primeiroVencimento');
+            const summaryToFinance = document.getElementById('summaryToFinance');
+            const summaryJurosContainer = document.getElementById('summaryJurosContainer');
+            const summaryJurosValue = document.getElementById('summaryJurosValue');
+            const summaryTotalFinance = document.getElementById('summaryTotalFinance');
+            const summaryInstallmentValue = document.getElementById('summaryInstallmentValue');
+            const submitBtn = document.getElementById('submitBtn');
+            const submitBtnText = document.getElementById('submitBtnText');
+            const submitSpinner = document.getElementById('submitSpinner');
+            
+            // --- Seletores (Aba 2: Gerenciar) ---
+            const searchCarnes = document.getElementById('searchCarnes');
+            const carneListContainer = document.getElementById('carneListContainer');
+            const loadingMessageCarnes = document.getElementById('loadingMessageCarnes');
+
+            // --- Seletores (Modal Gerenciar) ---
+            const modalGerenciarCarne = document.getElementById('modalGerenciarCarne');
+            const closeManageCarneModalBtn = document.getElementById('closeManageCarneModalBtn');
+            const manageCarneCliente = document.getElementById('manageCarneCliente');
+            const resumoValorTotal = document.getElementById('resumoValorTotal');
+            const resumoTotalPago = document.getElementById('resumoTotalPago');
+            const resumoTotalDescontos = document.getElementById('resumoTotalDescontos'); 
+            const resumoTotalMultas = document.getElementById('resumoTotalMultas');
+            const resumoSaldoDevedor = document.getElementById('resumoSaldoDevedor');
+            const toggleItensBtn = document.getElementById('toggleItensBtn'); 
+            const manageItensList = document.getElementById('manageItensList'); 
+            const manageParcelasList = document.getElementById('manageParcelasList');
+            const imprimirCanhotosBtn = document.getElementById('imprimirCanhotosBtn');
+            const openRealizarPagamentoBtn = document.getElementById('openRealizarPagamentoBtn');
+
+            // --- Seletores (Modal Pagamento) ---
+            const modalRealizarPagamento = document.getElementById('modalRealizarPagamento');
+            const closePagamentoModalBtn = document.getElementById('closePagamentoModalBtn');
+            const pagamentoForm = document.getElementById('pagamentoForm');
+            const pagamentoVendaId = document.getElementById('pagamentoVendaId');
+            const pagamentoParcelasSelecionadas = document.getElementById('pagamentoParcelasSelecionadas');
+            const pagamentoValorOriginal = document.getElementById('pagamentoValorOriginal');
+            const pagamentoMultaAtraso = document.getElementById('pagamentoMultaAtraso');
+            const pagamentoTotalPendente = document.getElementById('pagamentoTotalPendente');
+            const pagamentoDesconto = document.getElementById('pagamentoDesconto');
+            const pagamentoDescontoNumeric = document.getElementById('pagamentoDescontoNumeric');
+            const pagamentoValorPago = document.getElementById('pagamentoValorPago');
+            const pagamentoValorPagoNumeric = document.getElementById('pagamentoValorPagoNumeric');
+            const submitPagamentoBtn = document.getElementById('submitPagamentoBtn');
+            const submitPagamentoBtnText = document.getElementById('submitPagamentoBtnText');
+            const submitPagamentoSpinner = document.getElementById('submitPagamentoSpinner');
+
+            // --- Seletores (Modal Histórico) ---
+            const modalHistoricoParcela = document.getElementById('modalHistoricoParcela');
+            const historicoModalTitle = document.getElementById('historicoModalTitle');
+            const historicoModalContent = document.getElementById('historicoModalContent');
+            const closeHistoricoModalBtn = document.getElementById('closeHistoricoModalBtn');
+            const closeHistoricoModalBtn2 = document.getElementById('closeHistoricoModalBtn2');
+
+            // --- Seletores (Modal Impressão Canhoto) ---
+            const modalImprimirCanhotos = document.getElementById('modalImprimirCanhotos');
+            const closeCanhotoModalBtn = document.getElementById('closeCanhotoModalBtn');
+            const printCanhotoBtn = document.getElementById('printCanhotoBtn');
+            const printCanhotoContent = document.getElementById('printCanhotoContent');
+            
+            // --- Seletores (Modal Impressão Recibo) ---
+            const modalReciboPagamento = document.getElementById('modalReciboPagamento');
+            const closeReciboModalBtn = document.getElementById('closeReciboModalBtn');
+            const printReciboBtn = document.getElementById('printReciboBtn');
+            const printReciboContent = document.getElementById('printReciboContent');
+
+            // --- Seletores (Modais Genéricos) ---
+            const calendarModal = document.getElementById('calendarModal');
+            const calendarPrevBtn = document.getElementById('calendarPrevBtn');
+            const calendarNextBtn = document.getElementById('calendarNextBtn');
+            const calendarMonthYear = document.getElementById('calendarMonthYear');
+            const calendarDaysGrid = document.getElementById('calendarDaysGrid');
+            const calendarCloseBtn = document.getElementById('calendarCloseBtn');
+            const infoModal = document.getElementById('infoModal');
+            const infoModalTitle = document.getElementById('infoModalTitle');
+            const infoModalText = document.getElementById('infoModalText');
+            const closeInfoModalBtn = document.getElementById('closeInfoModalBtn');
+            
+            // ==========================================================
+            // --- INICIALIZAÇÃO E UTILITÁRIOS ---
+            // ==========================================================
+
+            // --- Lógica do CUSTOM SELECT ---
+            function initCustomSelect(trigger, optionsContainer, valueInput, displaySpan) {
+                const triggerBtn = trigger.querySelector('button');
+                // Adiciona listener nas opções
+                optionsContainer.addEventListener('click', (e) => {
+                    const option = e.target.closest('.custom-select-option');
+                    if (!option) return;
+                    
+                    const newValue = option.dataset.value;
+                    const newText = option.textContent;
+                    
+                    valueInput.value = newValue;
+                    displaySpan.textContent = newText;
+                    
+                    optionsContainer.querySelectorAll('.custom-select-option').forEach(opt => opt.classList.remove('selected'));
+                    option.classList.add('selected');
+                    optionsContainer.classList.add('hidden');
+                    valueInput.dispatchEvent(new Event('change')); // Dispara evento 'change'
+                });
+                
+                // Lógica de Toggle (Abrir/Fechar)
+                triggerBtn.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    const wasOpen = !optionsContainer.classList.contains('hidden');
+                    closeAllSelects(); // Fecha todos os outros
+                    if (!wasOpen) {
+                        optionsContainer.classList.remove('hidden'); // Abre o atual
+                    }
+                });
+            }
+            
+            function closeAllSelects() {
+                document.querySelectorAll('.custom-select-options').forEach(opt => opt.classList.add('hidden'));
+            }
+            document.addEventListener('click', closeAllSelects);
+            
+            // Inicializa os selects customizados
+            initCustomSelect(periodoSelect, periodoOptions, periodoValue, periodoDisplay);
+            
+            // --- Funções de Máscara e Formatação ---
+            function maskCurrency(input, hiddenInput) {
+                let value = input.value.replace(/\D/g, '');
+                hiddenInput.value = (Number(value) / 100).toFixed(2); 
+                
+                let num = (Number(value) / 100).toLocaleString('pt-BR', {
+                    style: 'currency',
+                    currency: 'BRL'
+                });
+                
+                input.value = num;
+            }
+
+            function formatCurrency(value) {
+                const numValue = Number(value) || 0;
+                return numValue.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+            }
+
+            function formatDate(date, includeTime = false) {
+                if (!date) return 'Data inválida';
+                
+                let jsDate;
+                if (date.toDate) { // Objeto Timestamp do Firebase
+                    jsDate = date.toDate();
+                } else if (date instanceof Timestamp) { // Outra forma de Timestamp
+                    jsDate = date.toDate();
+                } else if (!(date instanceof Date)) { // String ou número
+                    jsDate = new Date(date);
+                } else {
+                    jsDate = date;
+                }
+
+                if (isNaN(jsDate.getTime())) {
+                    return "Data inválida";
+                }
+
+                const options = {
+                    day: '2-digit', month: '2-digit', year: 'numeric'
+                };
+                if (includeTime) {
+                    options.hour = '2-digit';
+                    options.minute = '2-digit';
+                }
+                return jsDate.toLocaleString('pt-BR', options);
+            }
+            
+            function formatDateForInput(date) {
+                // Formato DD/MM/AAAA para o input customizado
+                return date.toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit', year: 'numeric' });
+            }
+            
+            function parseInputDate(str) {
+                // Converte DD/MM/AAAA de volta para um objeto Date
+                const parts = str.split('/');
+                if (parts.length === 3) {
+                    // new Date(ano, mês-1, dia)
+                    return new Date(parts[2], parts[1] - 1, parts[0]);
+                }
+                return null;
+            }
+
+            // --- Funções de Modal Genéricas ---
+            function showModal(modalElement) {
+                modalElement.classList.remove('hidden');
+                document.body.classList.add('overflow-hidden');
+            }
+            function hideModal(modalElement, formElement = null) {
+                modalElement.classList.add('hidden');
+                document.body.classList.remove('overflow-hidden');
+                if (formElement) formElement.reset();
+            }
+            
+            function showInfoModal(title, text) {
+                infoModalTitle.textContent = title;
+                infoModalText.textContent = text;
+                showModal(infoModal);
+            }
+            closeInfoModalBtn.addEventListener('click', () => hideModal(infoModal));
+            
+            // --- Funções do Calendário Customizado ---
+            function openCalendarModal(target) {
+                calendarTargetInput = target;
+                const dateValue = parseInputDate(target.value) || new Date();
+                calendarCurrentDate = new Date(dateValue.getFullYear(), dateValue.getMonth(), 1);
+                renderCalendar();
+                showModal(calendarModal);
+            }
+            function renderCalendar() {
+                const month = calendarCurrentDate.getMonth();
+                const year = calendarCurrentDate.getFullYear();
+                
+                calendarMonthYear.textContent = new Date(year, month).toLocaleString('pt-BR', {
+                    month: 'long', year: 'numeric'
+                }).toUpperCase();
+                
+                calendarDaysGrid.innerHTML = '';
+                
+                const firstDayOfMonth = new Date(year, month, 1).getDay();
+                const daysInMonth = new Date(year, month + 1, 0).getDate();
+                const today = new Date();
+                
+                let selectedDate = null;
+                if (calendarTargetInput && calendarTargetInput.value) {
+                    selectedDate = parseInputDate(calendarTargetInput.value);
+                }
+                // Preenche os dias vazios
+                for (let i = 0; i < firstDayOfMonth; i++) {
+                    calendarDaysGrid.innerHTML += `<div class="calendar-day empty"></div>`;
+                }
+                
+                // Preenche os dias do mês
+                for (let day = 1; day <= daysInMonth; day++) {
+                    const dayEl = document.createElement('div');
+                    dayEl.className = 'calendar-day';
+                    dayEl.textContent = day;
+                    
+                    const thisDate = new Date(year, month, day);
+                    
+                    if (thisDate.toDateString() === today.toDateString()) {
+                        dayEl.classList.add('today');
+                    }
+                    if (selectedDate && thisDate.toDateString() === selectedDate.toDateString()) {
+                        dayEl.classList.add('selected');
+                    }
+                    
+                    dayEl.addEventListener('click', () => selectDate(day, month, year));
+                    calendarDaysGrid.appendChild(dayEl);
+                }
+            }
+            function selectDate(day, month, year) {
+                const selected = new Date(year, month, day);
+                calendarTargetInput.value = formatDateForInput(selected);
+                hideModal(calendarModal);
+            }
+            
+            calendarPrevBtn.addEventListener('click', () => {
+                calendarCurrentDate.setMonth(calendarCurrentDate.getMonth() - 1);
+                renderCalendar();
+            });
+            
+            calendarNextBtn.addEventListener('click', () => {
+                calendarCurrentDate.setMonth(calendarCurrentDate.getMonth() + 1);
+                renderCalendar();
+            });
+            
+            calendarCloseBtn.addEventListener('click', () => hideModal(calendarModal));
+            primeiroVencimento.addEventListener('click', () => openCalendarModal(primeiroVencimento));
+
+            // --- Funções de Loading ---
+            function setSubmitLoading(isLoading, btn, btnText, spinner) {
+                if (isLoading) {
+                    btn.disabled = true;
+                    btnText.classList.add('hidden');
+                    spinner.classList.remove('hidden');
+                } else {
+                    btn.disabled = false;
+                    btnText.classList.remove('hidden');
+                    spinner.classList.add('hidden');
+                }
+            }
+
+            // --- Lógica de Cálculo Financeiro (PMT) ---
+            function calculatePMT(valorPresente, taxaJurosMensal, numParcelas) {
+                if (taxaJurosMensal === 0) {
+                    return valorPresente / numParcelas;
+                }
+                const pmt = valorPresente * (taxaJurosMensal / (1 - Math.pow(1 + taxaJurosMensal, -numParcelas)));
+                return pmt;
+            }
+
+            // --- Funções de Navegação ---
+            function navigateTo(pageId, tabElement) {
+                allPages.forEach(page => page.classList.add('hidden'));
+                allNavTabs.forEach(tab => tab.classList.remove('tab-active'));
+                document.getElementById(pageId).classList.remove('hidden');
+                tabElement.classList.add('tab-active');
+            }
+            navAba1.addEventListener('click', () => navigateTo('pageAba1', navAba1));
+            // (CORREÇÃO 3)
+            navAba2.addEventListener('click', () => {
+                navigateTo('pageAba2', navAba2);
+                renderGerenciarAba(); // Força a renderização ao clicar na aba
+            });
+
+            // ==========================================================
+            // --- ABA 1: LÓGICA DE REGISTRAR CARNÊ ---
+            // ==========================================================
+            
+            // --- Busca de Cliente ---
+            customerSearchInput.addEventListener('input', (e) => {
+                const query = e.target.value.toLowerCase().trim();
+                
+                if (query.length < 1) {
+                    customerResults.classList.add('hidden');
+                    selectedCustomerId = null;
+                    return;
+                }
+                
+                const queryCPF = query.replace(/\D/g, '');
+                const filtered = allClients.filter(client => {
+                    const nomeMatch = client.nome ? client.nome.toLowerCase().includes(query) : false;
+                    const cpfMatch = client.cpf && queryCPF.length > 0 ? client.cpf.replace(/\D/g, '').includes(queryCPF) : false;
+                    return nomeMatch || cpfMatch;
+                });
+                
+                customerResults.innerHTML = '';
+                if (filtered.length === 0) {
+                    customerResults.innerHTML = '<div class="p-2 text-gray-400">Nenhum cliente encontrado</div>';
+                } else {
+                    filtered.slice(0, 10).forEach(client => { 
+                        const div = document.createElement('div');
+                        div.className = 'p-2 hover:bg-gray-600 cursor-pointer text-gray-100';
+                        div.textContent = `${client.nome} ${client.cpf ? '('+client.cpf+')' : ''}`; 
+                        div.addEventListener('click', () => selectCustomer(client));
+                        customerResults.appendChild(div);
+                    });
+                }
+                customerResults.classList.remove('hidden');
+            });
+
+            function selectCustomer(client) {
+                selectedCustomerId = client.id;
+                customerSearchInput.value = client.nome;
+                customerResults.classList.add('hidden');
+            }
+
+            // --- Busca de Produto ---
+            productSearchInput.addEventListener('input', (e) => {
+                const query = e.target.value.toLowerCase();
+                if (query.length < 1) {
+                    productResults.classList.add('hidden');
+                    return;
+                }
+                const filtered = allProducts.filter(p =>
+                    (p.nome && p.nome.toLowerCase().includes(query)) ||
+                    (p.codigoProduto && p.codigoProduto.toString().padStart(6, '0').includes(query))
+                );
+                
+                productResults.innerHTML = '';
+                if (filtered.length === 0) {
+                    productResults.innerHTML = '<div class="p-2 text-gray-400">Nenhum produto encontrado</div>';
+                } else {
+                    filtered.slice(0, 10).forEach(product => { 
+                        const div = document.createElement('div');
+                        div.className = 'p-2 hover:bg-gray-600 cursor-pointer text-gray-100';
+                        div.textContent = `[${product.codigoProduto.toString().padStart(6, '0')}] ${product.nome} - ${formatCurrency(product.precoVenda)}`;
+                        div.addEventListener('click', () => selectProductForItem(product));
+                        productResults.appendChild(div);
+                    });
+                }
+                productResults.classList.remove('hidden');
+            });
+
+            function selectProductForItem(product) {
+                tempSelectedProduct = product; 
+                
+                productSearchInput.value = `[${product.codigoProduto.toString().padStart(6, '0')}] ${product.nome}`;
+                itemUnitPriceNumeric.value = product.precoVenda;
+                itemUnitPrice.value = formatCurrency(product.precoVenda);
+                productResults.classList.add('hidden');
+                itemQuantity.focus();
+            }
+
+            // --- Carrinho de Itens ---
+            addItemToSaleBtn.addEventListener('click', () => {
+                if (!tempSelectedProduct) {
+                    showInfoModal('Produto Inválido', 'Por favor, selecione um produto da lista.');
+                    return;
+                }
+                
+                const qty = parseInt(itemQuantity.value) || 1;
+                if(tempSelectedProduct.estoqueAtual === undefined || qty > tempSelectedProduct.estoqueAtual) {
+                    showInfoModal('Estoque Insuficiente', `Estoque insuficiente para ${tempSelectedProduct.nome}. Restam ${tempSelectedProduct.estoqueAtual || 0}.`);
+                    return;
+                }
+                const price = parseFloat(itemUnitPriceNumeric.value) || 0;
+                
+                const newItem = {
+                    productId: tempSelectedProduct.id,
+                    productName: tempSelectedProduct.nome,
+                    codigoProduto: tempSelectedProduct.codigoProduto,
+                    quantity: qty,
+                    unitPrice: price,
+                    subtotal: (price * qty)
+                };
+                
+                tempSaleItems.push(newItem);
+                
+                renderSaleItemsList(); 
+                updateCarneSummary();   
+                resetSaleItemForm();   
+            });
+            
+            function resetSaleItemForm() {
+                tempSelectedProduct = null;
+                productSearchInput.value = '';
+                itemQuantity.value = '1';
+                itemUnitPrice.value = 'R$ 0,00';
+                itemUnitPriceNumeric.value = '0';
+            }
+            
+            function renderSaleItemsList() {
+                saleItemsList.innerHTML = ''; 
+                
+                if (tempSaleItems.length === 0) {
+                    saleItemsList.appendChild(emptyCartMessage); 
+                    return;
+                }
+                
+                emptyCartMessage.remove(); 
+                
+                tempSaleItems.forEach((item, index) => {
+                    const itemDiv = document.createElement('div');
+                    itemDiv.className = 'p-2 border-b border-gray-600 text-gray-100 flex justify-between items-center';
+                    
+                    itemDiv.innerHTML = `
+                        <div class="text-sm">
+                            <span class="font-semibold">${item.productName}</span>
+                            <br>
+                            <span class="text-xs text-gray-400">
+                                ${item.quantity}x ${formatCurrency(item.unitPrice)}
+                            </span>
+                        </div>
+                        <div class="text-sm font-bold text-right">${formatCurrency(item.subtotal)}</div>
+                        <button type="button" class="remove-sale-item-btn ml-2" data-index="${index}" title="Remover Item">
+                            ${trashIconSVG}
+                        </button>
+                    `;
+                    saleItemsList.appendChild(itemDiv);
+                });
+            }
+            
+            saleItemsList.addEventListener('click', (e) => {
+                const removeBtn = e.target.closest('.remove-sale-item-btn');
+                if (removeBtn) {
+                    const indexToRemove = parseInt(removeBtn.dataset.index);
+                    tempSaleItems.splice(indexToRemove, 1); 
+                    renderSaleItemsList(); 
+                    updateCarneSummary();   
+                }
+            });
+
+            // --- Resumo do Carnê (Cálculo de Juros) ---
+            function updateCarneSummary() {
+                const subtotal = tempSaleItems.reduce((acc, item) => acc + item.subtotal, 0);
+                summarySubtotal.textContent = formatCurrency(subtotal);
+
+                const entrada = parseFloat(downPaymentNumeric.value) || 0;
+                const parcelas = parseInt(numParcelas.value) || 1;
+                const valorAParcelar = subtotal - entrada;
+
+                summaryToFinance.textContent = formatCurrency(valorAParcelar);
+
+                let juros = 0;
+                let valorParcela = 0;
+                let valorTotalComJuros = valorAParcelar;
+
+                if (valorAParcelar > 0) {
+                    if (parcelas >= 4) {
+                        // Aplicar Juros de 7% a.m.
+                        valorParcela = calculatePMT(valorAParcelar, JUROS_VENDA_MES, parcelas);
+                        valorTotalComJuros = valorParcela * parcelas;
+                        juros = valorTotalComJuros - valorAParcelar;
+                        
+                        summaryJurosContainer.classList.remove('hidden');
+                        summaryJurosValue.textContent = formatCurrency(juros);
+                    } else {
+                        // Sem Juros
+                        valorParcela = valorAParcelar / parcelas;
+                        summaryJurosContainer.classList.add('hidden');
+                        summaryJurosValue.textContent = formatCurrency(0);
+                    }
+                }
+
+                summaryTotalFinance.textContent = formatCurrency(valorTotalComJuros);
+                summaryInstallmentValue.textContent = `${parcelas}x de ${formatCurrency(valorParcela)}`;
+            }
+
+            // Adiciona listeners para atualizar o resumo
+            downPayment.addEventListener('input', () => {
+                maskCurrency(downPayment, downPaymentNumeric);
+                updateCarneSummary();
+            });
+            numParcelas.addEventListener('input', updateCarneSummary);
+            
+            // (CORREÇÃO 5b)
+            periodoValue.addEventListener('change', () => {
+                updateCarneSummary(); // Recalcula resumo
+                
+                // Define data de vencimento padrão
+                const hoje = new Date();
+                const periodo = periodoValue.value;
+                
+                if (periodo === 'Semanal') {
+                    hoje.setDate(hoje.getDate() + 7);
+                } else if (periodo === 'Quinzenal') {
+                    hoje.setDate(hoje.getDate() + 15);
+                } else { // Mensal
+                    hoje.setMonth(hoje.getMonth() + 1);
+                }
+                
+                primeiroVencimento.value = formatDateForInput(hoje);
+            });
+            
+            // --- Submit do Formulário (Aba 1) ---
+            carneForm.addEventListener('submit', handleCarneFormSubmit);
+
+            async function handleCarneFormSubmit(e) {
+                e.preventDefault();
+                
+                // Validações
+                const selectedCustomer = allClients.find(c => c.id === selectedCustomerId);
+                if (!selectedCustomer) {
+                    showInfoModal('Cliente Inválido', 'Por favor, selecione um cliente da lista.');
+                    return;
+                }
+                
+                // (CORREÇÃO 5a)
+                if (!selectedCustomer.cpf || selectedCustomer.cpf.trim() === '') {
+                    showInfoModal('Cliente Inválido', 'Apenas clientes com CPF cadastrado podem gerar carnês.');
+                    return;
+                }
+
+                if (tempSaleItems.length === 0) {
+                    showInfoModal('Venda Vazia', 'Por favor, adicione pelo menos um produto ao carnê.');
+                    return;
+                }
+                const dataVencimentoInput = parseInputDate(primeiroVencimento.value);
+                if (!dataVencimentoInput) {
+                    showInfoModal('Data Inválida', 'Por favor, selecione a data do primeiro vencimento.');
+                    return;
+                }
+
+                setSubmitLoading(true, submitBtn, submitBtnText, submitSpinner);
+
+                try {
+                    // 1. Recalcular valores finais
+                    const subtotal = tempSaleItems.reduce((acc, item) => acc + item.subtotal, 0);
+                    const entrada = parseFloat(downPaymentNumeric.value) || 0;
+                    const nParcelas = parseInt(numParcelas.value) || 1;
+                    const periodicidade = periodoValue.value;
+                    const valorAParcelar = subtotal - entrada;
+                    
+                    let juros = 0;
+                    let valorParcela = 0;
+                    let valorTotalComJuros = valorAParcelar;
+
+                    if (valorAParcelar > 0) {
+                        if (nParcelas >= 4) {
+                            valorParcela = calculatePMT(valorAParcelar, JUROS_VENDA_MES, nParcelas);
+                            valorTotalComJuros = valorParcela * nParcelas;
+                            juros = valorTotalComJuros - valorAParcelar;
+                        } else {
+                            valorParcela = valorAParcelar / nParcelas;
+                        }
+                    }
+
+                    // (CORREÇÃO 4)
+                    const novoCodigoCarne = currentCarneCode + 1;
+                    currentCarneCode = novoCodigoCarne; // Incrementa estado local
+
+                    // 2. Criar o documento `vendasCarne`
+                    const vendaCarneData = {
+                        codigoCarne: novoCodigoCarne, // (CORREÇÃO 4)
+                        clienteId: selectedCustomer.id,
+                        clienteNome: selectedCustomer.nome,
+                        dataVenda: serverTimestamp(),
+                        itens: tempSaleItems,
+                        valorOriginal: subtotal, // Valor sem juros
+                        valorJuros: juros,
+                        valorTotal: subtotal + juros, // Valor com juros (inclui entrada)
+                        valorEntrada: entrada,
+                        numeroParcelas: nParcelas,
+                        periodicidade: periodicidade,
+                        primeiroVencimento: Timestamp.fromDate(dataVencimentoInput)
+                    };
+
+                    const vendaCarneRef = await addDoc(vendasCarneCollection, vendaCarneData);
+
+                    // 3. Criar a(s) parcela(s) e o histórico da entrada (em batch)
+                    const batch = writeBatch(db);
+
+                    // 3a. Histórico da Entrada (se houver)
+                    if (entrada > 0) {
+                        const historicoEntradaRef = doc(collection(db, 'pagamentosHistorico'));
+                        batch.set(historicoEntradaRef, {
+                            vendaCarneId: vendaCarneRef.id,
+                            clienteId: selectedCustomer.id,
+                            dataPagamento: serverTimestamp(),
+                            valorPago: entrada,
+                            tipo: "Entrada",
+                            observacao: "Pagamento de entrada"
+                        });
+                    }
+                    
+                    // 3b. Parcelas
+                    if (valorAParcelar > 0) {
+                        let dataVencimentoAtual = new Date(dataVencimentoInput.getTime());
+
+                        for (let i = 1; i <= nParcelas; i++) {
+                            const parcelaRef = doc(collection(db, 'parcelasCarne'));
+                            
+                            batch.set(parcelaRef, {
+                                vendaCarneId: vendaCarneRef.id,
+                                clienteId: selectedCustomer.id,
+                                clienteNome: selectedCustomer.nome,
+                                numeroParcela: i,
+                                valorOriginal: valorParcela,
+                                valorPendente: valorParcela,
+                                dataVencimento: Timestamp.fromDate(dataVencimentoAtual),
+                                status: "Pendente"
+                            });
+
+                            // Calcular próximo vencimento
+                            if (periodicidade === 'Semanal') {
+                                dataVencimentoAtual.setDate(dataVencimentoAtual.getDate() + 7);
+                            } else if (periodicidade === 'Quinzenal') {
+                                dataVencimentoAtual.setDate(dataVencimentoAtual.getDate() + 15);
+                            } else { // Mensal
+                                dataVencimentoAtual.setMonth(dataVencimentoAtual.getMonth() + 1);
+                            }
+                        }
+                    }
+
+                    // 4. Atualizar estoque (também em batch)
+                    for (const item of tempSaleItems) {
+                        const productRef = doc(db, 'produtos', item.productId);
+                        const product = allProducts.find(p => p.id === item.productId);
+                        const newStock = (product.estoqueAtual || 0) - item.quantity;
+                        batch.update(productRef, { estoqueAtual: newStock });
+                    }
+
+                    // 5. Commitar o batch
+                    await batch.commit();
+
+                    showInfoModal('Sucesso!', `Carnê #${novoCodigoCarne} gerado com sucesso.`);
+                    
+                    // 6. Abrir modal de impressão
+                    // Precisamos buscar as parcelas recém-criadas para imprimir
+                    const q = query(parcelasCarneCollection, where("vendaCarneId", "==", vendaCarneRef.id));
+                    const parcelasSnapshot = await getDocs(q);
+                    const parcelasRecemCriadas = [];
+                    parcelasSnapshot.forEach(doc => parcelasRecemCriadas.push({id: doc.id, ...doc.data()}));
+                    
+                    // Passa o objeto vendaCarneData (que contém o novo codigoCarne)
+                    openCanhotoModal(vendaCarneRef.id, vendaCarneData, valorParcela, parcelasRecemCriadas);
+                    
+                    resetCarneForm();
+
+                } catch (error) {
+                    console.error("Erro ao gerar carnê: ", error);
+                    showInfoModal('Erro', `Ocorreu um erro ao salvar o carnê: ${error.message}`);
+                } finally {
+                    setSubmitLoading(false, submitBtn, submitBtnText, submitSpinner);
+                }
+            }
+
+            function resetCarneForm() {
+                carneForm.reset();
+                selectedCustomerId = null;
+                tempSaleItems = [];
+                renderSaleItemsList();
+                downPayment.value = 'R$ 0,00';
+                downPaymentNumeric.value = '0';
+                periodoValue.value = 'Mensal';
+                periodoDisplay.textContent = 'Mensal';
+                numParcelas.value = '1';
+                primeiroVencimento.value = '';
+                updateCarneSummary();
+            }
+
+            // ==========================================================
+            // --- ABA 2: LÓGICA DE GERENCIAR CARNÊS ---
+            // ==========================================================
+            
+            searchCarnes.addEventListener('input', renderGerenciarAba);
+
+            function renderGerenciarAba() {
+                loadingMessageCarnes.textContent = 'Carregando carnês...';
+                carneListContainer.innerHTML = '';
+                carneListContainer.appendChild(loadingMessageCarnes);
+
+                // 1. Processar dados
+                const carnesAgrupados = {};
+                const hoje = new Date();
+                hoje.setHours(0, 0, 0, 0);
+
+                // Agrupar todas as parcelas por vendaId
+                allParcelas.forEach(p => {
+                    if (!carnesAgrupados[p.vendaCarneId]) {
+                        const venda = allVendasCarne.find(v => v.id === p.vendaCarneId);
+                        if (!venda) return; // Venda não encontrada (raro)
+
+                        carnesAgrupados[p.vendaCarneId] = {
+                            vendaId: p.vendaCarneId,
+                            clienteNome: p.clienteNome,
+                            clienteCPF: allClients.find(c => c.id === p.clienteId)?.cpf || '',
+                            codigoCarne: venda.codigoCarne || 0, // (CORREÇÃO 4)
+                            status: 'Quitado', // Assume quitado até achar parcela pendente
+                            parcelas: [],
+                            dataOrdenacao: new Date('2999-12-31') // Fica por último
+                        };
+                    }
+                    carnesAgrupados[p.vendaCarneId].parcelas.push(p);
+                });
+
+                // 2. Calcular Status e Data de Ordenação
+                Object.values(carnesAgrupados).forEach(carne => {
+                    const parcelasPendentes = carne.parcelas
+                        .filter(p => p.status === 'Pendente')
+                        .sort((a, b) => a.dataVencimento - b.dataVencimento);
+
+                    if (parcelasPendentes.length > 0) {
+                        const proximaParcela = parcelasPendentes[0];
+                        carne.proximaParcela = proximaParcela;
+                        carne.dataOrdenacao = proximaParcela.dataVencimento;
+
+                        if (proximaParcela.dataVencimento < hoje) {
+                            carne.status = 'Atrasado';
+                        } else {
+                            carne.status = 'Pendente';
+                        }
+                    }
+                });
+
+                // 3. Ordenar
+                let carnesOrdenados = Object.values(carnesAgrupados).sort((a, b) => {
+                    return a.dataOrdenacao - b.dataOrdenacao;
+                });
+
+                // 4. Filtrar
+                const query = searchCarnes.value.toLowerCase().trim();
+                const queryCPF = query.replace(/\D/g, '');
+
+                if (query) {
+                    carnesOrdenados = carnesOrdenados.filter(carne => {
+                        const nomeMatch = carne.clienteNome.toLowerCase().includes(query);
+                        const cpfMatch = queryCPF.length > 0 && carne.clienteCPF.includes(queryCPF);
+                        const codigoMatch = carne.codigoCarne.toString().includes(query); // (CORREÇÃO 4)
+                        return nomeMatch || cpfMatch || codigoMatch;
+                    });
+                }
+                
+                // 5. Renderizar
+                carneListContainer.innerHTML = '';
+                if (carnesOrdenados.length === 0) {
+                    loadingMessageCarnes.textContent = 'Nenhum carnê encontrado.';
+                    carneListContainer.appendChild(loadingMessageCarnes);
+                    return;
+                }
+
+                carnesOrdenados.forEach(carne => {
+                    let statusClass = 'text-green-400';
+                    let statusText = 'Quitado';
+                    let vencimentoText = 'Todas as parcelas pagas';
+
+                    if (carne.status === 'Pendente') {
+                        statusClass = 'text-blue-400';
+                        statusText = 'Pendente';
+                        vencimentoText = `Próx. Venc: ${formatDate(carne.proximaParcela.dataVencimento)}`;
+                    } else if (carne.status === 'Atrasado') {
+                        statusClass = 'text-red-500';
+                        statusText = 'Atrasado';
+                        vencimentoText = `Vencido desde: ${formatDate(carne.proximaParcela.dataVencimento)}`;
+                    }
+                    
+                    const codigoCarneFormatado = carne.codigoCarne.toString().padStart(6, '0'); // (CORREÇÃO 4)
+
+                    const card = document.createElement('div');
+                    card.className = `bg-gray-800 p-4 rounded-lg shadow-md border border-gray-700 flex flex-col md:flex-row justify-between items-start md:items-center gap-4 ${carne.status === 'Quitado' ? 'opacity-60' : ''}`;
+                    card.innerHTML = `
+                        <div>
+                            <p class="text-lg font-semibold text-gray-100">${carne.clienteNome}</p>
+                            <p class="text-sm text-gray-400">Carnê #${codigoCarneFormatado}</p> <!-- (CORREÇÃO 4) -->
+                            <p class="text-sm ${statusClass} font-medium">${statusText}</p>
+                            <p class="text-sm text-gray-400">${vencimentoText}</p>
+                        </div>
+                        <div class="flex-shrink-0 w-full md:w-auto">
+                            <button class="manage-carne-btn w-full md:w-auto bg-amber-500 text-black px-4 py-2 rounded-lg hover:bg-amber-600 font-semibold" data-venda-id="${carne.vendaId}">
+                                Gerenciar Carnê
+                            </button>
+                        </div>
+                    `;
+                    card.querySelector('.manage-carne-btn').addEventListener('click', () => openGerenciarModal(carne.vendaId));
+                    carneListContainer.appendChild(card);
+                });
+            }
+            
+            // ==========================================================
+            // --- MODAL: GERENCIAR CARNÊ (LÓGICA PRINCIPAL) ---
+            // ==========================================================
+
+            // (CORREÇÃO 1)
+            toggleItensBtn.addEventListener('click', () => {
+                manageItensList.classList.toggle('hidden');
+                toggleItensBtn.textContent = manageItensList.classList.contains('hidden') ? 'Ver Itens da Venda' : 'Ocultar Itens';
+            });
+
+            function openGerenciarModal(vendaId) {
+                currentManagingVendaId = vendaId;
+                selectedParcelasParaPagar = []; // Limpa seleção
+                openRealizarPagamentoBtn.disabled = true;
+
+                const venda = allVendasCarne.find(v => v.id === vendaId);
+                const parcelas = allParcelas
+                    .filter(p => p.vendaCarneId === vendaId)
+                    .sort((a, b) => a.numeroParcela - b.numeroParcela);
+                const pagamentos = allPagamentos.filter(p => p.vendaCarneId === vendaId);
+
+                if (!venda) {
+                    showInfoModal("Erro", "Venda não encontrada.");
+                    return;
+                }
+                
+                // (CORREÇÃO 4)
+                const codigoCarneFormatado = (venda.codigoCarne || 0).toString().padStart(6, '0');
+                manageCarneCliente.textContent = `${venda.clienteNome} (Carnê #${codigoCarneFormatado})`;
+                
+                // (CORREÇÃO 2) - Calcular Resumo Financeiro
+                const valorTotal = venda.valorTotal;
+                const totalPago = pagamentos.filter(p => p.tipo === 'Pagamento' || p.tipo === 'Entrada').reduce((acc, p) => acc + (p.valorPago || 0), 0);
+                const totalMultas = 0; // (CORREÇÃO 1) - Multas removidas
+                const totalDescontos = pagamentos.filter(p => p.tipo === 'Desconto').reduce((acc, p) => acc + (p.valorPago || 0), 0);
+                // Saldo devedor = (Total da Venda) - (Total Pago + Total Descontos)
+                const saldoDevedor = valorTotal - (totalPago + totalDescontos); // (CORREÇÃO 1)
+
+                resumoValorTotal.textContent = formatCurrency(valorTotal);
+                resumoTotalPago.textContent = formatCurrency(totalPago);
+                resumoTotalDescontos.textContent = formatCurrency(totalDescontos); 
+                resumoTotalMultas.textContent = formatCurrency(totalMultas); // Será R$ 0,00
+                resumoSaldoDevedor.textContent = formatCurrency(saldoDevedor < 0.01 ? 0 : saldoDevedor); // (BUGFIX) Arredonda para 0
+
+                // (CORREÇÃO 1) - Renderizar Itens da Venda
+                manageItensList.innerHTML = '';
+                if (venda.itens && venda.itens.length > 0) {
+                    venda.itens.forEach(item => {
+                        const itemDiv = document.createElement('div');
+                        itemDiv.className = 'flex justify-between items-center text-sm p-1 border-b border-gray-600';
+                        itemDiv.innerHTML = `
+                            <div>
+                                <span class="font-semibold text-gray-200">${item.productName}</span>
+                                <span class="text-gray-400 text-xs"> (${item.quantity}x ${formatCurrency(item.unitPrice)})</span>
+                            </div>
+                            <span class="font-medium text-gray-300">${formatCurrency(item.subtotal)}</span>
+                        `;
+                        manageItensList.appendChild(itemDiv);
+                    });
+                } else {
+                    manageItensList.innerHTML = '<p class="text-gray-400 text-sm">Nenhum item encontrado nesta venda.</p>';
+                }
+                // Reseta o estado do botão
+                manageItensList.classList.add('hidden');
+                toggleItensBtn.textContent = 'Ver Itens da Venda';
+
+
+                // Renderizar Lista de Parcelas
+                manageParcelasList.innerHTML = '';
+                const hoje = new Date();
+                hoje.setHours(0, 0, 0, 0);
+
+                parcelas.forEach(p => {
+                    const div = document.createElement('div');
+                    let statusClass = 'text-green-400';
+                    let statusText = 'Paga';
+                    let isPendente = false;
+                    let diasAtraso = 0;
+                    
+                    const nTotalParcelasDoCarne = allParcelas.filter(ap => ap.vendaCarneId === vendaId).length;
+                    
+                    // (BUGFIX) Considera pendente se for maior que 1 centavo
+                    if (p.status === 'Pendente' || p.valorPendente > 0.01) { 
+                        if (p.dataVencimento < hoje) {
+                            statusClass = 'text-red-500';
+                            statusText = 'Atrasada'; // (CORREÇÃO 1) - Texto mantido, mas sem multa
+                            isPendente = true;
+                            // Calcular dias de atraso
+                            diasAtraso = Math.floor((hoje - p.dataVencimento) / (1000 * 60 * 60 * 24));
+                        } else {
+                            statusClass = 'text-blue-400';
+                            statusText = 'Pendente';
+                            isPendente = true;
+                        }
+                    } else {
+                        // Garante que se for 0, é Paga
+                        statusClass = 'text-green-400';
+                        statusText = 'Paga';
+                        isPendente = false;
+                    }
+                    
+                    div.className = `bg-gray-700 p-3 rounded-lg flex flex-col md:flex-row justify-between md:items-center gap-3 ${!isPendente ? 'opacity-50' : ''}`;
+                    div.innerHTML = `
+                        <div class="flex items-center gap-3">
+                            ${isPendente ? `
+                            <input type="checkbox" class="form-checkbox h-5 w-5 bg-gray-800 border-gray-600 text-amber-500 rounded focus:ring-amber-400 parcela-checkbox" data-parcela-id="${p.id}">
+                            ` : `
+                            <div class="w-5 h-5 flex-shrink-0"></div>
+                            `}
+                            <div>
+                                <p class="font-semibold text-gray-100">Parcela ${p.numeroParcela} / ${nTotalParcelasDoCarne}</p> 
+                                <p class="text-sm text-gray-400">Vencimento: ${formatDate(p.dataVencimento)}</p>
+                            </div>
+                        </div>
+                        <div class="text-left md:text-right">
+                            <p class="font-bold text-lg ${statusClass}">${formatCurrency(p.valorPendente)}</p>
+                            <p class="text-sm ${statusClass} font-medium">${statusText} ${diasAtraso > 0 ? `(${diasAtraso} dias)` : ''}</p>
+                        </div>
+                        <button class="view-history-btn p-2 rounded-lg hover:bg-gray-600" data-parcela-id="${p.id}" title="Ver Histórico">
+                            ${historyIconSVG}
+                        </button>
+                    `;
+                    div.querySelector('.view-history-btn').addEventListener('click', (e) => {
+                        openHistoricoModal(e.currentTarget.dataset.parcelaId, p.numeroParcela);
+                    });
+
+                    if (isPendente) {
+                        div.querySelector('.parcela-checkbox').addEventListener('change', (e) => {
+                            const id = e.target.dataset.parcelaId;
+                            if (e.target.checked) {
+                                selectedParcelasParaPagar.push(id);
+                            } else {
+                                selectedParcelasParaPagar = selectedParcelasParaPagar.filter(pId => pId !== id);
+                            }
+                            openRealizarPagamentoBtn.disabled = selectedParcelasParaPagar.length === 0;
+                        });
+                    }
+                    manageParcelasList.appendChild(div);
+                });
+
+                showModal(modalGerenciarCarne);
+            }
+
+            closeManageCarneModalBtn.addEventListener('click', () => hideModal(modalGerenciarCarne));
+
+            // --- Abrir Modal de Pagamento ---
+            openRealizarPagamentoBtn.addEventListener('click', () => {
+                // Ordenar parcelas selecionadas por data de vencimento (mais antiga primeiro)
+                currentManagingParcelas = selectedParcelasParaPagar
+                    .map(id => allParcelas.find(p => p.id === id))
+                    .sort((a, b) => a.dataVencimento - b.dataVencimento);
+
+                if (currentManagingParcelas.length === 0) {
+                    showInfoModal("Nenhuma Parcela", "Selecione ao menos uma parcela para pagar.");
+                    return;
+                }
+
+                pagamentoForm.reset();
+                pagamentoDesconto.value = 'R$ 0,00';
+                pagamentoDescontoNumeric.value = '0';
+                pagamentoValorPago.value = '';
+                pagamentoValorPagoNumeric.value = '0';
+
+                let valorOriginalTotal = 0;
+                // (CORREÇÃO 1) - Multa removida
+                // let multaTotal = 0; 
+                const hoje = new Date();
+                hoje.setHours(0, 0, 0, 0);
+
+                const numerosParcelas = currentManagingParcelas.map(p => p.numeroParcela).join(', ');
+                pagamentoParcelasSelecionadas.textContent = numerosParcelas;
+
+                currentManagingParcelas.forEach(p => {
+                    valorOriginalTotal += p.valorPendente;
+                    // (CORREÇÃO 1) - Cálculo de multa removido
+                });
+
+                pagamentoValorOriginal.textContent = formatCurrency(valorOriginalTotal);
+                pagamentoMultaAtraso.textContent = formatCurrency(0); // (CORREÇÃO 1)
+                pagamentoTotalPendente.textContent = formatCurrency(valorOriginalTotal); // (CORREÇÃO 1)
+
+                // Sugerir o valor total no campo de pagamento
+                pagamentoValorPagoNumeric.value = valorOriginalTotal.toFixed(2); // (CORREÇÃO 1)
+                pagamentoValorPago.value = formatCurrency(valorOriginalTotal); // (CORREÇÃO 1)
+
+                showModal(modalRealizarPagamento);
+            });
+
+            closePagamentoModalBtn.addEventListener('click', () => hideModal(modalRealizarPagamento, pagamentoForm));
+            
+            // (CORREÇÃO 4) Adiciona máscaras de moeda
+            pagamentoDesconto.addEventListener('input', () => maskCurrency(pagamentoDesconto, pagamentoDescontoNumeric));
+            pagamentoValorPago.addEventListener('input', () => maskCurrency(pagamentoValorPago, pagamentoValorPagoNumeric));
+
+            // --- Lógica de Pagamento (Submit) ---
+            // (BUGFIX) Lógica de pagamento refatorada
+            pagamentoForm.addEventListener('submit', handlePagamentoSubmit);
+            
+            async function handlePagamentoSubmit(e) {
+                e.preventDefault();
+                setSubmitLoading(true, submitPagamentoBtn, submitPagamentoBtnText, submitPagamentoSpinner);
+
+                const venda = allVendasCarne.find(v => v.id === currentManagingVendaId);
+                
+                const allParcelasDoCarne = allParcelas.filter(p => p.vendaCarneId === currentManagingVendaId);
+                const nTotalParcelas = allParcelasDoCarne.length; 
+                
+                const clienteId = venda.clienteId;
+                
+                // Valores de entrada do formulário
+                const valorPagoInput = parseFloat(pagamentoValorPagoNumeric.value) || 0;
+                const descontoInput = parseFloat(pagamentoDescontoNumeric.value) || 0;
+                const valorDisponivelTotal = valorPagoInput + descontoInput; // Total de "crédito"
+                
+                // *** ESTA É A CORREÇÃO ***
+                // Calcular proporções UMA VEZ, baseado no total disponível
+                const proporcaoPago = (valorDisponivelTotal > 0.001) ? valorPagoInput / valorDisponivelTotal : 1;
+                const proporcaoDesconto = (valorDisponivelTotal > 0.001) ? descontoInput / valorDisponivelTotal : 0;
+                
+                // Usar uma variável de 'crédito' decrescente
+                let creditoDisponivel = valorDisponivelTotal;
+
+                const hoje = new Date();
+                hoje.setHours(0, 0, 0, 0);
+                
+                const batch = writeBatch(db);
+                
+                try {
+                    // Itera sobre as parcelas selecionadas (já ordenadas por vencimento)
+                    for (const parcela of currentManagingParcelas) {
+                        if (creditoDisponivel <= 0.001) break; // Sai se não há mais crédito
+
+                        const parcelaRef = doc(db, 'parcelasCarne', parcela.id);
+                        let valorPendenteDaParcela = parcela.valorPendente;
+                        
+                        // 2. Definir o valor a ser pago nesta parcela
+                        let valorAplicado = Math.min(creditoDisponivel, valorPendenteDaParcela);
+                        
+                        // 3. Calcular valores reais de pagamento e desconto com base na proporção *fixa*
+                        let valorPagoReal = valorAplicado * proporcaoPago;
+                        let descontoAplicado = valorAplicado * proporcaoDesconto;
+
+                        // 4. Verificar regra da última parcela (não pode pagar a mais)
+                        const isUltimaParcela = parcela.numeroParcela === nTotalParcelas;
+                        if (isUltimaParcela && creditoDisponivel > valorPendenteDaParcela) {
+                            valorAplicado = valorPendenteDaParcela;
+                            
+                            // Recalcula com base no valorAplicado
+                            valorPagoReal = valorAplicado * proporcaoPago;
+                            descontoAplicado = valorAplicado * proporcaoDesconto;
+                            
+                            creditoDisponivel = 0; // Zera o restante
+                        } else {
+                            creditoDisponivel -= valorAplicado; // Subtrai o que foi usado
+                        }
+                        
+                        // 5. Salvar Históricos de Pagamento
+                        if (descontoAplicado > 0.001) {
+                            const histDescRef = doc(collection(db, 'pagamentosHistorico'));
+                            batch.set(histDescRef, {
+                                parcelaCarneId: parcela.id,
+                                vendaCarneId: parcela.vendaCarneId,
+                                clienteId: clienteId,
+                                dataPagamento: serverTimestamp(),
+                                valorPago: descontoAplicado,
+                                tipo: "Desconto",
+                                observacao: "Desconto aplicado na baixa"
+                            });
+                        }
+                        if (valorPagoReal > 0.001) {
+                            const histPagRef = doc(collection(db, 'pagamentosHistorico'));
+                            batch.set(histPagRef, {
+                                parcelaCarneId: parcela.id,
+                                vendaCarneId: parcela.vendaCarneId,
+                                clienteId: clienteId,
+                                dataPagamento: serverTimestamp(),
+                                valorPago: valorPagoReal,
+                                tipo: "Pagamento",
+                                observacao: "Pagamento de parcela"
+                            });
+                        }
+                        
+                        // 6. Atualizar a Parcela
+                        const novoValorPendente = valorPendenteDaParcela - valorAplicado;
+                        if (novoValorPendente <= 0.01) { // Quitado (com margem de segurança)
+                            batch.update(parcelaRef, {
+                                valorPendente: 0,
+                                status: "Paga"
+                            });
+                        } else {
+                            // Pagamento parcial 
+                            batch.update(parcelaRef, {
+                                valorPendente: novoValorPendente
+                            });
+                        }
+                    } // Fim do loop for
+
+                    // 7. Lidar com creditoDisponivel (sobra ou falta)
+                    // O `valorDisponivel` original (o let) agora é o `creditoDisponivel`
+                    if (creditoDisponivel > 0.01) {
+                        // VALOR PAGO A MAIS (SOBRA)
+                        // Encontrar a próxima parcela PENDENTE (mesmo que não selecionada)
+                        const proximaParcela = allParcelasDoCarne 
+                            .filter(p => p.status === 'Pendente' && !selectedParcelasParaPagar.includes(p.id))
+                            .sort((a, b) => a.numeroParcela - b.numeroParcela)[0];
+                        
+                        if (proximaParcela) {
+                            // Regra: Pagar a mais e rolar para a próxima
+                            const proxParcelaRef = doc(db, 'parcelasCarne', proximaParcela.id);
+                            const novoPendente = proximaParcela.valorPendente - creditoDisponivel; // Subtrai o crédito
+
+                            batch.update(proxParcelaRef, { valorPendente: novoPendente });
+                            
+                            // Salva histórico de crédito (que é um pagamento/desconto adiantado)
+                            // Salva como "Pagamento" para o resumo bater
+                            const histCredRef = doc(collection(db, 'pagamentosHistorico'));
+                            batch.set(histCredRef, {
+                                parcelaCarneId: proximaParcela.id,
+                                vendaCarneId: currentManagingVendaId,
+                                clienteId: clienteId,
+                                dataPagamento: serverTimestamp(),
+                                valorPago: creditoDisponivel * proporcaoPago,
+                                tipo: "Pagamento",
+                                observacao: `Sobra (pagamento) da(s) parcela(s) ${currentManagingParcelas.map(p => p.numeroParcela).join(', ')}`
+                            });
+                            // E salva o desconto adiantado
+                             if (creditoDisponivel * proporcaoDesconto > 0.001) {
+                                const histCredDescRef = doc(collection(db, 'pagamentosHistorico'));
+                                batch.set(histCredDescRef, {
+                                    parcelaCarneId: proximaParcela.id,
+                                    vendaCarneId: currentManagingVendaId,
+                                    clienteId: clienteId,
+                                    dataPagamento: serverTimestamp(),
+                                    valorPago: creditoDisponivel * proporcaoDesconto,
+                                    tipo: "Desconto",
+                                    observacao: `Sobra (desconto) da(s) parcela(s) ${currentManagingParcelas.map(p => p.numeroParcela).join(', ')}`
+                                });
+                            }
+
+                        } else {
+                            console.warn("Valor excedente ignorado pois era a última parcela.");
+                        }
+                    } else if (creditoDisponivel < -0.01) {
+                        // VALOR PAGO A MENOS (FALTA)
+                        const ultimaParcelaProcessada = currentManagingParcelas[currentManagingParcelas.length - 1];
+                        const valorRestante = Math.abs(creditoDisponivel);
+
+                        if (ultimaParcelaProcessada.numeroParcela === nTotalParcelas) {
+                            // Regra: Se for a última parcela DO CARNÊ, cria uma nova
+                            const novaParcelaRef = doc(collection(db, 'parcelasCarne'));
+                            
+                            let novoVencimento = new Date(ultimaParcelaProcessada.dataVencimento.getTime());
+                            // Adiciona 30 dias (ou baseado na periodicidade)
+                            novoVencimento.setDate(novoVencimento.getDate() + 30); // Simples
+
+                            batch.set(novaParcelaRef, {
+                                vendaCarneId: ultimaParcelaProcessada.vendaCarneId,
+                                clienteId: clienteId,
+                                clienteNome: ultimaParcelaProcessada.clienteNome,
+                                numeroParcela: nTotalParcelas + 1, 
+                                valorOriginal: valorRestante,
+                                valorPendente: valorRestante,
+                                dataVencimento: Timestamp.fromDate(novoVencimento),
+                                status: "Pendente"
+                            });
+                            
+                        } else {
+                            // Regra: Rola o restante para a próxima parcela PENDENTE
+                            const proximaParcela = allParcelasDoCarne 
+                                .filter(p => p.numeroParcela > ultimaParcelaProcessada.numeroParcela && p.status === 'Pendente')
+                                .sort((a,b) => a.numeroParcela - b.numeroParcela)[0];
+                            
+                            if (proximaParcela) {
+                                const proxParcelaRef = doc(db, 'parcelasCarne', proximaParcela.id);
+                                const novoPendente = proximaParcela.valorPendente + valorRestante; // Soma o débito
+                                batch.update(proxParcelaRef, { valorPendente: novoPendente });
+                            }
+                        }
+                    }
+
+                    // 8. Commit
+                    await batch.commit();
+
+                    showInfoModal("Sucesso", "Pagamento registrado com sucesso!");
+                    
+                    // 9. Gerar Recibo
+                    openReciboPagamentoModal(currentManagingParcelas, valorPagoInput, descontoInput, clienteId);
+                    
+                    hideModal(modalRealizarPagamento, pagamentoForm);
+                    hideModal(modalGerenciarCarne); // Fecha o modal principal também
+
+                } catch (error) {
+                    console.error("Erro ao registrar pagamento: ", error);
+                    showInfoModal('Erro', `Ocorreu um erro ao salvar o pagamento: ${error.message}`);
+                } finally {
+                    setSubmitLoading(false, submitPagamentoBtn, submitPagamentoBtnText, submitPagamentoSpinner);
+                }
+            }
+
+
+            // --- Modal: Histórico da Parcela ---
+            function openHistoricoModal(parcelaId, numeroParcela) {
+                historicoModalTitle.textContent = `Histórico da Parcela ${numeroParcela}`;
+                historicoModalContent.innerHTML = '<p class="text-gray-400">Carregando histórico...</p>';
+                
+                const pagamentos = allPagamentos
+                    .filter(p => p.parcelaCarneId === parcelaId)
+                    .sort((a, b) => a.dataPagamento - b.dataPagamento);
+                
+                if (pagamentos.length === 0) {
+                    historicoModalContent.innerHTML = '<p class="text-gray-400">Nenhum pagamento registrado para esta parcela.</p>';
+                } else {
+                    historicoModalContent.innerHTML = pagamentos.map(p => `
+                        <div class="bg-gray-700 p-3 rounded-lg">
+                            <div class="flex justify-between items-center">
+                                <!-- (CORREÇÃO 1) - Tipo 'Multa' não deve mais aparecer, mas o estilo é mantido -->
+                                <span class="font-semibold ${p.tipo === 'Pagamento' ? 'text-green-400' : (p.tipo === 'Multa' ? 'text-red-400' : (p.tipo === 'Desconto' ? 'text-yellow-400' : 'text-blue-400'))}">
+                                    ${p.tipo}
+                                </span>
+                                <span class="font-bold text-lg">${formatCurrency(p.valorPago)}</span>
+                            </div>
+                            <p class="text-sm text-gray-300">Data: ${formatDate(p.dataPagamento, true)}</p>
+                            ${p.observacao ? `<p class="text-xs text-gray-400 italic">Obs: ${p.observacao}</p>` : ''}
+                        </div>
+                    `).join('');
+                }
+                
+                showModal(modalHistoricoParcela);
+            }
+            closeHistoricoModalBtn.addEventListener('click', () => hideModal(modalHistoricoParcela));
+            closeHistoricoModalBtn2.addEventListener('click', () => hideModal(modalHistoricoParcela));
+            
+            // --- Lógica de Impressão ---
+            
+            // Impressão Canhotos (Aba 1 e Modal Gerenciar)
+            function openCanhotoModal(vendaId, vendaData, valorParcela, parcelas = null) {
+                const venda = vendaData || allVendasCarne.find(v => v.id === vendaId);
+                // Usa as parcelas passadas (se houver) ou busca no estado global
+                const parcelasDoCarne = parcelas || allParcelas.filter(p => p.vendaCarneId === vendaId);
+
+                if (!venda) return;
+                
+                printCanhotoContent.innerHTML = ''; // Limpa
+                
+                // Ordena as parcelas para garantir a ordem correta na impressão
+                parcelasDoCarne.sort((a, b) => a.numeroParcela - b.numeroParcela);
+                
+                const nTotalParcelasDoCarne = parcelasDoCarne.length; 
+
+                for(const parcela of parcelasDoCarne) {
+                    const dataVencimento = parcela ? formatDate(parcela.dataVencimento) : 'N/A';
+                    
+                    const canhoto = document.createElement('div');
+                    canhoto.className = 'canhoto-slip';
+                    canhoto.innerHTML = `
+                        <div class="canhoto-header">
+                            <div>
+                                <h3 style="font-family: 'Times New Roman', serif;">AURA PREMIUM</h3>
+                                <p style="font-size: 0.8rem;">Comprovante de Carnê</p>
+                            </div>
+                            <div style="text-align: right;">
+                                <p style="font-size: 0.8rem;">Parcela</p>
+                                <p style="font-size: 1.2rem; font-weight: bold;">${parcela.numeroParcela}/${nTotalParcelasDoCarne}</p> 
+                            </div>
+                        </div>
+                        <div class="canhoto-body">
+                            <p><strong>Cliente:</strong> ${venda.clienteNome}</p>
+                            <p><strong>Carnê:</strong> #${(venda.codigoCarne || 0).toString().padStart(6, '0')}</p> 
+                            <p><strong>Vencimento:</strong> ${dataVencimento}</p>
+                            <div class="valor">
+                                Valor: ${formatCurrency(parcela.valorOriginal)}
+                            </div>
+                        </div>
+                    `;
+                    printCanhotoContent.appendChild(canhoto);
+                }
+                showModal(modalImprimirCanhotos);
+            }
+            closeCanhotoModalBtn.addEventListener('click', () => hideModal(modalImprimirCanhotos));
+            printCanhotoBtn.addEventListener('click', () => window.print());
+            imprimirCanhotosBtn.addEventListener('click', () => {
+                openCanhotoModal(currentManagingVendaId);
+            });
+
+            // Impressão Recibo de Pagamento
+            function openReciboPagamentoModal(parcelasPagas, valorPago, desconto, clienteId) { // (CORREÇÃO 1)
+                const cliente = allClients.find(c => c.id === clienteId);
+                const numerosParcelas = parcelasPagas.map(p => p.numeroParcela).join(', ');
+                
+                const receiptHTML = `
+                    <div class="text-center p-2 receipt-logo">
+                        <h1 class="text-3xl font-bold text-black" style="font-family: 'Times New Roman', serif;">AURA</h1>
+                        <p class="text-lg font-light text-gray-800" style="letter-spacing: 0.15em;">PREMIUM</p>
+                    </div>
+                    <hr class="border-t-2 border-dashed border-black my-2">
+                    <div class="text-center text-xs">
+                        <p>COMPROVANTE DE PAGAMENTO</p>
+                        <p>${formatDate(new Date(), true)}</p>
+                    </div>
+                    <hr class="border-t-2 border-dashed border-black my-2">
+                    <div class="text-xs">
+                        <p><strong>CLIENTE:</strong> ${cliente?.nome || 'N/A'}</p>
+                        ${cliente && cliente.cpf ? `<p><strong>CPF:</strong> ${cliente.cpf}</p>` : ''}
+                    </div>
+                    <hr class="border-t-2 border-dashed border-black my-2">
+                    <div class="text-xs space-y-1">
+                        <p>Recebemos o valor de <strong>${formatCurrency(valorPago)}</strong> referente ao pagamento da(s) parcela(s) <strong>${numerosParcelas}</strong>.</p>
+                        ${desconto > 0 ? `
+                        <div class="flex justify-between">
+                            <span>Desconto Aplicado:</span>
+                            <span>${formatCurrency(desconto)}</span>
+                        </div>` : ''}
+                         <!-- (CORREÇÃO 1) - Bloco de Multas removido -->
+                        <div class="flex justify-between font-bold text-base border-t border-dashed border-black mt-1 pt-1">
+                            <span>VALOR PAGO:</span>
+                            <span>${formatCurrency(valorPago)}</span>
+                        </div>
+                    </div>
+                    <hr class="border-t-2 border-dashed border-black my-2">
+                    <div class="text-center text-xs mt-2">
+                        <p>Obrigado!</p>
+                    </div>
+                `;
+                
+                printReciboContent.innerHTML = receiptHTML;
+                showModal(modalReciboPagamento);
+            }
+            closeReciboModalBtn.addEventListener('click', () => hideModal(modalReciboPagamento));
+            printReciboBtn.addEventListener('click', () => window.print());
+
+            // ==========================================================
+            // --- LÓGICA DE AUTENTICAÇÃO E SYNC FIREBASE ---
+            // ==========================================================
+            
+            function showAuthMessage(message) {
+                authMessage.textContent = message;
+                authMessage.classList.remove('hidden');
+            }
+            loginForm.addEventListener('submit', async (e) => {
+                e.preventDefault();
+                setSubmitLoading(true, loginBtn, loginBtnText, loginSpinner);
+                authMessage.classList.add('hidden');
+                
+                const email = authEmail.value;
+                const password = authPassword.value;
+                
+                try {
+                    await signInWithEmailAndPassword(auth, email, password);
+                } catch (error) {
+                    console.error("Erro ao fazer login:", error);
+                    showAuthMessage("E-mail ou senha incorretos.");
+                } finally {
+                    setSubmitLoading(false, loginBtn, loginBtnText, loginSpinner);
+                }
+            });
+            
+            logoutBtn.addEventListener('click', async () => {
+                try {
+                    await signOut(auth);
+                } catch (error) {
+                    console.error("Erro ao sair:", error);
+                }
+            });
+            
+            onAuthStateChanged(auth, (user) => {
+                if (user) {
+                    authScreen.classList.add('hidden'); 
+                    appContainer.classList.remove('hidden'); 
+                    userName.textContent = `Olá, ${user.email}`;
+                    
+                    // Seta a data do 1º Vencimento para o dia seguinte por padrão
+                    const amanha = new Date();
+                    amanha.setDate(amanha.getDate() + 1);
+                    primeiroVencimento.value = formatDateForInput(amanha);
+
+                    if (!firebaseListenersAttached) {
+                        setupFirebaseListeners();
+                        firebaseListenersAttached = true;
+                    }
+
+function handleHashChange() {
+                    const hash = window.location.hash;
+                    console.log("Hash detectado:", hash);
+                    
+                    let tabToClick;
+                    if (hash === '#gerenciar') {
+                        tabToClick = document.getElementById('tab-aba2');
+                    } else {
+                        // O padrão é #novo ou qualquer outra coisa
+                        tabToClick = document.getElementById('tab-aba1');
+                    }
+
+                    if (tabToClick) {
+                        tabToClick.click();
+                    }
+                }
+                handleHashChange();
+                window.addEventListener('hashchange', handleHashChange);
+
+                } else {
+                    authScreen.classList.remove('hidden'); 
+                    appContainer.classList.add('hidden'); 
+                    userName.textContent = '';
+                    loginForm.reset();
+                    
+                    // Limpa dados locais ao deslogar
+                    allClients = [];
+                    allProducts = [];
+                    allVendasCarne = [];
+                    allParcelas = [];
+                    allPagamentos = [];
+                    currentCarneCode = 0; 
+                    firebaseListenersAttached = false; 
+                }
+            });
+
+            function setupFirebaseListeners() {
+                // Listener para Clientes
+                onSnapshot(query(clientsCollection), (snapshot) => {
+                    allClients = [];
+                    snapshot.forEach((doc) => allClients.push({ id: doc.id, ...doc.data() }));
+                    console.log(`Carregados ${allClients.length} clientes.`);
+                    // Se a Aba 2 estiver ativa, atualiza a lista
+                    if (!pageAba2.classList.contains('hidden')) {
+                        renderGerenciarAba();
+                    }
+                }, (error) => console.error("Erro ao carregar clientes: ", error));
+
+                // Listener para Produtos
+                onSnapshot(query(productsCollection), (snapshot) => {
+                    allProducts = [];
+                    snapshot.forEach((doc) => allProducts.push({ id: doc.id, ...doc.data() }));
+                    console.log(`Carregados ${allProducts.length} produtos.`);
+                }, (error) => console.error("Erro ao carregar produtos: ", error));
+
+                // Listener para VendasCarne 
+                onSnapshot(query(vendasCarneCollection), (snapshot) => {
+                    allVendasCarne = [];
+                    let maxCode = 0; 
+                    snapshot.forEach((doc) => {
+                        const data = doc.data();
+                        if (data.codigoCarne > maxCode) { 
+                            maxCode = data.codigoCarne;
+                        }
+                        allVendasCarne.push({ 
+                            id: doc.id, 
+                            ...data,
+                            // Converte timestamps
+                            dataVenda: data.dataVenda?.toDate(),
+                            primeiroVencimento: data.primeiroVencimento?.toDate()
+                        });
+                    });
+                    currentCarneCode = maxCode; 
+                    console.log(`Carregadas ${allVendasCarne.length} vendas de carnê. Próximo código: ${currentCarneCode + 1}`);
+                    if (!pageAba2.classList.contains('hidden')) {
+                        renderGerenciarAba();
+                    }
+                }, (error) => console.error("Erro ao carregar vendas carnê: ", error));
+
+                // Listener para ParcelasCarne
+                onSnapshot(query(parcelasCarneCollection), (snapshot) => {
+                    allParcelas = [];
+                    snapshot.forEach((doc) => {
+                        const data = doc.data();
+                        allParcelas.push({ 
+                            id: doc.id, 
+                            ...data,
+                            // Converte timestamp
+                            dataVencimento: data.dataVencimento?.toDate()
+                        });
+                    });
+                    console.log(`Carregadas ${allParcelas.length} parcelas.`);
+                    if (!pageAba2.classList.contains('hidden')) {
+                        renderGerenciarAba();
+                    }
+                }, (error) => console.error("Erro ao carregar parcelas: ", error));
+
+                // Listener para PagamentosHistorico
+                onSnapshot(query(pagamentosHistoricoCollection), (snapshot) => {
+                    allPagamentos = [];
+                    snapshot.forEach((doc) => {
+                         const data = doc.data();
+                        allPagamentos.push({ 
+                            id: doc.id, 
+                            ...data,
+                            // Converte timestamp
+                            dataPagamento: data.dataPagamento?.toDate()
+                        });
+                    });
+                    console.log(`Carregados ${allPagamentos.length} históricos de pagamento.`);
+                    // Atualiza a aba 2 se estiver aberta, pois o resumo financeiro pode mudar
+                    if (!pageAba2.classList.contains('hidden')) {
+                        renderGerenciarAba();
+                    }
+                }, (error) => console.error("Erro ao carregar históricos: ", error));
+            }
+        });
+    </script>
+</body>
+</html>
