@@ -1356,9 +1356,21 @@
                     });
                 });
 
+                // 3.5. Processar Saídas (Contas Pagas) no período (NOVA LÓGICA)
+                let totalSaidas = 0;
+                allContasPagar.forEach(conta => {
+                    if (conta.status === 'Paga' && conta.dataPagamento && 
+                        conta.dataPagamento >= startDate && conta.dataPagamento <= endDate) {
+                        
+                        totalSaidas += conta.valor;
+                    }
+                });
+
+
                 // 4. Renderizar Cards de Resumo
                 reportTotalFaturado.textContent = formatCurrency(totalFaturado);
-                reportTotalLucro.textContent = formatCurrency(totalRecebidoLiquido - totalCusto); 
+                // CORREÇÃO: Alterado para Valor Líquido (totalRecebidoLiquido) MENOS Saídas (totalSaidas)
+                reportTotalLucro.textContent = formatCurrency(totalRecebidoLiquido - totalSaidas); 
                 reportTotalVendas.textContent = totalVendas;
 
                 // 5. Renderizar Tabela de Produtos Mais Vendidos
