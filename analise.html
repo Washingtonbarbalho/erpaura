@@ -1,0 +1,1249 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Aura Premium - Análise de Crédito</title>
+    <!-- Carrega o Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Fonte Poppins -->
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap');
+        body {
+            font-family: 'Poppins', sans-serif;
+            background-color: #111827; /* bg-gray-900 */
+            color: #f3f4f6; /* text-gray-100 */
+            overflow-x: hidden;
+        }
+        /* Estilo para spinner de carregamento */
+        .spinner {
+            border: 4px solid rgba(255, 255, 255, .1);
+            border-left-color: #f59e0b; /* amber-500 */
+            border-radius: 50%;
+            width: 24px;
+            height: 24px;
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+        /* Classe para aba ativa (Menu Principal) */
+        .nav-active {
+            background-color: #374151; /* bg-gray-700 */
+            color: #f59e0b; /* amber-500 */
+            font-weight: 600;
+        }
+        /* Estilo para Inputs e Selects no tema escuro */
+        .form-input, .form-select, .form-textarea {
+            background-color: #374151; /* bg-gray-700 */
+            border: 1px solid #4b5563; /* border-gray-600 */
+            color: #f3f4f6; /* text-gray-100 */
+            border-radius: 0.5rem; /* rounded-lg */
+            padding: 0.5rem; /* p-2 */
+            width: 100%;
+        }
+        .form-input:focus, .form-select:focus, .form-textarea:focus {
+            outline: none;
+            border-color: #f59e0b; /* border-amber-500 */
+            box-shadow: 0 0 0 2px #f59e0b33;
+        }
+        .form-input[disabled], .form-select[disabled], .form-textarea[disabled] {
+            background-color: #4b5563; /* bg-gray-600 */
+            color: #9ca3af; /* text-gray-400 */
+            cursor: not-allowed;
+        }
+        
+        /* Estilo customizado para input date (calendário) */
+        .form-input[type="date"] {
+            color-scheme: dark;
+        }
+        /* Placeholder para inputs escuros */
+        .form-input::placeholder, .form-textarea::placeholder {
+            color: #9ca3af; /* text-gray-400 */
+        }
+        
+        /* Cor de fundo para Autocomplete do browser */
+        input:-webkit-autofill,
+        input:-webkit-autofill:hover, 
+        input:-webkit-autofill:focus, 
+        input:-webkit-autofill:active  {
+            -webkit-box-shadow: 0 0 0 30px #374151 inset !important; /* bg-gray-700 */
+            -webkit-text-fill-color: #f3f4f6 !important; /* text-gray-100 */
+        }
+        
+        /* Layout da página principal */
+        /* REMOVIDO: height: calc(100vh - 150px); */
+        
+        .client-list-item {
+            cursor: pointer;
+            padding: 0.75rem;
+            border-radius: 0.5rem;
+            transition: background-color 0.2s;
+            border: 1px solid #374151; /* border-gray-700 */
+        }
+        .client-list-item:hover {
+            background-color: #374151; /* bg-gray-700 */
+        }
+        .client-list-item.selected {
+            background-color: #4b5563; /* bg-gray-600 */
+            border-color: #f59e0b; /* border-amber-500 */
+            font-weight: 600;
+        }
+    </style>
+    <!-- Configuração do Firebase (IDÊNTICA AOS OUTROS SISTEMAS) -->
+    <script type="module">
+      // Usando a mesma configuração dos outros sistemas
+      import { initializeApp } from "https://www.gstatic.com/firebasejs/12.5.0/firebase-app.js";
+      import { 
+          getAuth, 
+          onAuthStateChanged, 
+          signInWithEmailAndPassword, 
+          signOut
+      } from "https://www.gstatic.com/firebasejs/12.5.0/firebase-auth.js";
+      import { 
+          getFirestore, 
+          collection, 
+          addDoc, 
+          onSnapshot, 
+          query, 
+          serverTimestamp, 
+          doc, 
+          updateDoc, 
+          deleteDoc, 
+          getDocs, 
+          getDoc, 
+          setDoc, // Adicionado setDoc para salvar/atualizar
+          where,
+          Timestamp 
+      } from "https://www.gstatic.com/firebasejs/12.5.0/firebase-firestore.js";
+      
+      // Configuração do Firebase (copiada do admin.html)
+      const firebaseConfig = {
+        apiKey: "AIzaSyC7_OEoz9p1TpLhQEFu9M7Nh3UtbBQbqNE",
+        authDomain: "sistema-de-vendas-17583.firebaseapp.com",
+        projectId: "sistema-de-vendas-17583",
+        storageBucket: "sistema-de-vendas-17583.firebasestorage.app",
+        messagingSenderId: "809093367439",
+        appId: "1:809093367439:web:bc03a5aae5a638735252fa"
+      };
+      // Inicializa Firebase
+      const app = initializeApp(firebaseConfig);
+      const db = getFirestore(app);
+      const auth = getAuth(app); 
+      // Disponibiliza no 'window' para o script principal
+      window.firebase = {
+          db,
+          auth, 
+          collection,
+          addDoc,
+          onSnapshot,
+          query,
+          serverTimestamp,
+          doc,
+          updateDoc,
+          deleteDoc,
+          getDocs,
+          getDoc, 
+          setDoc, // Exporta setDoc
+          where,
+          Timestamp, 
+          onAuthStateChanged,
+          signInWithEmailAndPassword,
+          signOut
+      };
+    </script>
+</head>
+<body class="bg-gray-900 text-gray-100">
+    <!-- ======================= -->
+    <!--     TELA DE LOGIN -->
+    <!-- ======================= -->
+    <div id="authScreen" class="flex items-center justify-center min-h-screen hidden">
+        <div class="bg-gray-800 p-8 rounded-lg shadow-xl w-full max-w-md border border-gray-700">
+            
+            <!-- Logo Aura Premium -->
+            <div class="text-center mb-8">
+                <h1 class="text-5xl font-bold text-amber-400" style="font-family: 'Times New Roman', serif;">AURA</h1>
+                <p class="text-2xl font-light text-gray-200" style="letter-spacing: 0.2em;">PREMIUM</p>
+                <p class="text-lg text-amber-400 mt-2">Análise de Crédito</p>
+            </div>
+            <!-- Mensagem de Erro -->
+            <div id="authMessage" class="hidden p-3 rounded-lg mb-4 text-sm bg-red-900 text-red-100"></div>
+            <!-- Formulário de Login (Email e Senha) -->
+            <form id="loginForm" class="space-y-4">
+                <div>
+                    <label for="authEmail" class="block text-sm font-medium text-gray-300 mb-1">E-mail</label>
+                    <input type="email" id="authEmail" class="form-input" required>
+                </div>
+                <div>
+                    <label for="authPassword" class="block text-sm font-medium text-gray-300 mb-1">Senha</label>
+                    <input type="password" id="authPassword" class="form-input" required>
+                </div>
+                <button id="loginBtn" type="submit" class="w-full bg-amber-500 text-black px-5 py-3 rounded-lg shadow-md hover:bg-amber-600 transition flex items-center justify-center font-semibold">
+                    <span id="loginBtnText">Entrar</span>
+                    <div id="loginSpinner" class="spinner hidden"></div>
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <!-- ======================= -->
+    <!--     CONTEÚDO PRINCIPAL (APP) -->
+    <!-- ======================= -->
+    <div id="appContainer" class="hidden"> <!-- Começa oculto -->
+        
+        <!-- Cabeçalho -->
+        <header class="bg-gray-800 shadow-md border-b border-gray-700 sticky top-0 z-40">
+            <div class="container mx-auto px-4 md:px-8 py-4 flex justify-between items-center">
+                <!-- Logo Aura Premium -->
+                <div class="flex items-center gap-3">
+                    <div>
+                        <h1 class="text-3xl font-bold text-amber-400" style="font-family: 'Times New Roman', serif;">AURA</h1>
+                        <p class="text-sm font-light text-gray-200" style="letter-spacing: 0.1em;">PREMIUM</p>
+                    </div>
+                    <span class="text-gray-500 text-xl">/</span>
+                    <span class="text-xl text-gray-300 font-light">Análise de Crédito</span>
+                </div>
+                <!-- Seção de Logout -->
+                <div class="flex items-center gap-4">
+                    <span id="userName" class="text-sm text-gray-300 hidden md:block"></span>
+                    <button id="logoutBtn" class="text-sm text-red-500 hover:text-red-400 font-medium flex items-center gap-1">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                          <path fill-rule="evenodd" d="M3 3a1 1 0 00-1 1v12a1 1 0 102 0V4a1 1 0 00-1-1zm10.293 9.293a1 1 0 001.414 1.414l3-3a1 1 0 000-1.414l-3-3a1 1 0 10-1.414 1.414L14.586 9H7a1 1 0 100 2h7.586l-1.293 1.293z" clip-rule="evenodd" />
+                        </svg>
+                        Sair
+                    </button>
+                </div>
+            </div>
+        </header>
+
+        <!-- Navegação Principal (Simplificada) -->
+        <nav class="bg-gray-800 border-b-2 border-amber-500">
+            <div class="container mx-auto px-4 md:px-8 flex space-x-4">
+                <button id="navClientes" class="main-nav-tab py-3 px-5 text-sm font-medium text-gray-300 hover:text-amber-400 nav-active">
+                    Clientes
+                </button>
+            </div>
+        </nav>
+
+        <!-- Página Principal (Layout de 3 Colunas) -->
+        <main class="container mx-auto p-4 md:p-8">
+            <!-- Layout alterado: removida a classe 'main-layout' e a altura fixa. -->
+            <!-- Layout alterado: de lg:grid-cols-4 para lg:grid-cols-3 para melhor fluxo -->
+            <div id="pageClientes" class="app-page grid grid-cols-1 lg:grid-cols-3 gap-6">
+                
+                <!-- Coluna 1: Lista de Clientes -->
+                <div class="lg:col-span-1 bg-gray-800 p-4 rounded-lg shadow-md border border-gray-700 min-h-[70vh] flex flex-col">
+                    <h2 class="text-xl font-bold text-gray-100 mb-4">Clientes</h2>
+                    <div class="mb-4">
+                        <label for="searchClientes" class="block text-sm font-medium text-gray-300 mb-1">Buscar (Nome ou CPF)</label>
+                        <input type="search" id="searchClientes" class="form-input" placeholder="Buscar...">
+                    </div>
+                    <div id="clientListContainer" class="flex-1 overflow-y-auto space-y-2 pr-1">
+                        <p id="loadingMessageClientes" class="text-center text-gray-400">Carregando...</p>
+                        <!-- Itens da lista de clientes são injetados aqui -->
+                    </div>
+                </div>
+
+                <!-- Painel de Boas-Vindas (Default) -->
+                <!-- ESTE BLOCO FOI RE-ADICIONADO PARA CORRIGIR O ERRO 'null' -->
+                <div id="welcomePanel" class="lg:col-span-2 flex items-center justify-center min-h-[70vh] text-center text-gray-400">
+                    <h3 class="text-2xl">Selecione um cliente à esquerda<br>para iniciar a análise.</h3>
+                </div>
+
+                <!-- Painel de Análise (Oculto por padrão) - Alterado para Coluna Única -->
+                <div id="analysisPanel" class="hidden lg:col-span-2 grid grid-cols-1 gap-6">
+                    
+                    <!-- Coluna 2 & 3 combinadas: GATILHO E RESULTADOS -->
+                    <div class="col-span-1 space-y-6">
+                        
+                        <!-- NOVO Bloco de Gatilho para o Modal -->
+                        <div class="bg-gray-800 p-6 rounded-lg shadow-md border border-gray-700">
+                            <h3 class="text-xl font-semibold text-amber-400 mb-4">Dados do Cliente</h3>
+                            <p class="text-gray-300 mb-4">Clique no botão abaixo para preencher ou atualizar as informações de análise de crédito do cliente selecionado.</p>
+                            <button id="openCreditoModalBtn" class="w-full bg-blue-600 text-white px-5 py-3 rounded-lg shadow-md hover:bg-blue-700 font-semibold text-lg flex items-center justify-center gap-2">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                                  <path d="M17.414 2.586a2 2 0 00-2.828 0L7 10.172V13h2.828l7.586-7.586a2 2 0 000-2.828z" />
+                                  <path fill-rule="evenodd" d="M2 6a2 2 0 012-2h4a1 1 0 010 2H4v10h10v-4a1 1 0 112 0v4a2 2 0 01-2 2H4a2 2 0 01-2-2V6z" clip-rule="evenodd" />
+                                </svg>
+                                Ver / Editar Informações de Análise
+                            </button>
+                        </div>
+
+                        <!-- Seção 2: Histórico Interno (Read-Only) -->
+                        <div class="bg-gray-800 p-6 rounded-lg shadow-md border border-gray-700">
+                            <h3 class="text-xl font-semibold text-amber-400 mb-4">Histórico na Loja (Carnês)</h3>
+                            <!-- Alterado para 5 colunas para incluir "Total em Aberto" -->
+                            <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-3 xl:grid-cols-5 gap-4 text-center">
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-400">Carnês</label>
+                                    <p id="histCarnes" class="text-2xl font-bold text-gray-100">0</p>
+                                </div>
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-400">Total Financiado</label>
+                                    <p id="histTotal" class="text-2xl font-bold text-gray-100">R$ 0,00</p>
+                                </div>
+                                <!-- NOVO CAMPO: Total em Aberto -->
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-400">Total em Aberto</label>
+                                    <p id="histEmAberto" class="text-2xl font-bold text-yellow-400">R$ 0,00</p>
+                                </div>
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-400">Pagas (Dia)</label>
+                                    <p id="histPagasDia" class="text-2xl font-bold text-green-400">0</p>
+                                </div>
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-400">Pagas (Atraso)</label>
+                                    <p id="histAtrasadas" class="text-2xl font-bold text-red-500">0</p>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Seção 4: Análise e Limite -->
+                        <div class="bg-gray-800 p-6 rounded-lg shadow-md border border-gray-700 space-y-4">
+                            <h3 class="text-xl font-semibold text-amber-400 mb-4">Análise de Crédito</h3>
+                            
+                            <button id="runAnalysisBtn" class_="w-full bg-gray-600 text-white px-5 py-3 rounded-lg shadow-md hover:bg-gray-700 font-semibold text-lg">
+                                Rodar Análise Automática
+                            </button>
+
+                            <div id="analysisResult" class="hidden space-y-4">
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-400">Justificativa da Análise</label>
+                                    <p id="analysisJustificativa" class="text-sm text-gray-300 bg-gray-700 p-3 rounded-lg"></p>
+                                </div>
+                                <div class="text-center">
+                                    <label class="block text-sm font-medium text-gray-400">Limite Total Sugerido</dlabel>
+                                    <p id="analysisLimiteSugerido" class="text-4xl font-bold text-green-400">R$ 0,00</p>
+                                </div>
+                                <!-- NOVO CAMPO: Limite Disponível (Automático) -->
+                                <div class="text-center">
+                                    <label class="block text-sm font-medium text-gray-400">Limite Disponível (Sugerido)</label>
+                                    <p id="analysisLimiteDisponivel" class="text-2xl font-bold text-blue-400">R$ 0,00</p>
+                                </div>
+                            </div>
+                            
+                            <hr class="border-gray-700">
+
+                            <!-- Aprovação Manual -->
+                            <div class="space-y-2">
+                                <label for="limiteManual" class="block text-sm font-medium text-gray-300 mb-1">Definir Limite Aprovado (R$)</label>
+                                <input type="text" id="limiteManual" class="form-input text-lg" placeholder="R$ 0,00">
+                                <input type="hidden" id="limiteManualNumeric">
+                            </div>
+                            <!-- NOVO BLOCO: Cálculo de Limite Disponível Manual -->
+                            <div class="text-center my-4 p-4 bg-gray-700 rounded-lg space-y-2">
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-400">Total em Aberto (Atual)</label>
+                                    <p id="manualTotalEmAberto" class="text-lg font-bold text-yellow-400">R$ 0,00</p>
+                                </div>
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-400">Limite Disponível (Calculado)</label>
+                                    <p id="manualLimiteDisponivel" class="text-2xl font-bold text-blue-400">R$ 0,00</p>
+                                </div>
+                            </div>
+                            <!-- FIM NOVO BLOCO -->
+                            <div class="flex justify-end">
+                                <button id="saveLimiteBtn" type="button" class="w-full md:w-auto bg-amber-500 text-black px-5 py-3 rounded-lg shadow-md hover:bg-amber-600 font-semibold flex items-center justify-center text-lg">
+                                    <span id="saveLimiteBtnText">Aprovar e Salvar Limite</span>
+                                    <div id="saveLimiteSpinner" class="spinner hidden"></div>
+                                </button>
+                            </div>
+
+                        </div>
+
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- ================================== -->
+    <!--    MODAL DE INFORMAÇÃO (AVISO)     -->
+    <!-- ================================== -->
+    <div id="infoModal" class="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center p-4 hidden z-50">
+        <div class="bg-gray-800 p-6 rounded-lg shadow-xl w-full max-w-sm border border-gray-700">
+            <h2 id="infoModalTitle" class="text-xl font-bold text-amber-400 mb-4">Aviso</h2>
+            <p id="infoModalText" class="text-gray-300 mb-6"></p>
+            <div class="flex justify-end">
+                <button id="closeInfoModalBtn" class="bg-amber-500 text-black px-5 py-2 rounded-lg shadow-md hover:bg-amber-600 font-semibold">
+                    Entendido
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ================================== -->
+    <!--    NOVO MODAL DE INFORMAÇÕES DE CRÉDITO   -->
+    <!-- ================================== -->
+    <div id="creditoFormModal" class="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center p-4 hidden z-40">
+        <div class="bg-gray-800 p-6 rounded-lg shadow-xl w-full max-w-3xl border border-gray-700 flex flex-col max-h-[90vh]">
+            <!-- Cabeçalho do Modal -->
+            <div class="flex justify-between items-center mb-4 pb-4 border-b border-gray-700">
+                <h2 class="text-xl font-bold text-amber-400">Informações de Análise de Crédito</h2>
+                <button id="closeCreditoModalBtn" class="text-gray-400 hover:text-white text-3xl leading-none">&times;</button>
+            </div>
+            
+            <!-- Conteúdo Rolável do Modal -->
+            <div class="overflow-y-auto pr-2 space-y-6">
+                
+                <!-- Seção 1: Informações Básicas (Read-Only) - MOVIDO PARA CÁ -->
+                <div class="bg-gray-700 p-6 rounded-lg shadow-md border border-gray-600">
+                    <h3 class="text-xl font-semibold text-amber-400 mb-4">Informações Básicas</h3>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-400">Nome</label>
+                            <p id="infoNome" class="text-lg text-gray-100">-</p>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-400">CPF</label>
+                            <p id="infoCPF" class="text-lg text-gray-100">-</p>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-400">Telefone</label>
+                            <p id="infoTelefone" class="text-lg text-gray-100">-</p>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-400">Cliente Desde</label>
+                            <p id="infoClienteDesde" class="text-lg text-gray-100">-</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Seção 3: Informações Adicionais (Formulário) - MOVIDO PARA CÁ -->
+                <form id="creditoForm" class="bg-gray-700 p-6 rounded-lg shadow-md border border-gray-600 space-y-4">
+                    <h3 class="text-xl font-semibold text-amber-400 mb-4">Informações Adicionais (Análise)</h3>
+                    
+                    <!-- Profissionais -->
+                    <fieldset class="border border-gray-600 p-4 rounded-lg">
+                        <legend class="text-md font-semibold text-gray-300 px-2">Profissionais</legend>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div>
+                                <label for="credEmprego" class="block text-sm font-medium text-gray-300 mb-1">Emprego Atual</label>
+                                <input type="text" id="credEmprego" class="form-input" placeholder="Ex: Vendedor(a)">
+                            </div>
+                            <div>
+                                <label for="credTempo" class="block text-sm font-medium text-gray-300 mb-1">Tempo (meses)</label>
+                                <input type="number" id="credTempo" class="form-input" placeholder="Ex: 12">
+                            </div>
+                            <div>
+                                <label for="credTipoRenda" class="block text-sm font-medium text-gray-300 mb-1">Tipo de Renda</label>
+                                <select id="credTipoRenda" class="form-select">
+                                    <option value="">Não informado</option>
+                                    <option value="Fixo (CLT)">Fixo (CLT)</option>
+                                    <option value="Variável">Variável (Comissão, etc)</option>
+                                    <option value="Autônomo">Autônomo</option>
+                                    <option value="Aposentado/Pensionista">Aposentado/Pensionista</option>
+                                    <option value="Outro">Outro</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label for="credRenda" class="block text-sm font-medium text-gray-300 mb-1">Renda Atual (R$)</label>
+                                <input type="text" id="credRenda" class="form-input" placeholder="R$ 0,00">
+                                <input type="hidden" id="credRendaNumeric">
+                            </div>
+                        </div>
+                    </fieldset>
+
+                    <!-- Comerciais -->
+                    <fieldset class="border border-gray-600 p-4 rounded-lg">
+                        <legend class="text-md font-semibold text-gray-300 px-2">Comerciais (Outras Lojas)</legend>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div>
+                                <label for="credCompraFora" class="block text-sm font-medium text-gray-300 mb-1">Compra no Carnê Fora?</label>
+                                <select id="credCompraFora" class="form-select">
+                                    <option value="">Não informado</option>
+                                    <option value="Sim">Sim</option>
+                                    <option value="Não">Não</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label for="credPagaDiaFora" class="block text-sm font-medium text-gray-300 mb-1">Paga em dia?</label>
+                                <select id="credPagaDiaFora" class="form-select">
+                                    <option value="">Não informado</option>
+                                    <option value="Sim">Sim</option>
+                                    <option value="Não">Não</option>
+                                </select>
+                            </div>
+                            <div class="md:col-span-2">
+                                <label for="credInfoLojas" class="block text-sm font-medium text-gray-300 mb-1">Info (Lojas, Compras, etc)</label>
+                                <textarea id="credInfoLojas" rows="3" class="form-textarea" placeholder="Ex: Compra na Loja X, maior compra R$ 500..."></textarea>
+                            </div>
+                        </div>
+                    </fieldset>
+
+                    <!-- Restrições -->
+                    <fieldset class="border border-gray-600 p-4 rounded-lg">
+                        <legend class="text-md font-semibold text-gray-300 px-2">Restrições (Manual)</legend>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div class="flex items-center space-x-6">
+                                <div class="flex items-center gap-2">
+                                    <input type="checkbox" id="credSPC" class="h-4 w-4 rounded bg-gray-700 border-gray-600 text-amber-500 focus:ring-amber-400">
+                                    <label for="credSPC" class="text-sm font-medium text-gray-300">SPC</label>
+                                </div>
+                                <div class="flex items-center gap-2">
+                                    <input type="checkbox" id="credSerasa" class="h-4 w-4 rounded bg-gray-700 border-gray-600 text-amber-500 focus:ring-amber-400">
+                                    <label for="credSerasa" class="text-sm font-medium text-gray-300">Serasa</label>
+                                </div>
+                            </div>
+                            <div>
+                                <label for="credRestTempo" class="block text-sm font-medium text-gray-300 mb-1">Tempo Restrição (meses)</label>
+                                <input type="number" id="credRestTempo" class="form-input" placeholder="Ex: 6">
+                            </div>
+                            <div class="md:col-span-2">
+                                <label for="credRestValor" class="block text-sm font-medium text-gray-300 mb-1">Valor Total (R$)</label>
+                                <input type="text" id="credRestValor" class="form-input" placeholder="R$ 0,00">
+                                <input type="hidden" id="credRestValorNumeric">
+                            </div>
+                        </div>
+                    </fieldset>
+                    
+                    <div class="flex justify-end pt-2">
+                        <button id="saveCreditoInfoBtn" type="submit" class="bg-blue-600 text-white px-5 py-2 rounded-lg shadow-md hover:bg-blue-700 font-semibold flex items-center justify-center">
+                            <span id="saveCreditoInfoBtnText">Salvar Informações</span>
+                            <div id="saveCreditoInfoSpinner" class="spinner hidden"></div>
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+
+    <script type="module">
+        document.addEventListener('DOMContentLoaded', () => {
+            
+            // --- Acesso ao Firebase (disponibilizado via 'window') ---
+            const { 
+                db, auth, collection, onSnapshot, query,
+                doc, setDoc, // Usaremos setDoc para salvar com ID específico
+                where, Timestamp,
+                onAuthStateChanged, signInWithEmailAndPassword, signOut
+            } = window.firebase;
+            
+            // --- REFERÊNCIAS DE COLEÇÃO ---
+            // Coleções existentes
+            const clientsCollection = collection(db, "clientes");
+            const vendasCarneCollection = collection(db, "vendasCarne");
+            const parcelasCarneCollection = collection(db, "parcelasCarne");
+            const pagamentosHistoricoCollection = collection(db, "pagamentosHistorico");
+            
+            // *** NOVA COLEÇÃO ***
+            // Armazena as informações de crédito. O ID do documento será o ID do cliente.
+            const clientesCreditoCollection = collection(db, "clientesCredito");
+
+            // --- Estado Global da Aplicação ---
+            let allClients = [];
+            let allVendasCarne = [];
+            let allParcelas = [];
+            let allPagamentos = [];
+            let allClientesCredito = [];
+            
+            let firebaseListenersAttached = false; 
+            let currentUser = null; 
+            let currentSelectedClientId = null;
+            
+            // --- Seletores do DOM (Auth) ---
+            const authScreen = document.getElementById('authScreen');
+            const authMessage = document.getElementById('authMessage');
+            const loginForm = document.getElementById('loginForm');
+            const authEmail = document.getElementById('authEmail');
+            const authPassword = document.getElementById('authPassword');
+            const loginBtn = document.getElementById('loginBtn');
+            const loginBtnText = document.getElementById('loginBtnText');
+            const loginSpinner = document.getElementById('loginSpinner');
+            const logoutBtn = document.getElementById('logoutBtn');
+            const userName = document.getElementById('userName');
+
+            // --- Seletores do DOM (App) ---
+            const appContainer = document.getElementById('appContainer');
+            const navClientes = document.getElementById('navClientes');
+            
+            // --- Seletores (Página) ---
+            const pageClientes = document.getElementById('pageClientes');
+            const searchClientes = document.getElementById('searchClientes');
+            const clientListContainer = document.getElementById('clientListContainer');
+            const loadingMessageClientes = document.getElementById('loadingMessageClientes');
+            const welcomePanel = document.getElementById('welcomePanel');
+            const analysisPanel = document.getElementById('analysisPanel');
+            const openCreditoModalBtn = document.getElementById('openCreditoModalBtn'); // NOVO Seletor
+
+            // --- Seletores (Painel - Seção 1) ---
+            const infoNome = document.getElementById('infoNome');
+            const infoCPF = document.getElementById('infoCPF');
+            const infoTelefone = document.getElementById('infoTelefone');
+            const infoClienteDesde = document.getElementById('infoClienteDesde');
+
+            // --- Seletores (Painel - Seção 2) ---
+            const histCarnes = document.getElementById('histCarnes');
+            const histTotal = document.getElementById('histTotal');
+            const histPagasDia = document.getElementById('histPagasDia');
+            const histAtrasadas = document.getElementById('histAtrasadas');
+            const histEmAberto = document.getElementById('histEmAberto'); // Novo Seletor
+            
+            // --- Seletores (Painel - Seção 3) ---
+            const creditoForm = document.getElementById('creditoForm');
+            const credEmprego = document.getElementById('credEmprego');
+            const credTempo = document.getElementById('credTempo');
+            const credTipoRenda = document.getElementById('credTipoRenda');
+            const credRenda = document.getElementById('credRenda');
+            const credRendaNumeric = document.getElementById('credRendaNumeric');
+            const credCompraFora = document.getElementById('credCompraFora');
+            const credPagaDiaFora = document.getElementById('credPagaDiaFora');
+            const credInfoLojas = document.getElementById('credInfoLojas');
+            const credSPC = document.getElementById('credSPC');
+            const credSerasa = document.getElementById('credSerasa');
+            const credRestTempo = document.getElementById('credRestTempo');
+            const credRestValor = document.getElementById('credRestValor');
+            const credRestValorNumeric = document.getElementById('credRestValorNumeric');
+            const saveCreditoInfoBtn = document.getElementById('saveCreditoInfoBtn');
+            const saveCreditoInfoBtnText = document.getElementById('saveCreditoInfoBtnText');
+            const saveCreditoInfoSpinner = document.getElementById('saveCreditoInfoSpinner');
+
+            // --- Seletores (Painel - Seção 4) ---
+            const runAnalysisBtn = document.getElementById('runAnalysisBtn');
+            const analysisResult = document.getElementById('analysisResult');
+            const analysisJustificativa = document.getElementById('analysisJustificativa');
+            const analysisLimiteSugerido = document.getElementById('analysisLimiteSugerido');
+            const analysisLimiteDisponivel = document.getElementById('analysisLimiteDisponivel'); // Novo Seletor
+            const limiteManual = document.getElementById('limiteManual');
+            const limiteManualNumeric = document.getElementById('limiteManualNumeric');
+            const manualTotalEmAberto = document.getElementById('manualTotalEmAberto'); // Novo Seletor
+            const manualLimiteDisponivel = document.getElementById('manualLimiteDisponivel'); // Novo Seletor
+            const saveLimiteBtn = document.getElementById('saveLimiteBtn');
+            const saveLimiteBtnText = document.getElementById('saveLimiteBtnText');
+            const saveLimiteSpinner = document.getElementById('saveLimiteSpinner');
+
+            // --- Seletores (Modais Genéricos) ---
+            const infoModal = document.getElementById('infoModal');
+            const infoModalTitle = document.getElementById('infoModalTitle');
+            const infoModalText = document.getElementById('infoModalText');
+            const closeInfoModalBtn = document.getElementById('closeInfoModalBtn');
+            
+            // --- NOVO Seletores (Modal Crédito) ---
+            const creditoFormModal = document.getElementById('creditoFormModal');
+            const closeCreditoModalBtn = document.getElementById('closeCreditoModalBtn');
+            
+
+            // ==========================================================
+            
+            // --- Funções de Máscara ---
+            function maskCurrency(input, hiddenInput) {
+                let value = input.value.replace(/\D/g, '');
+                // Limita para não bugar com valores astronômicos
+                if (value.length > 10) value = value.substring(0, 10);
+                
+                hiddenInput.value = (Number(value) / 100).toFixed(2); 
+                
+                let num = (Number(value) / 100).toLocaleString('pt-BR', {
+                    style: 'currency',
+                    currency: 'BRL'
+                });
+                
+                input.value = num;
+            }
+            
+            // Listeners das máscaras
+            credRenda.addEventListener('input', () => maskCurrency(credRenda, credRendaNumeric));
+            credRestValor.addEventListener('input', () => maskCurrency(credRestValor, credRestValorNumeric));
+            
+            // Listener da máscara de limite manual ATUALIZADO
+            limiteManual.addEventListener('input', () => {
+                maskCurrency(limiteManual, limiteManualNumeric);
+                // Recalcula disponível imediatamente
+                if (currentSelectedClientId) {
+                    const limiteAprovado = parseFloat(limiteManualNumeric.value) || 0;
+                    const totalEmAberto = calculateOutstandingBalance(currentSelectedClientId);
+                    manualLimiteDisponivel.textContent = formatCurrency(Math.max(0, limiteAprovado - totalEmAberto));
+                }
+            });
+
+            // --- Funções de Formatação ---
+            function formatCurrency(value) {
+                const numValue = Number(value) || 0;
+                return numValue.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+            }
+            
+            function formatDate(date) {
+                if (!date) return 'Data inválida';
+                
+                let jsDate;
+                if (date.toDate) { // Objeto Timestamp do Firebase
+                    jsDate = date.toDate();
+                } else if (date instanceof Timestamp) { 
+                    jsDate = date.toDate();
+                } else if (!(date instanceof Date)) { 
+                    jsDate = new Date(date);
+                } else {
+                    jsDate = date;
+                }
+                if (isNaN(jsDate.getTime())) {
+                    return "Data inválida";
+                }
+                
+                return jsDate.toLocaleString('pt-BR', {
+                    day: '2-digit', month: '2-digit', year: 'numeric'
+                });
+            }
+            
+            // --- Funções de Modal Genéricas ---
+            function showModal(modalElement) {
+                modalElement.classList.remove('hidden');
+            }
+            function hideModal(modalElement) {
+                modalElement.classList.add('hidden');
+            }
+            
+            function showInfoModal(title, text) {
+                infoModalTitle.textContent = title;
+                infoModalText.textContent = text;
+                showModal(infoModal);
+            }
+            closeInfoModalBtn.addEventListener('click', () => hideModal(infoModal));
+            
+            // --- NOVO Listeners (Modal Crédito) ---
+            openCreditoModalBtn.addEventListener('click', () => showModal(creditoFormModal));
+            closeCreditoModalBtn.addEventListener('click', () => hideModal(creditoFormModal));
+
+            // --- Funções de Loading ---
+            function setSubmitLoading(isLoading, btn, btnText, spinner) {
+                if (isLoading) {
+                    btn.disabled = true;
+                    btnText.classList.add('hidden');
+                    spinner.classList.remove('hidden');
+                } else {
+                    btn.disabled = false;
+                    btnText.classList.remove('hidden');
+                    spinner.classList.add('hidden');
+                }
+            }
+            
+            // ==========================================================
+            // --- LÓGICA PRINCIPAL DA PÁGINA ---
+            // ==========================================================
+
+            // --- 1. Renderizar Lista de Clientes (Coluna Esquerda) ---
+            searchClientes.addEventListener('input', renderClientList);
+
+            function renderClientList() {
+                clientListContainer.innerHTML = '';
+                const query = searchClientes.value.toLowerCase().trim();
+                const queryCPF = query.replace(/\D/g, '');
+
+                let filteredClients = allClients;
+
+                if (query) {
+                    filteredClients = allClients.filter(client => {
+                        const nomeMatch = client.nome ? client.nome.toLowerCase().includes(query) : false;
+                        const cpfMatch = client.cpf && queryCPF.length > 0 ? client.cpf.replace(/\D/g, '').includes(queryCPF) : false;
+                        return nomeMatch || cpfMatch;
+                    });
+                }
+
+                if (filteredClients.length === 0) {
+                    loadingMessageClientes.textContent = query ? "Nenhum cliente encontrado." : "Nenhum cliente cadastrado.";
+                    clientListContainer.appendChild(loadingMessageClientes);
+                    return;
+                }
+                
+                // Ordena por nome
+                filteredClients.sort((a,b) => a.nome.localeCompare(b.nome));
+
+                filteredClients.forEach(client => {
+                    const div = document.createElement('div');
+                    div.className = 'client-list-item';
+                    div.textContent = client.nome;
+                    div.dataset.clientId = client.id;
+                    
+                    if (client.id === currentSelectedClientId) {
+                        div.classList.add('selected');
+                    }
+
+                    div.addEventListener('click', () => {
+                        // Remove 'selected' de todos
+                        clientListContainer.querySelectorAll('.client-list-item').forEach(item => {
+                            item.classList.remove('selected');
+                        });
+                        // Adiciona 'selected' ao clicado
+                        div.classList.add('selected');
+                        
+                        showClientAnalysis(client.id);
+                    });
+                    clientListContainer.appendChild(div);
+                });
+            }
+
+            // --- 2. Mostrar Painel de Análise (Coluna Direita) ---
+            function showClientAnalysis(clientId) {
+                currentSelectedClientId = clientId;
+                
+                // Agora o 'welcomePanel' existe novamente, então esta lógica funciona
+                if (welcomePanel) {
+                    welcomePanel.classList.add('hidden');
+                }
+                if (analysisPanel) {
+                    analysisPanel.classList.remove('hidden');
+                    analysisPanel.classList.add('grid');
+                }
+
+                const client = allClients.find(c => c.id === clientId);
+                // O ID do 'clienteCredito' é O MESMO ID do 'cliente'
+                const credito = allClientesCredito.find(cc => cc.id === clientId) || {};
+                const historico = calculateInternalHistory(clientId);
+
+                // --- Seção 1: Infos Básicas ---
+                infoNome.textContent = client.nome || '-';
+                infoCPF.textContent = client.cpf || '-';
+                infoTelefone.textContent = client.telefone || '-';
+                infoClienteDesde.textContent = client.createdAt ? formatDate(client.createdAt) : '-';
+                
+                // --- Seção 2: Histórico Interno ---
+                histCarnes.textContent = historico.totalCarnes;
+                histTotal.textContent = formatCurrency(historico.totalFinanciado);
+                histEmAberto.textContent = formatCurrency(historico.totalEmAberto); // NOVO
+                histPagasDia.textContent = historico.pagasEmDia;
+                histAtrasadas.textContent = historico.atrasadas;
+
+                // --- Seção 3: Form Adicional ---
+                credEmprego.value = credito.empregoAtual || '';
+                credTempo.value = credito.tempoTrabalhoMeses || '';
+                credTipoRenda.value = credito.tipoRenda || '';
+                
+                credRendaNumeric.value = credito.rendaAtual || 0;
+                credRenda.value = formatCurrency(credito.rendaAtual || 0);
+                
+                credCompraFora.value = credito.compraCarneOutrasLojas || '';
+                credPagaDiaFora.value = credito.pagaEmDiasOutrasLojas || '';
+                credInfoLojas.value = credito.infoLojas || '';
+                
+                credSPC.checked = credito.restricaoSPC || false;
+                credSerasa.checked = credito.restricaoSerasa || false;
+                credRestTempo.value = credito.restricaoTempoMeses || '';
+                
+                credRestValorNumeric.value = credito.restricaoValor || 0;
+                credRestValor.value = formatCurrency(credito.restricaoValor || 0);
+
+                // --- Seção 4: Análise e Limite ---
+                analysisResult.classList.add('hidden'); // Esconde resultado anterior
+                analysisJustificativa.textContent = '';
+                analysisLimiteSugerido.textContent = 'R$ 0,00';
+                analysisLimiteDisponivel.textContent = 'R$ 0,00'; // NOVO
+                
+                // Preenche o limite manual com o valor já salvo (se existir)
+                const limiteAprovadoAtual = credito.limiteAprovado || 0;
+                limiteManualNumeric.value = limiteAprovadoAtual;
+                limiteManual.value = formatCurrency(limiteAprovadoAtual);
+                
+                // Preenche os campos de cálculo manual
+                manualTotalEmAberto.textContent = formatCurrency(historico.totalEmAberto);
+                manualLimiteDisponivel.textContent = formatCurrency(Math.max(0, limiteAprovadoAtual - historico.totalEmAberto));
+            }
+
+            // --- 3. Calcular Histórico Interno (Helper) ---
+            function calculateInternalHistory(clientId) {
+                const vendas = allVendasCarne.filter(v => v.clienteId === clientId);
+                const parcelas = allParcelas.filter(p => p.clienteId === clientId);
+                const pagamentos = allPagamentos.filter(p => p.clienteId === clientId);
+
+                let totalFinanciado = 0;
+                let pagasEmDia = 0;
+                let atrasadas = 0;
+                const hoje = new Date();
+                hoje.setHours(0, 0, 0, 0);
+
+                vendas.forEach(v => {
+                    // Total financiado = Valor total - entrada
+                    totalFinanciado += (v.valorTotal || 0) - (v.valorEntrada || 0);
+                });
+
+                parcelas.forEach(p => {
+                    if (p.status === 'Pendente' && p.dataVencimento < hoje) {
+                        atrasadas++;
+                    } else if (p.status === 'Paga') {
+                        // Verifica se foi paga em dia
+                        
+                        // --- CORREÇÃO DO ERRO ---
+                        // 1. Filtra os pagamentos SÓ desta parcela
+                        const pagamentosDaParcela = allPagamentos.filter(pag => pag.parcelaCarneId === p.id && pag.tipo === 'Pagamento');
+                        
+                        // 2. Busca o último pagamento (com a variável correta)
+                        const ultimoPagamento = pagamentosDaParcela.sort((a,b) => b.dataPagamento - a.dataPagamento)[0];
+                        // --- FIM DA CORREÇÃO ---
+                        
+                        if (ultimoPagamento) {
+                            // Compara data do pagamento com data de vencimento
+                            const dataPagamento = ultimoPagamento.dataPagamento; // Já é Date
+                            const dataVencimento = p.dataVencimento; // Já é Date
+                            
+                            if (dataPagamento <= dataVencimento) {
+                                pagasEmDia++;
+                            } else {
+                                // Pagou, mas pagou atrasado (não contamos em 'atrasadas' pois já foi pago)
+                            }
+                        }
+                    }
+                });
+
+                // NOVO: Chamar cálculo de saldo devedor
+                const totalEmAberto = calculateOutstandingBalance(clientId);
+
+                return {
+                    totalCarnes: vendas.length,
+                    totalFinanciado: totalFinanciado,
+                    pagasEmDia: pagasEmDia,
+                    atrasadas: atrasadas, // Pendentes e vencidas
+                    totalEmAberto: totalEmAberto // Soma R$ de pendentes (vencidas ou não)
+                };
+            }
+
+            // --- 3b. NOVO Helper: Calcular Saldo Devedor ---
+            function calculateOutstandingBalance(clientId) {
+                if (!clientId) return 0;
+                
+                const parcelasPendentes = allParcelas.filter(p => 
+                    p.clienteId === clientId && 
+                    p.status === 'Pendente'
+                );
+                
+                const totalDevido = parcelasPendentes.reduce((sum, p) => sum + (p.valor || 0), 0);
+                return totalDevido;
+            }
+
+            // --- 4. Salvar Informações Adicionais (Form Seção 3) ---
+            creditoForm.addEventListener('submit', async (e) => {
+                e.preventDefault();
+                if (!currentSelectedClientId) return;
+                
+                setSubmitLoading(true, saveCreditoInfoBtn, saveCreditoInfoBtnText, saveCreditoInfoSpinner);
+
+                const data = {
+                    // Profissionais
+                    empregoAtual: credEmprego.value || null,
+                    tempoTrabalhoMeses: parseInt(credTempo.value) || 0,
+                    tipoRenda: credTipoRenda.value || null,
+                    rendaAtual: parseFloat(credRendaNumeric.value) || 0,
+                    // Comerciais
+                    compraCarneOutrasLojas: credCompraFora.value || null,
+                    pagaEmDiasOutrasLojas: credPagaDiaFora.value || null,
+                    infoLojas: credInfoLojas.value || null,
+                    // Restrições
+                    restricaoSPC: credSPC.checked,
+                    restricaoSerasa: credSerasa.checked,
+                    restricaoTempoMeses: parseInt(credRestTempo.value) || 0,
+                    restricaoValor: parseFloat(credRestValorNumeric.value) || 0
+                };
+                
+                try {
+                    // Usa setDoc com o ID do cliente. { merge: true } para não apagar o limite salvo.
+                    const docRef = doc(db, 'clientesCredito', currentSelectedClientId);
+                    await setDoc(docRef, data, { merge: true });
+                    showInfoModal("Sucesso", "Informações de crédito salvas com sucesso!");
+                    hideModal(creditoFormModal); // NOVO: Fecha o modal ao salvar
+                } catch (error) {
+                    console.error("Erro ao salvar infos de crédito:", error);
+                    showInfoModal("Erro", `Erro ao salvar: ${error.message}`);
+                } finally {
+                    setSubmitLoading(false, saveCreditoInfoBtn, saveCreditoInfoBtnText, saveCreditoInfoSpinner);
+                }
+            });
+
+            // --- 5. Rodar Análise (Motor de Crédito) ---
+            runAnalysisBtn.addEventListener('click', () => {
+                if (!currentSelectedClientId) return;
+
+                const client = allClients.find(c => c.id === currentSelectedClientId);
+                const credito = allClientesCredito.find(cc => cc.id === currentSelectedClientId) || {};
+                const historico = calculateInternalHistory(currentSelectedClientId);
+                
+                const resultado = runAnalysisLogic(client, credito, historico);
+
+                analysisJustificativa.textContent = resultado.justificativa.join(' | ');
+                analysisLimiteSugerido.textContent = formatCurrency(resultado.limite);
+                analysisLimiteDisponivel.textContent = formatCurrency(resultado.limiteDisponivel); // NOVO
+                analysisResult.classList.remove('hidden');
+
+                // Preenche o campo manual com a sugestão
+                limiteManual.value = formatCurrency(resultado.limite);
+                limiteManualNumeric.value = resultado.limite.toFixed(2);
+                
+                // Atualiza o cálculo manual com base na sugestão
+                manualTotalEmAberto.textContent = formatCurrency(historico.totalEmAberto);
+                manualLimiteDisponivel.textContent = formatCurrency(resultado.limiteDisponivel);
+            });
+
+            function runAnalysisLogic(client, credito, historico) {
+                let limite = 0;
+                let justificativa = [];
+                const isNewClient = historico.totalCarnes === 0;
+                const hasRestrictions = credito.restricaoSPC || credito.restricaoSerasa;
+
+                // --- REGRA 0: Cliente Novo com Restrição (Reprovação Automática) ---
+                if (isNewClient && hasRestrictions) {
+                    justificativa.push("Cliente novo (sem histórico) com restrições SPC/Serasa.");
+                    justificativa.push("Análise reprovada. Não conceder limite.");
+                    
+                    return {
+                        limite: 0,
+                        justificativa: justificativa,
+                        limiteDisponivel: 0
+                    };
+                }
+
+                // --- Regras de "Score" (Pontuação Negativa) ---
+                // Começa com score 100
+                let score = 100;
+                
+                // 1. Restrições
+                if (credito.restricaoSPC || credito.restricaoSerasa) {
+                    score -= 50;
+                    justificativa.push("Possui restrições SPC/Serasa");
+                    if (credito.restricaoValor > 500) {
+                        score -= 20;
+                        justificativa.push("Valor da restrição é alto");
+                    }
+                }
+
+                // 2. Renda/Emprego
+                const renda = credito.rendaAtual || 0;
+                if (renda < 1412) { // Menos que salário mínimo
+                    score -= 15;
+                    justificativa.push("Renda abaixo do S.M.");
+                }
+                if (credito.tipoRenda === 'Variável' || credito.tipoRenda === 'Autônomo') {
+                    score -= 5;
+                    justificativa.push("Renda variável/autônoma");
+                }
+                if (credito.tempoTrabalhoMeses < 6) {
+                    score -= 10;
+                    justificativa.push("Menos de 6 meses no emprego");
+                }
+
+                // 3. Histórico Externo
+                if (credito.pagaEmDiasOutrasLojas === 'Não') {
+                    score -= 30;
+                    justificativa.push("Paga com atraso em outras lojas");
+                }
+
+                // 4. Histórico Interno (o mais importante)
+                if (isNewClient) {
+                    justificativa.push("Cliente novo, sem histórico interno");
+                } else {
+                    if (historico.atrasadas > 0) {
+                        score -= (historico.atrasadas * 10); // Penalidade alta
+                        justificativa.push(`Possui ${historico.atrasadas} parcelas em atraso`);
+                    }
+                    if (historico.pagasEmDia > 0) {
+                        score += (historico.pagasEmDia * 5); // Bônus
+                        justificativa.push(`Bom pagador (${historico.pagasEmDia} parcelas em dia)`);
+                    }
+                }
+
+                // --- Cálculo do Limite ---
+                if (isNewClient) {
+                    if (score >= 80) { // Tudo OK
+                        limite = 300;
+                        justificativa.push("Análise OK. Limite inicial padrão.");
+                    } else if (score >= 50) { // Risco médio
+                        limite = 150;
+                        justificativa.push("Análise com ressalvas. Limite reduzido.");
+                    } else { // Risco alto
+                        limite = 0;
+                        justificativa.push("Análise reprovada. Não conceder limite.");
+                    }
+                } else {
+                    // Cliente existente
+                    let baseLimite;
+                    
+                    // REGRA DE CAUTELA (Menos de 3 carnês)
+                    if (historico.totalCarnes <= 3) {
+                        baseLimite = 300; // Limite base de cautela
+                        justificativa.push("Cliente com pouco histórico (< 3 carnês).");
+                    } else {
+                        // Cliente com 3+ carnês, podemos usar o histórico de valor
+                        baseLimite = Math.max(historico.totalFinanciado * 0.5, 400); // Aumenta a base
+                        justificativa.push("Cliente recorrente (3+ carnês).");
+                    }
+                    
+                    if (score > 100) { // Excelente
+                        limite = baseLimite * 2.0; // Dobra
+                    } else if (score > 80) { // Bom
+                        limite = baseLimite * 1.5;
+                    } else if (score > 50) { // OK
+                        limite = baseLimite * 1.0;
+                    } else { // Ruim
+                        limite = 100; // Limite de cortesia
+                        justificativa.push("Histórico interno ruim. Limite reduzido.");
+                    }
+                    
+                    // Arredonda para R$ 50,00 e aplica teto
+                    limite = Math.floor(limite / 50) * 50;
+                    limite = Math.min(limite, 5000); // Teto máximo
+                }
+
+                // --- CÁLCULO FINAL DO LIMITE DISPONÍVEL ---
+                // (O totalEmAberto é calculado fora, mas pego aqui para o disponível)
+                
+                // O limite disponível é o limite TOTAL (calculado acima) menos o que já está em aberto.
+                let limiteDisponivel = limite - historico.totalEmAberto;
+                
+                if (limiteDisponivel < 0) {
+                    limiteDisponivel = 0;
+                    if (limite > 0) { // Só adiciona a msg se o limite era positivo
+                        justificativa.push("Limite total já está comprometido com compras em aberto.");
+                    }
+                }
+
+                return {
+                    limite: limite, // Limite Total Aprovado
+                    justificativa: justificativa,
+                    limiteDisponivel: limiteDisponivel // Limite para Nova Compra
+                };
+            }
+
+            // --- 6. Salvar Limite Manualmente (Aprovação Final) ---
+            saveLimiteBtn.addEventListener('click', async () => {
+                if (!currentSelectedClientId) return;
+
+                setSubmitLoading(true, saveLimiteBtn, saveLimiteBtnText, saveLimiteSpinner);
+                const limiteFinal = parseFloat(limiteManualNumeric.value) || 0;
+
+                try {
+                    const docRef = doc(db, 'clientesCredito', currentSelectedClientId);
+                    // Salva SÓ o limite, usando merge para não apagar as outras infos
+                    await setDoc(docRef, { limiteAprovado: limiteFinal }, { merge: true });
+                    showInfoModal("Sucesso", `Limite de ${formatCurrency(limiteFinal)} salvo para o cliente!`);
+                } catch (error) {
+                    console.error("Erro ao salvar limite:", error);
+                    showInfoModal("Erro", `Erro ao salvar: ${error.message}`);
+                } finally {
+                    setSubmitLoading(false, saveLimiteBtn, saveLimiteBtnText, saveLimiteSpinner);
+                }
+            });
+
+            // ==========================================================
+            // --- LÓGICA DE AUTENTICAÇÃO E SYNC FIREBASE ---
+            // ==========================================================
+            
+            function showAuthMessage(message) {
+                authMessage.textContent = message;
+                authMessage.classList.remove('hidden');
+            }
+            loginForm.addEventListener('submit', async (e) => {
+                e.preventDefault();
+                setSubmitLoading(true, loginBtn, loginBtnText, loginSpinner);
+                authMessage.classList.add('hidden');
+                
+                const email = authEmail.value;
+                const password = authPassword.value;
+                
+                try {
+                    await signInWithEmailAndPassword(auth, email, password);
+                } catch (error) {
+                    console.error("Erro ao fazer login:", error);
+                    showAuthMessage("E-mail ou senha incorretos.");
+                } finally {
+                    setSubmitLoading(false, loginBtn, loginBtnText, loginSpinner);
+                }
+            });
+            
+            logoutBtn.addEventListener('click', async () => {
+                try {
+                    await signOut(auth);
+                } catch (error) {
+                    console.error("Erro ao sair:", error);
+                }
+            });
+            
+            onAuthStateChanged(auth, (user) => {
+                currentUser = user; 
+                if (user) {
+                    authScreen.classList.add('hidden'); 
+                    appContainer.classList.remove('hidden'); 
+                    userName.textContent = `Olá, ${user.email}`;
+                    
+                    if (!firebaseListenersAttached) {
+                        setupFirebaseListeners();
+                        firebaseListenersAttached = true;
+                    }
+                } else {
+                    authScreen.classList.remove('hidden'); 
+                    appContainer.classList.add('hidden'); 
+                    userName.textContent = '';
+                    loginForm.reset();
+                    
+                    // Limpa dados locais ao deslogar
+                    allClients = [];
+                    allVendasCarne = [];
+                    allParcelas = [];
+                    allPagamentos = [];
+                    allClientesCredito = [];
+                    currentSelectedClientId = null;
+                    
+                    // Reseta o painel
+                    // Esta lógica agora funciona porque 'welcomePanel' existe
+                    if (welcomePanel) {
+                        welcomePanel.classList.remove('hidden');
+                    }
+                    if (analysisPanel) {
+                        analysisPanel.classList.add('hidden');
+                        analysisPanel.classList.remove('grid');
+                    }
+                    
+                    firebaseListenersAttached = false; 
+                }
+            });
+
+            function setupFirebaseListeners() {
+                // Listener para Clientes
+                onSnapshot(query(clientsCollection), (snapshot) => {
+                    allClients = [];
+                    snapshot.forEach((doc) => allClients.push({ id: doc.id, ...doc.data(), createdAt: doc.data().createdAt?.toDate() }));
+                    console.log(`Carregados ${allClients.length} clientes.`);
+                    renderClientList(); // Atualiza a lista da esquerda
+                    // Se um cliente estava selecionado, atualiza o painel
+                    if(currentSelectedClientId) {
+                        showClientAnalysis(currentSelectedClientId);
+                    }
+                }, (error) => console.error("Erro ao carregar clientes: ", error));
+
+                // Listener para VendasCarne 
+                onSnapshot(query(vendasCarneCollection), (snapshot) => {
+                    allVendasCarne = [];
+                    snapshot.forEach((doc) => allVendasCarne.push({ id: doc.id, ...doc.data() }));
+                    console.log(`Carregadas ${allVendasCarne.length} vendas de carnê.`);
+                    if(currentSelectedClientId) showClientAnalysis(currentSelectedClientId);
+                }, (error) => console.error("Erro ao carregar vendas carnê: ", error));
+
+                // Listener para ParcelasCarne
+                onSnapshot(query(parcelasCarneCollection), (snapshot) => {
+                    allParcelas = [];
+                    snapshot.forEach((doc) => {
+                        const data = doc.data();
+                        allParcelas.push({ id: doc.id, ...data, dataVencimento: data.dataVencimento?.toDate() });
+                    });
+                    console.log(`Carregadas ${allParcelas.length} parcelas.`);
+                    if(currentSelectedClientId) showClientAnalysis(currentSelectedClientId);
+                }, (error) => console.error("Erro ao carregar parcelas: ", error));
+
+                // Listener para PagamentosHistorico
+                onSnapshot(query(pagamentosHistoricoCollection), (snapshot) => {
+                    allPagamentos = [];
+                    snapshot.forEach((doc) => {
+                         const data = doc.data();
+                        allPagamentos.push({ id: doc.id, ...data, dataPagamento: data.dataPagamento?.toDate() });
+                    });
+                    console.log(`Carregados ${allPagamentos.length} históricos de pagamento.`);
+                    if(currentSelectedClientId) showClientAnalysis(currentSelectedClientId);
+                }, (error) => console.error("Erro ao carregar históricos: ", error));
+                
+                // *** NOVO LISTENER ***
+                onSnapshot(query(clientesCreditoCollection), (snapshot) => {
+                    allClientesCredito = [];
+                    snapshot.forEach((doc) => allClientesCredito.push({ id: doc.id, ...doc.data() }));
+                    console.log(`Carregados ${allClientesCredito.length} dados de crédito.`);
+                    if(currentSelectedClientId) showClientAnalysis(currentSelectedClientId);
+                }, (error) => console.error("Erro ao carregar dados de crédito: ", error));
+            }
+        });
+    </script>
+</body>
+</html>
