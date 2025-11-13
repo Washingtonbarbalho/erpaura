@@ -2,18 +2,12 @@ document.addEventListener('DOMContentLoaded', () => {
     const links = document.querySelectorAll('.nav-link');
     const iframe = document.getElementById('content-frame');
 
-    // Mapeamento atualizado: 
-    // Mapeia o ID do link para o arquivo HTML e o HASH da aba
+    // Mapeia o ID do link para o arquivo HTML correspondente
     const pages = {
-        'nav-vendas': { file: 'vendas.html', hash: '#vendas' },
-        'nav-clientes': { file: 'vendas.html', hash: '#clientes' },
-        'nav-produtos': { file: 'vendas.html', hash: '#produtos' },
-        'nav-carne-novo': { file: 'carne.html', hash: '#novo' },
-        'nav-carne-gerenciar': { file: 'carne.html', hash: '#gerenciar' },
-        'nav-analise': { file: 'analise.html', hash: '' },
-        'nav-estoque': { file: 'admin.html', hash: '#estoque' },
-        'nav-financeiro': { file: 'admin.html', hash: '#financeiro' },
-        'nav-relatorio': { file: 'admin.html', hash: '#relatorios' },
+        'nav-vendas': 'vendas.html',
+        'nav-carne': 'carne.html',
+        'nav-analise': 'analise.html',
+        'nav-admin': 'admin.html'
     };
 
     links.forEach(link => {
@@ -26,19 +20,12 @@ document.addEventListener('DOMContentLoaded', () => {
             // Adiciona a classe ativa ao link clicado
             link.classList.add('nav-active');
 
-            // Obtém as informações da página (arquivo e hash)
-            const pageInfo = pages[link.id];
+            // Obtém o nome da página alvo
+            const pageFile = pages[link.id];
             
-            if (pageInfo) {
-                const newSrc = pageInfo.file + pageInfo.hash;
-                
-                // Altera o 'src' do iframe para carregar a nova página/aba
-                // Verificamos se o src é diferente para evitar recargas desnecessárias
-                // (embora mudar o hash vá recarregar de qualquer forma, é uma boa prática)
-                const currentSrc = iframe.src.split('/').pop(); // ex: "vendas.html#clientes"
-                if (currentSrc !== newSrc) {
-                     iframe.src = newSrc;
-                }
+            // Altera o 'src' do iframe para carregar a nova página
+            if (pageFile && iframe.src.endsWith(pageFile) === false) {
+                iframe.src = pageFile;
             }
         });
     });
@@ -46,5 +33,5 @@ document.addEventListener('DOMContentLoaded', () => {
     // Garante que o link 'vendas' esteja ativo no carregamento inicial
     document.getElementById('nav-vendas').classList.add('nav-active');
     // Carrega a página inicial (vendas.html)
-    iframe.src = pages['nav-vendas'].file + pages['nav-vendas'].hash;
+    iframe.src = 'vendas.html';
 });
