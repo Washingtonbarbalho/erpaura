@@ -2229,26 +2229,6 @@
                         setupFirebaseListeners();
                         firebaseListenersAttached = true;
                     }
-
-function handleHashChange() {
-                    const hash = window.location.hash;
-                    console.log("Hash detectado:", hash);
-                    
-                    let tabToClick;
-                    if (hash === '#gerenciar') {
-                        tabToClick = document.getElementById('tab-aba2');
-                    } else {
-                        // O padrão é #novo ou qualquer outra coisa
-                        tabToClick = document.getElementById('tab-aba1');
-                    }
-
-                    if (tabToClick) {
-                        tabToClick.click();
-                    }
-                }
-                handleHashChange();
-                window.addEventListener('hashchange', handleHashChange);
-
                 } else {
                     authScreen.classList.remove('hidden'); 
                     appContainer.classList.add('hidden'); 
