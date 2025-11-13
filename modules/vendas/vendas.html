@@ -1,0 +1,463 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Aura Premium - Sistema de Vendas</title>
+    <!-- Carrega o Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Carrega o CSS específico deste módulo -->
+    <link rel="stylesheet" href="vendas.css">
+    
+    <!-- Carrega o JavaScript principal deste módulo -->
+    <!-- 'type="module"' é essencial para permitir 'import' -->
+    <script type="module" src="vendas.js"></script>
+</head>
+<body class="bg-gray-900 text-gray-100 font-poppins">
+
+    <!-- Tela de Login -->
+    <div id="login-screen" class="hidden h-screen w-full flex items-center justify-center">
+        <div class="bg-gray-800 p-8 rounded-lg shadow-xl w-full max-w-sm">
+            <h2 class="text-2xl font-bold text-amber-500 mb-6 text-center">Login</h2>
+            <form id="login-form">
+                <div class="mb-4">
+                    <label for="email" class="block text-sm font-medium text-gray-300 mb-2">Email</label>
+                    <input type="email" id="email" class="w-full p-3 bg-gray-700 rounded-lg border border-gray-600 focus:border-amber-500 focus:ring-amber-500 outline-none" required>
+                </div>
+                <div class="mb-6">
+                    <label for="password" class="block text-sm font-medium text-gray-300 mb-2">Senha</label>
+                    <input type="password" id="password" class="w-full p-3 bg-gray-700 rounded-lg border border-gray-600 focus:border-amber-500 focus:ring-amber-500 outline-none" required>
+                </div>
+                <button type="submit" id="login-button" class="w-full bg-amber-500 hover:bg-amber-600 text-gray-900 font-bold p-3 rounded-lg transition duration-200 flex items-center justify-center">
+                    Entrar
+                </button>
+                <p id="login-error" class="text-red-500 text-sm mt-4 text-center"></p>
+            </form>
+        </div>
+    </div>
+
+    <!-- Conteúdo Principal do Módulo -->
+    <div id="main-content" class="hidden p-4 md:p-8">
+        
+        <!-- Abas de Navegação -->
+        <div class="border-b border-gray-700 mb-6">
+            <nav class="flex space-x-4" aria-label="Tabs">
+                <button id="tab-vendas" class="tab-button tab-active">Vendas</button>
+                <button id="tab-clientes" class="tab-button">Clientes</button>
+                <button id="tab-produtos" class="tab-button">Produtos</button>
+            </nav>
+        </div>
+
+        <!-- Container das Páginas -->
+        <div>
+            <!-- Página de Vendas -->
+            <div id="page-vendas" class="space-y-6">
+                <!-- Seção do Cabeçalho: Filtros e Botões -->
+                <div class="flex flex-col md:flex-row justify-between items-center space-y-4 md:space-y-0">
+                    <div class="flex flex-col md:flex-row items-center space-y-4 md:space-y-0 md:space-x-4 w-full md:w-auto">
+                        <input type="text" id="search-vendas" placeholder="Buscar por cliente ou cód. venda..." class="w-full md:w-64 p-3 bg-gray-800 rounded-lg border border-gray-700 focus:border-amber-500 outline-none">
+                        <input type="date" id="filter-date" class="w-full md:w-auto p-3 bg-gray-800 rounded-lg border border-gray-700 focus:border-amber-500 outline-none">
+                        <button id="filter-date-btn" class="w-full md:w-auto p-3 bg-gray-700 hover:bg-gray-600 rounded-lg transition">Filtrar Data</button>
+                    </div>
+                    <button id="open-venda-modal" class="w-full md:w-auto p-3 bg-amber-500 hover:bg-amber-600 text-gray-900 font-bold rounded-lg transition whitespace-nowrap">Nova Venda</button>
+                </div>
+                
+                <!-- Resumo Financeiro -->
+                <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+                    <div class="bg-gray-800 p-4 rounded-lg shadow"><h3 class="text-sm font-medium text-gray-400">Total Vendido (Filtro)</h3><p id="summary-total" class="text-2xl font-bold"></p></div>
+                    <div class="bg-gray-800 p-4 rounded-lg shadow"><h3 class="text-sm font-medium text-gray-400">Total Recebido (Filtro)</h3><p id="summary-recebido" class="text-2xl font-bold text-green-500"></p></div>
+                    <div class="bg-gray-800 p-4 rounded-lg shadow"><h3 class="text-sm font-medium text-gray-400">A Receber (Filtro)</h3><p id="summary-a-receber" class="text-2xl font-bold text-yellow-500"></p></div>
+                    <div class="bg-gray-800 p-4 rounded-lg shadow"><h3 class="text-sm font-medium text-gray-400">Vendas (Filtro)</h3><p id="summary-count" class="text-2xl font-bold"></p></div>
+                </div>
+
+                <!-- Tabela de Vendas -->
+                <div class="bg-gray-800 rounded-lg shadow overflow-hidden">
+                    <div class="overflow-x-auto">
+                        <table class="w-full min-w-full divide-y divide-gray-700">
+                            <thead class="bg-gray-700">
+                                <tr>
+                                    <th class="th-cell">Cód.</th>
+                                    <th class="th-cell">Data</th>
+                                    <th class="th-cell">Cliente</th>
+                                    <th class="th-cell">Total</th>
+                                    <th class="th-cell">Forma Pgto</th>
+                                    <th class="th-cell">Status</th>
+                                </tr>
+                            </thead>
+                            <tbody id="sales-list" class="divide-y divide-gray-700">
+                                <!-- Linhas de vendas serão injetadas aqui -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Página de Clientes -->
+            <div id="page-clientes" class="hidden space-y-6">
+                <!-- Cabeçalho: Busca e Botão -->
+                <div class="flex flex-col md:flex-row justify-between items-center space-y-4 md:space-y-0">
+                    <input type="text" id="search-clientes" placeholder="Buscar por nome, CPF ou telefone..." class="w-full md:w-96 p-3 bg-gray-800 rounded-lg border border-gray-700 focus:border-amber-500 outline-none">
+                    <button id="open-cliente-modal" class="w-full md:w-auto p-3 bg-amber-500 hover:bg-amber-600 text-gray-900 font-bold rounded-lg transition whitespace-nowrap">Novo Cliente</button>
+                </div>
+
+                <!-- Tabela de Clientes -->
+                <div class="bg-gray-800 rounded-lg shadow overflow-hidden">
+                    <div class="overflow-x-auto">
+                        <table class="w-full min-w-full divide-y divide-gray-700">
+                            <thead class="bg-gray-700">
+                                <tr>
+                                    <th class="th-cell">Nome</th>
+                                    <th class="th-cell">CPF/CNPJ</th>
+                                    <th class="th-cell">Telefone</th>
+                                    <th class="th-cell">Email</th>
+                                    <th class="th-cell">Cidade</th>
+                                </tr>
+                            </thead>
+                            <tbody id="client-list" class="divide-y divide-gray-700">
+                                <!-- Linhas de clientes serão injetadas aqui -->
+                            </tbody>
+                        </table>
+                    </div>
+                    <!-- Paginação -->
+                    <div id="client-pagination" class="p-4 flex justify-between items-center"></div>
+                </div>
+            </div>
+
+            <!-- Página de Produtos -->
+            <div id="page-produtos" class="hidden space-y-6">
+                <!-- Cabeçalho: Busca e Botão -->
+                <div class="flex flex-col md:flex-row justify-between items-center space-y-4 md:space-y-0">
+                    <input type="text" id="search-produtos" placeholder="Buscar por nome ou código..." class="w-full md:w-96 p-3 bg-gray-800 rounded-lg border border-gray-700 focus:border-amber-500 outline-none">
+                    <button id="open-produto-modal" class="w-full md:w-auto p-3 bg-amber-500 hover:bg-amber-600 text-gray-900 font-bold rounded-lg transition whitespace-nowrap">Novo Produto</button>
+                </div>
+                
+                <!-- Filtros de Categoria -->
+                <div id="category-filters" class="flex flex-wrap gap-2">
+                    <!-- Botões de filtro de categoria serão injetados aqui -->
+                </div>
+
+                <!-- Tabela de Produtos -->
+                <div class="bg-gray-800 rounded-lg shadow overflow-hidden">
+                    <div class="overflow-x-auto">
+                        <table class="w-full min-w-full divide-y divide-gray-700">
+                            <thead class="bg-gray-700">
+                                <tr>
+                                    <th class="th-cell">Código</th>
+                                    <th class="th-cell">Nome</th>
+                                    <th class="th-cell">Categoria</th>
+                                    <th class="th-cell">Preço Venda</th>
+                                    <th class="th-cell">Preço Custo</th>
+                                    <th class="th-cell">Estoque</th>
+                                </tr>
+                            </thead>
+                            <tbody id="product-list" class="divide-y divide-gray-700">
+                                <!-- Linhas de produtos serão injetadas aqui -->
+                            </tbody>
+                        </table>
+                    </div>
+                    <!-- Paginação -->
+                    <div id="product-pagination" class="p-4 flex justify-between items-center"></div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <!-- ===== MODAIS ===== -->
+
+    <!-- Modal: Nova Venda / Detalhes da Venda -->
+    <div id="venda-modal" class="modal-backdrop">
+        <div class="modal-content max-w-4xl">
+            <!-- Conteúdo do Modal (Cabeçalho) -->
+            <div class="flex justify-between items-center mb-6">
+                <h2 id="venda-modal-title" class="text-2xl font-bold text-amber-500">Nova Venda</h2>
+                <button id="close-venda-modal" class="modal-close-btn">&times;</button>
+            </div>
+
+            <!-- Corpo do Modal (Formulário) -->
+            <form id="venda-form" class="space-y-6">
+                <input type="hidden" id="venda-id">
+
+                <!-- Detalhes do Cliente (Somente Leitura em Edição) -->
+                <div id="venda-cliente-details" class="space-y-4">
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                            <label for="venda-cliente-select" class="form-label">Cliente</label>
+                            <select id="venda-cliente-select" class="form-input"></select>
+                        </div>
+                        <div>
+                            <label for="venda-cliente-cpf" class="form-label">CPF/CNPJ</label>
+                            <input type="text" id="venda-cliente-cpf" class="form-input" readonly>
+                        </div>
+                    </div>
+                    <div id="venda-cliente-info" class="text-sm text-gray-400 p-3 bg-gray-800 rounded-lg">
+                        Selecione um cliente para ver os detalhes...
+                    </div>
+                </div>
+
+                <!-- Itens da Venda -->
+                <div class="space-y-4">
+                    <h3 class="text-lg font-semibold text-gray-300">Itens da Venda</h3>
+                    <!-- Adicionar Item (Somente em Nova Venda) -->
+                    <div id="venda-add-item-section" class="grid grid-cols-1 md:grid-cols-6 gap-4 items-end">
+                        <div class="md:col-span-3">
+                            <label for="venda-produto-select" class="form-label">Produto</label>
+                            <select id="venda-produto-select" class="form-input"></select>
+                        </div>
+                        <div>
+                            <label for="venda-item-qty" class="form-label">Qtd.</label>
+                            <input type="number" id="venda-item-qty" value="1" min="1" class="form-input">
+                        </div>
+                        <div>
+                            <label for="venda-item-price" class="form-label">Preço (R$)</label>
+                            <input type="text" id="venda-item-price" class="form-input" placeholder="0,00">
+                        </div>
+                        <button type="button" id="venda-add-item-btn" class="p-3 bg-blue-600 hover:bg-blue-700 rounded-lg text-white font-medium">Adicionar</button>
+                    </div>
+                    <!-- Tabela de Itens -->
+                    <div class="overflow-x-auto bg-gray-800 rounded-lg">
+                        <table class="w-full min-w-full">
+                            <thead class="bg-gray-700">
+                                <tr>
+                                    <th class="th-cell">Produto</th>
+                                    <th class="th-cell">Qtd.</th>
+                                    <th class="th-cell">Preço Unit.</th>
+                                    <th class="th-cell">Subtotal</th>
+                                    <th class="th-cell" id="venda-item-action-header">Ação</th>
+                                </tr>
+                            </thead>
+                            <tbody id="venda-items-list" class="divide-y divide-gray-700">
+                                <!-- Itens adicionados aqui -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- Resumo e Pagamento -->
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6 items-start">
+                    <!-- Coluna da Esquerda: Observações e Endereço -->
+                    <div class="space-y-4">
+                        <div>
+                            <label for="venda-endereco" class="form-label">Endereço de Entrega</label>
+                            <select id="venda-endereco" class="form-input"></select>
+                        </div>
+                         <div>
+                            <label for="venda-obs" class="form-label">Observações</label>
+                            <textarea id="venda-obs" rows="4" class="form-input"></textarea>
+                        </div>
+                    </div>
+                    <!-- Coluna da Direita: Totais e Pagamento -->
+                    <div class="space-y-4 p-4 bg-gray-800 rounded-lg">
+                        <div class="flex justify-between text-lg">
+                            <span class="font-medium text-gray-400">Subtotal:</span>
+                            <span id="venda-subtotal" class="font-semibold">R$ 0,00</span>
+                        </div>
+                        <div class="flex justify-between items-center text-lg">
+                            <label for="venda-desconto" class="font-medium text-gray-400">Desconto (R$):</label>
+                            <input type="text" id="venda-desconto" class="form-input w-28 text-right" placeholder="0,00">
+                        </div>
+                        <div class="flex justify-between text-2xl font-bold text-amber-500 border-t border-gray-700 pt-3">
+                            <span>Total:</span>
+                            <span id="venda-total">R$ 0,00</span>
+                        </div>
+                        
+                        <hr class="border-gray-700">
+
+                        <!-- Seção de Pagamento -->
+                        <div>
+                            <label for="venda-forma-pgto" class="form-label">Forma de Pagamento</label>
+                            <select id="venda-forma-pgto" class="form-input"></select>
+                        </div>
+                        <!-- Pagamento em Dinheiro -->
+                        <div id="venda-pgto-dinheiro" class="hidden space-y-2">
+                            <label for="venda-valor-pago" class="form-label">Valor Pago (R$)</label>
+                            <input type="text" id="venda-valor-pago" class="form-input" placeholder="0,00">
+                            <p class="text-sm text-gray-400">Troco: <span id="venda-troco" class="font-medium text-white">R$ 0,00</span></p>
+                        </div>
+                        <!-- Pagamento a Prazo (Carnê) -->
+                        <div id="venda-pgto-prazo" class="hidden space-y-2">
+                             <p class="text-sm text-yellow-400 p-3 bg-yellow-900 bg-opacity-30 rounded-lg">O carnê será gerado automaticamente ao salvar a venda.</p>
+                        </div>
+                        
+                         <!-- Status da Venda (Somente Leitura) -->
+                        <div id="venda-status-section" class="hidden">
+                            <label class="form-label">Status da Venda</label>
+                            <p id="venda-status-text" class="text-lg font-semibold p-3 bg-gray-900 rounded-lg"></p>
+                        </div>
+
+                    </div>
+                </div>
+
+                <!-- Botões de Ação do Modal -->
+                <div class="flex flex-col md:flex-row justify-end items-center gap-4 pt-6 border-t border-gray-700">
+                    <button type="button" id="venda-delete-btn" class="p-3 bg-red-600 hover:bg-red-700 text-white font-medium rounded-lg transition hidden">Excluir Venda</button>
+                    <button type="button" id="venda-print-btn" class="p-3 bg-gray-600 hover:bg-gray-700 text-white font-medium rounded-lg transition hidden">Imprimir Recibo</button>
+                    <button type="submit" id="venda-save-btn" class="w-full md:w-auto p-3 bg-amber-500 hover:bg-amber-600 text-gray-900 font-bold rounded-lg transition flex items-center justify-center min-w-[120px]">
+                        Salvar Venda
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Modal: Novo Cliente / Detalhes do Cliente -->
+    <div id="cliente-modal" class="modal-backdrop">
+        <div class="modal-content max-w-3xl">
+            <!-- Cabeçalho -->
+            <div class="flex justify-between items-center mb-6">
+                <h2 id="cliente-modal-title" class="text-2xl font-bold text-amber-500">Novo Cliente</h2>
+                <button id="close-cliente-modal" class="modal-close-btn">&times;</button>
+            </div>
+
+            <!-- Formulário -->
+            <form id="cliente-form" class="space-y-6">
+                <input type="hidden" id="cliente-id">
+                
+                <!-- Informações Pessoais -->
+                <fieldset class="p-4 border border-gray-700 rounded-lg">
+                    <legend class="text-lg font-semibold text-gray-300 px-2">Informações Pessoais</legend>
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mt-4">
+                        <div class="md:col-span-2">
+                            <label for="cliente-nome" class="form-label">Nome Completo</label>
+                            <input type="text" id="cliente-nome" class="form-input" required>
+                        </div>
+                        <div>
+                            <label for="cliente-cpf" class="form-label">CPF/CNPJ</label>
+                            <input type="text" id="cliente-cpf" class="form-input" required>
+                        </div>
+                        <div>
+                            <label for="cliente-telefone" class="form-label">Telefone</label>
+                            <input type="text" id="cliente-telefone" class="form-input">
+                        </div>
+                        <div>
+                            <label for="cliente-email" class="form-label">Email</label>
+                            <input type="email" id="cliente-email" class="form-input">
+                        </div>
+                        <div>
+                            <label for="cliente-nascimento" class="form-label">Data de Nascimento</label>
+                            <input type="date" id="cliente-nascimento" class="form-input">
+                        </div>
+                    </div>
+                </fieldset>
+
+                <!-- Endereço Principal -->
+                <fieldset class="p-4 border border-gray-700 rounded-lg">
+                    <legend class="text-lg font-semibold text-gray-300 px-2">Endereço Principal</legend>
+                    <div class="grid grid-cols-1 md:grid-cols-6 gap-4 mt-4">
+                        <div class="md:col-span-2">
+                            <label for="cliente-cep" class="form-label">CEP</label>
+                            <input type="text" id="cliente-cep" class="form-input">
+                        </div>
+                        <div class="md:col-span-4">
+                            <label for="cliente-logradouro" class="form-label">Logradouro</label>
+                            <input type="text" id="cliente-logradouro" class="form-input">
+                        </div>
+                         <div class="md:col-span-2">
+                            <label for="cliente-numero" class="form-label">Número</label>
+                            <input type="text" id="cliente-numero" class="form-input">
+                        </div>
+                        <div class="md:col-span-4">
+                            <label for="cliente-complemento" class="form-label">Complemento</label>
+                            <input type="text" id="cliente-complemento" class="form-input">
+                        </div>
+                        <div class="md:col-span-2">
+                            <label for="cliente-bairro" class="form-label">Bairro</label>
+                            <input type="text" id="cliente-bairro" class="form-input">
+                        </div>
+                        <div class="md:col-span-2">
+                            <label for="cliente-cidade" class="form-label">Cidade</label>
+                            <input type="text" id="cliente-cidade" class="form-input">
+                        </div>
+                        <div class="md:col-span-2">
+                            <label for="cliente-estado" class="form-label">Estado</label>
+                            <input type="text" id="cliente-estado" class="form-input">
+                        </div>
+                    </div>
+                </fieldset>
+
+                <!-- Endereços de Entrega -->
+                <fieldset class="p-4 border border-gray-700 rounded-lg">
+                    <legend class="text-lg font-semibold text-gray-300 px-2">Endereços de Entrega</legend>
+                    <button type="button" id="add-endereco-entrega" class="mt-2 p-2 bg-blue-600 hover:bg-blue-700 text-sm rounded-lg">Adicionar Outro Endereço</button>
+                    <div id="enderecos-entrega-container" class="space-y-4 mt-4">
+                        <!-- Endereços de entrega dinâmicos aqui -->
+                    </div>
+                </fieldset>
+
+                <!-- Botões -->
+                <div class="flex justify-end gap-4 pt-6 border-t border-gray-700">
+                    <button type="button" id="cliente-delete-btn" class="p-3 bg-red-600 hover:bg-red-700 text-white font-medium rounded-lg transition hidden">Excluir Cliente</button>
+                    <button type="submit" id="cliente-save-btn" class="p-3 bg-amber-500 hover:bg-amber-600 text-gray-900 font-bold rounded-lg transition flex items-center justify-center min-w-[120px]">
+                        Salvar Cliente
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Modal: Novo Produto / Detalhes do Produto -->
+    <div id="produto-modal" class="modal-backdrop">
+        <div class="modal-content max-w-2xl">
+            <!-- Cabeçalho -->
+            <div class="flex justify-between items-center mb-6">
+                <h2 id="produto-modal-title" class="text-2xl font-bold text-amber-500">Novo Produto</h2>
+                <button id="close-produto-modal" class="modal-close-btn">&times;</button>
+            </div>
+            
+            <!-- Formulário -->
+            <form id="produto-form" class="space-y-6">
+                <input type="hidden" id="produto-id">
+                
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                     <div>
+                        <label for="produto-codigo" class="form-label">Código do Produto</label>
+                        <input type="number" id="produto-codigo" class="form-input" required>
+                    </div>
+                    <div class="md:col-span-2">
+                        <label for="produto-nome" class="form-label">Nome</label>
+                        <input type="text" id="produto-nome" class="form-input" required>
+                    </div>
+                </div>
+                
+                <div>
+                    <label for="produto-categoria" class="form-label">Categoria</label>
+                    <input type="text" id="produto-categoria" class="form-input">
+                </div>
+                
+                <div>
+                    <label for="produto-descricao" class="form-label">Descrição</label>
+                    <textarea id="produto-descricao" rows="3" class="form-input"></textarea>
+                </div>
+                
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div>
+                        <label for="produto-preco-venda" class="form-label">Preço de Venda (R$)</label>
+                        <input type="text" id="produto-preco-venda" class="form-input" placeholder="0,00" required>
+                    </div>
+                    <div>
+                        <label for="produto-preco-custo" class="form-label">Preço de Custo (R$)</label>
+                        <input type="text" id="produto-preco-custo" class="form-input" placeholder="0,00">
+                    </div>
+                     <div>
+                        <label for="produto-estoque" class="form-label">Qtd. em Estoque</label>
+                        <input type="number" id="produto-estoque" class="form-input" value="0">
+                    </div>
+                </div>
+
+                <!-- Botões -->
+                <div class="flex justify-end gap-4 pt-6 border-t border-gray-700">
+                    <button type="button" id="produto-delete-btn" class="p-3 bg-red-600 hover:bg-red-700 text-white font-medium rounded-lg transition hidden">Excluir Produto</button>
+                    <button type="submit" id="produto-save-btn" class="p-3 bg-amber-500 hover:bg-amber-600 text-gray-900 font-bold rounded-lg transition flex items-center justify-center min-w-[120px]">
+                        Salvar Produto
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+    
+    <!-- Toast Notification -->
+    <!-- O showToast() em utils.js criará isso dinamicamente -->
+
+</body>
+</html>
