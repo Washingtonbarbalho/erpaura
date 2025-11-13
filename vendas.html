@@ -1,0 +1,3031 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale1.0">
+    <title>Aura Premium - Sistema de Vendas</title>
+    <!-- Carrega o Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Fonte Poppins -->
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap');
+        body {
+            font-family: 'Poppins', sans-serif;
+            background-color: #111827; /* bg-gray-900 */
+            color: #f3f4f6; /* text-gray-100 */
+        }
+        /* Estilo para spinner de carregamento */
+        .spinner {
+            border: 4px solid rgba(255, 255, 255, .1);
+            border-left-color: #f59e0b; /* amber-500 */
+            border-radius: 50%;
+            width: 24px;
+            height: 24px;
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+        /* Classe para aba ativa */
+        .tab-active {
+            border-bottom-color: #f59e0b; /* amber-500 */
+            color: #f59e0b; /* amber-500 */
+            font-weight: 600;
+        }
+        /* Botões de Ação da Tabela */
+        .action-btn {
+            padding: 4px;
+            border-radius: 4px;
+            transition: background-color 0.2s;
+            cursor: pointer;
+        }
+        .action-btn:hover:not(:disabled) {
+            background-color: #374151; /* bg-gray-700 */
+        }
+        .action-btn:disabled {
+            cursor: not-allowed;
+        }
+        /* Estilo para item no carrinho de venda */
+        .sale-item {
+            display: grid;
+            grid-template-columns: 1fr auto auto;
+            gap: 8px;
+            align-items: center;
+        }
+        /* Estilos de Paginação */
+        .pagination-btn {
+            padding: 6px 12px;
+            border: 1px solid #374151; /* border-gray-700 */
+            background-color: #1f2937; /* bg-gray-800 */
+            color: #d1d5db; /* text-gray-300 */
+            border-radius: 6px;
+            transition: background-color 0.2s;
+        }
+        .pagination-btn:hover:not(:disabled) {
+            background-color: #374151; /* bg-gray-700 */
+        }
+        .pagination-btn.active {
+            background-color: #f59e0b; /* bg-amber-500 */
+            color: #111827; /* text-black */
+            border-color: #f59e0b;
+            font-weight: 600;
+        }
+        .pagination-btn:disabled {
+            background-color: #1f2937; /* bg-gray-800 */
+            color: #6b7280; /* text-gray-500 */
+            cursor: not-allowed;
+        }
+        /* Estilo para Inputs e Selects no tema escuro */
+        .form-input, .form-select {
+            background-color: #374151; /* bg-gray-700 */
+            border: 1px solid #4b5563; /* border-gray-600 */
+            color: #f3f4f6; /* text-gray-100 */
+            border-radius: 0.5rem; /* rounded-lg */
+            padding: 0.5rem; /* p-2 */
+            width: 100%;
+        }
+        .form-input:focus, .form-select:focus {
+            outline: none;
+            border-color: #f59e0b; /* border-amber-500 */
+            box-shadow: 0 0 0 2px #f59e0b33;
+        }
+        /* Estilo customizado para input date (calendário) */
+        .form-input[type="date"] {
+            color-scheme: dark;
+        }
+        .form-input-with-icon {
+            position: relative;
+        }
+        .form-input-with-icon .form-input {
+            padding-right: 2.5rem; /* Espaço para o ícone */
+        }
+        .form-input-with-icon .input-icon {
+            position: absolute;
+            top: 50%;
+            right: 0.5rem;
+            transform: translateY(-50%);
+            color: #9ca3af; /* text-gray-400 */
+        }
+
+        /* Placeholder para inputs escuros */
+        .form-input::placeholder {
+            color: #9ca3af; /* text-gray-400 */
+        }
+        
+        /* --- ESTILOS DO NOVO CUSTOM SELECT --- */
+        .custom-select-trigger {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            cursor: pointer;
+        }
+        .custom-select-options {
+            background-color: #374151; /* bg-gray-700 */
+            border: 1px solid #4b5563; /* border-gray-600 */
+            border-radius: 0.5rem; /* rounded-lg */
+            max-height: 200px;
+            overflow-y: auto;
+            width: 100%;
+            margin-top: 4px;
+        }
+        .custom-select-option {
+            padding: 0.5rem;
+            cursor: pointer;
+            color: #f3f4f6; /* text-gray-100 */
+        }
+        .custom-select-option:hover, .custom-select-option.selected {
+            background-color: #4b5563; /* bg-gray-600 */
+        }
+        .custom-select-option.selected {
+            font-weight: 600;
+        }
+        .custom-select-value {
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+        .chevron-icon {
+            width: 20px;
+            height: 20px;
+            stroke: #9ca3af; /* text-gray-400 */
+            flex-shrink: 0;
+        }
+        
+        /* --- ESTILOS DO NOVO MODAL DE CALENDÁRIO --- */
+        #calendarModal .calendar-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        #calendarModal .calendar-grid {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            gap: 4px;
+            text-align: center;
+        }
+        #calendarModal .calendar-day, #calendarModal .calendar-dow {
+            padding: 8px;
+            border-radius: 50%;
+            width: 36px;
+            height: 36px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.875rem;
+        }
+        #calendarModal .calendar-dow {
+            font-weight: 600;
+            color: #9ca3af; /* text-gray-400 */
+        }
+        #calendarModal .calendar-day {
+            cursor: pointer;
+        }
+        #calendarModal .calendar-day:not(.empty):hover {
+            background-color: #374151; /* bg-gray-700 */
+        }
+        #calendarModal .calendar-day.today {
+            border: 1px solid #f59e0b; /* border-amber-500 */
+        }
+        #calendarModal .calendar-day.selected {
+            background-color: #f59e0b; /* bg-amber-500 */
+            color: #111827; /* text-black */
+            font-weight: 600;
+        }
+
+        /* --- ESTILOS DE IMPRESSÃO DO RECIBO --- */
+        @media print {
+            body * {
+                visibility: hidden;
+            }
+            #receiptModal, #receiptModal * {
+                visibility: visible;
+            }
+            #receiptModal {
+                position: absolute;
+                left: 0;
+                top: 0;
+                width: 100%;
+                max-width: 100%;
+                height: 100%;
+                border: none;
+                box-shadow: none;
+                padding: 0;
+                margin: 0;
+                overflow: visible;
+                background: #fff;
+            }
+            #receiptContent {
+                color: #000 !important;
+                max-height: none;
+                overflow: visible;
+                background: #fff;
+            }
+            .print-hide {
+                display: none;
+            }
+            .receipt-logo h1 {
+                color: #000 !important;
+            }
+            .receipt-logo p {
+                color: #333 !important;
+            }
+        }
+        /* Cor de fundo para Autocomplete do browser */
+        input:-webkit-autofill,
+        input:-webkit-autofill:hover, 
+        input:-webkit-autofill:focus, 
+        input:-webkit-autofill:active  {
+            -webkit-box-shadow: 0 0 0 30px #374151 inset !important; /* bg-gray-700 */
+            -webkit-text-fill-color: #f3f4f6 !important; /* text-gray-100 */
+        }
+    </style>
+
+    <!-- Configuração do Firebase -->
+    <script type="module">
+      import { initializeApp } from "https://www.gstatic.com/firebasejs/12.5.0/firebase-app.js";
+      import { 
+          getAuth, 
+          onAuthStateChanged, 
+          signInWithEmailAndPassword, 
+          signOut
+      } from "https://www.gstatic.com/firebasejs/12.5.0/firebase-auth.js";
+      import { 
+          getFirestore, 
+          collection, 
+          addDoc, 
+          onSnapshot, 
+          query, 
+          serverTimestamp, 
+          doc, 
+          updateDoc, 
+          deleteDoc, 
+          getDocs, 
+          getDoc, 
+          arrayUnion,
+          where
+      } from "https://www.gstatic.com/firebasejs/12.5.0/firebase-firestore.js";
+
+      const firebaseConfig = {
+        apiKey: "AIzaSyC7_OEoz9p1TpLhQEFu9M7Nh3UtbBQbqNE",
+        authDomain: "sistema-de-vendas-17583.firebaseapp.com",
+        projectId: "sistema-de-vendas-17583",
+        storageBucket: "sistema-de-vendas-17583.firebasestorage.app",
+        messagingSenderId: "809093367439",
+        appId: "1:809093367439:web:bc03a5aae5a638735252fa"
+      };
+
+      const app = initializeApp(firebaseConfig);
+      const db = getFirestore(app);
+      const auth = getAuth(app); 
+
+      window.firebase = {
+          db,
+          auth, 
+          collection,
+          addDoc,
+          onSnapshot,
+          query,
+          serverTimestamp,
+          doc,
+          updateDoc,
+          deleteDoc,
+          getDocs,
+          getDoc, 
+          arrayUnion,
+          where,
+          onAuthStateChanged,
+          signInWithEmailAndPassword,
+          signOut
+      };
+    </script>
+</head>
+<body class="bg-gray-900 text-gray-100">
+
+    <!-- ======================= -->
+    <!--     TELA DE LOGIN -->
+    <!-- ======================= -->
+    <div id="authScreen" class="flex items-center justify-center min-h-screen hidden">
+        <div class="bg-gray-800 p-8 rounded-lg shadow-xl w-full max-w-md border border-gray-700">
+            
+            <!-- Logo Aura Premium -->
+            <div class="text-center mb-8">
+                <h1 class="text-5xl font-bold text-amber-400" style="font-family: 'Times New Roman', serif;">AURA</h1>
+                <p class="text-2xl font-light text-gray-200" style="letter-spacing: 0.2em;">PREMIUM</p>
+            </div>
+
+            <!-- Mensagem de Erro -->
+            <div id="authMessage" class="hidden p-3 rounded-lg mb-4 text-sm bg-red-900 text-red-100"></div>
+
+            <!-- Formulário de Login (Email e Senha) -->
+            <form id="loginForm" class="space-y-4">
+                <div>
+                    <label for="authEmail" class="block text-sm font-medium text-gray-300 mb-1">E-mail</label>
+                    <input type="email" id="authEmail" class="form-input" required>
+                </div>
+                <div>
+                    <label for="authPassword" class="block text-sm font-medium text-gray-300 mb-1">Senha</label>
+                    <input type="password" id="authPassword" class="form-input" required>
+                </div>
+                <button id="loginBtn" type="submit" class="w-full bg-amber-500 text-black px-5 py-3 rounded-lg shadow-md hover:bg-amber-600 transition flex items-center justify-center font-semibold">
+                    <span id="loginBtnText">Entrar</span>
+                    <div id="loginSpinner" class="spinner hidden"></div>
+                </button>
+            </form>
+        </div>
+    </div>
+
+
+    <!-- ======================= -->
+    <!--     CONTEÚDO PRINCIPAL (APP) -->
+    <!-- ======================= -->
+    <div id="appContainer" class="hidden container mx-auto p-4 md:p-8"> <!-- Começa oculto -->
+
+        <!-- Cabeçalho -->
+        <header class="flex flex-col md:flex-row justify-between md:items-center mb-6 gap-4">
+            <!-- Logo Aura Premium -->
+            <div>
+                <h1 class="text-4xl font-bold text-amber-400" style="font-family: 'Times New Roman', serif;">AURA</h1>
+                <p class="text-xl font-light text-gray-200" style="letter-spacing: 0.15em;">PREMIUM</p>
+            </div>
+            <!-- Seção de Logout -->
+            <div class="flex items-center gap-4">
+                <span id="userName" class="text-sm text-gray-300"></span>
+                <button id="logoutBtn" class="text-sm text-red-500 hover:text-red-400 font-medium">Sair</button>
+            </div>
+        </header>
+
+        <!-- Navegação por Abas -->
+        <nav class="flex border-b border-gray-700 mb-6">
+            <button id="navVendas" class="nav-tab py-3 px-6 border-b-2 tab-active">Vendas</button>
+            <button id="navClientes" class="nav-tab py-3 px-6 border-b-2 border-transparent text-gray-400 hover:text-amber-400">Clientes</button>
+            <button id="navProdutos" class="nav-tab py-3 px-6 border-b-2 border-transparent text-gray-400 hover:text-amber-400">Produtos</button>
+        </nav>
+
+        <!-- ======================= -->
+        <!--     PÁGINA DE VENDAS    -->
+        <!-- ======================= -->
+        <div id="pageVendas">
+            <!-- Botão de Nova Venda -->
+            <div class="flex justify-end mb-6">
+                <button id="openModalBtn" class="bg-amber-500 text-black px-5 py-2 rounded-lg shadow-md hover:bg-amber-600 transition duration-300 ease-in-out w-full sm:w-auto font-semibold">
+                    + Adicionar Nova Venda
+                </button>
+            </div>
+            
+            <!-- Resumo das Vendas -->
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+                <div class="bg-gray-800 p-6 rounded-lg shadow-md border border-gray-700">
+                    <h2 id="salesValueTitle" class="text-lg font-semibold text-gray-400 mb-2">Valor Total de Vendas (Mês Atual)</h2> 
+                    <p id="totalSalesValue" class="text-3xl font-bold text-green-400">R$ 0,00</p>
+                </div>
+                <div class="bg-gray-800 p-6 rounded-lg shadow-md border border-gray-700">
+                    <h2 id="salesCountTitle" class="text-lg font-semibold text-gray-400 mb-2">Número de Vendas (Mês Atual)</h2> 
+                    <p id="totalSalesCount" class="text-3xl font-bold text-blue-400">0</p>
+                </div>
+            </div>
+
+            <!-- Filtros de Vendas (Data e Busca) -->
+            <div class="bg-gray-800 p-4 rounded-lg shadow-md mb-6 border border-gray-700">
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <!-- Filtro de Data Início (CUSTOMIZADO) -->
+                    <div>
+                        <label for="filtroDataInicio" class="block text-sm font-medium text-gray-300 mb-1">Data Início</label>
+                        <div class="form-input-with-icon">
+                            <input type="text" id="filtroDataInicio" class="form-input" readonly>
+                            <svg class="input-icon w-5 h-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>
+                        </div>
+                    </div>
+                    <!-- Filtro de Data Fim (CUSTOMIZADO) -->
+                    <div>
+                        <label for="filtroDataFim" class="block text-sm font-medium text-gray-300 mb-1">Data Fim</label>
+                        <div class="form-input-with-icon">
+                            <input type="text" id="filtroDataFim" class="form-input" readonly>
+                            <svg class="input-icon w-5 h-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>
+                        </div>
+                    </div>
+                    <div class="flex items-end">
+                        <button id="filterDateBtn" class="bg-gray-600 text-white px-5 py-2 rounded-lg shadow-md hover:bg-gray-700 w-full font-medium">Filtrar</button>
+                    </div>
+                </div>
+                <div class="mt-4">
+                    <label for="searchVendas" class="block text-sm font-medium text-gray-300 mb-1">Buscar Venda (Cód, Cliente, Status)</label>
+                    <input type="search" id="searchVendas" class="form-input" placeholder="Buscar por Cód, Cliente ou Status...">
+                </div>
+            </div>
+
+            <!-- Tabela de Vendas Realizadas -->
+            <main class="bg-gray-800 rounded-lg shadow-md overflow-hidden border border-gray-700">
+                <h2 class="text-xl font-semibold p-4 border-b border-gray-700 text-gray-100">Vendas Realizadas</h2>
+                <div class="overflow-x-auto">
+                    <table class="w-full">
+                        <thead class="bg-gray-700">
+                            <tr>
+                                <th class="p-3 text-left text-sm font-semibold text-amber-400 uppercase tracking-wider">Cód.</th>
+                                <th class="p-3 text-left text-sm font-semibold text-amber-400 uppercase tracking-wider">Data</th>
+                                <th class="p-3 text-left text-sm font-semibold text-amber-400 uppercase tracking-wider">Cliente</th>
+                                <th class="p-3 text-left text-sm font-semibold text-amber-400 uppercase tracking-wider">Total</th>
+                                <th class="p-3 text-left text-sm font-semibold text-amber-400 uppercase tracking-wider">Pagamento</th>
+                                <th class="p-3 text-left text-sm font-semibold text-amber-400 uppercase tracking-wider">Status</th>
+                                <th class="p-3 text-left text-sm font-semibold text-amber-400 uppercase tracking-wider">Ações</th>
+                            </tr>
+                        </thead>
+                        <tbody id="salesTableBody" class="divide-y divide-gray-700">
+                            <tr id="loadingMessageVendas">
+                                <td colspan="7" class="p-4 text-center text-gray-400">Carregando vendas...</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+                <!-- Paginação Vendas -->
+                <div id="paginationVendas" class="p-4 flex justify-center items-center gap-2 border-t border-gray-700"></div>
+            </main>
+        </div>
+
+        <!-- ========================= -->
+        <!--    PÁGINA DE CLIENTES     -->
+        <!-- ========================= -->
+        <div id="pageClientes" class="hidden">
+            <!-- Botão e Busca -->
+            <div class="flex flex-col md:flex-row justify-between gap-4 mb-6">
+                <div class="flex-1">
+                    <label for="searchClientes" class="block text-sm font-medium text-gray-300 mb-1">Buscar Cliente (Nome ou CPF)</label>
+                    <input type="search" id="searchClientes" class="form-input" placeholder="Buscar por Nome ou CPF...">
+                </div>
+                <div class="flex items-end">
+                    <button id="openClientModalBtn" class="bg-blue-600 text-white px-5 py-2 rounded-lg shadow-md hover:bg-blue-700 w-full md:w-auto font-semibold">
+                        + Adicionar Novo Cliente
+                    </button>
+                </div>
+            </div>
+            
+            <!-- Tabela de Clientes -->
+            <main class="bg-gray-800 rounded-lg shadow-md overflow-hidden border border-gray-700">
+                <h2 class="text-xl font-semibold p-4 border-b border-gray-700 text-gray-100">Clientes Cadastrados</h2>
+                <div class="overflow-x-auto">
+                    <table class="w-full">
+                        <thead class="bg-gray-700">
+                            <tr>
+                                <th class="p-3 text-left text-sm font-semibold text-amber-400 uppercase tracking-wider">Nome</th>
+                                <th class="p-3 text-left text-sm font-semibold text-amber-400 uppercase tracking-wider">Telefone</th>
+                                <th class="p-3 text-left text-sm font-semibold text-amber-400 uppercase tracking-wider">CPF</th>
+                                <th class="p-3 text-left text-sm font-semibold text-amber-400 uppercase tracking-wider">Ações</th>
+                            </tr>
+                        </thead>
+                        <tbody id="clientsTableBody" class="divide-y divide-gray-700">
+                            <tr id="loadingMessageClientes">
+                                <td colspan="4" class="p-4 text-center text-gray-400">Carregando clientes...</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+                <!-- Paginação Clientes -->
+                <div id="paginationClientes" class="p-4 flex justify-center items-center gap-2 border-t border-gray-700"></div>
+            </main>
+        </div>
+
+        <!-- ========================= -->
+        <!--    PÁGINA DE PRODUTOS     -->
+        <!-- ========================= -->
+        <div id="pageProdutos" class="hidden">
+             <!-- Botão e Busca -->
+             <div class="flex flex-col md:flex-row justify-between gap-4 mb-6">
+                <div class="flex-1">
+                    <label for="searchProdutos" class="block text-sm font-medium text-gray-300 mb-1">Buscar Produto (Cód. ou Nome)</label>
+                    <input type="search" id="searchProdutos" class="form-input" placeholder="Buscar por Cód. ou Nome...">
+                </div>
+                <div class="flex items-end">
+                    <button id="openProductModalBtn" class="bg-green-600 text-white px-5 py-2 rounded-lg shadow-md hover:bg-green-700 w-full md:w-auto font-semibold">
+                        + Adicionar Novo Produto
+                    </button>
+                </div>
+            </div>
+            
+            <!-- Tabela de Produtos -->
+            <main class="bg-gray-800 rounded-lg shadow-md overflow-hidden border border-gray-700">
+                <h2 class="text-xl font-semibold p-4 border-b border-gray-700 text-gray-100">Produtos Cadastrados</h2>
+                <div class="overflow-x-auto">
+                    <table class="w-full">
+                        <thead class="bg-gray-700">
+                            <tr>
+                                <th class="p-3 text-left text-sm font-semibold text-amber-400 uppercase tracking-wider">Cód.</th>
+                                <th class="p-3 text-left text-sm font-semibold text-amber-400 uppercase tracking-wider">Nome</th>
+                                <th class="p-3 text-left text-sm font-semibold text-amber-400 uppercase tracking-wider">Preço Venda</th>
+                                <th class="p-3 text-left text-sm font-semibold text-amber-400 uppercase tracking-wider">Estoque</th>
+                                <th class="p-3 text-left text-sm font-semibold text-amber-400 uppercase tracking-wider">Ações</th>
+                            </tr>
+                        </thead>
+                        <tbody id="productsTableBody" class="divide-y divide-gray-700">
+                            <tr id="loadingMessageProdutos">
+                                <td colspan="5" class="p-4 text-center text-gray-400">Carregando produtos...</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+                <!-- Paginação Produtos -->
+                <div id="paginationProdutos" class="p-4 flex justify-center items-center gap-2 border-t border-gray-700"></div>
+            </main>
+        </div>
+    </div>
+
+    <!-- =================================================================================== -->
+    <!-- =================================== MODAIS ======================================== -->
+    <!-- =================================================================================== -->
+
+    <!-- ========================= -->
+    <!--    MODAL DE NOVA VENDA    -->
+    <!-- ========================= -->
+    <div id="saleModal" class="fixed inset-0 bg-black bg-opacity-75 flex items-start justify-center p-4 hidden z-50 overflow-y-auto">
+        <div class="bg-gray-800 p-6 rounded-lg shadow-xl w-full max-w-lg my-8 mt-16 border border-gray-700">
+            <!-- Cabeçalho do Modal -->
+            <div class="flex justify-between items-center mb-6">
+                <h2 class="text-2xl font-bold text-gray-100">Registrar Nova Venda</h2>
+                <button id="closeModalBtn" class="text-gray-400 hover:text-white text-3xl leading-none">&times;</button>
+            </div>
+
+            <form id="saleForm" class="space-y-4 max-h-[70vh] overflow-y-auto pr-2">
+                
+                <!-- Cliente -->
+                <div class="relative">
+                    <label for="customerSearchInput" class="block text-sm font-medium text-gray-300 mb-1">Cliente (Nome ou CPF)</label>
+                    <input type="text" id="customerSearchInput" class="form-input" placeholder="Digite nome ou CPF..." autocomplete="off">
+                    <div id="customerResults" class="absolute z-30 w-full bg-gray-700 border border-gray-600 rounded-lg shadow-lg mt-1 max-h-48 overflow-y-auto hidden">
+                        <!-- Resultados da busca de clientes -->
+                    </div>
+                </div>
+                
+                <hr class="my-4 border-gray-700">
+                
+                <!-- Sub-Formulário: Adicionar Item -->
+                <h3 class="text-lg font-semibold text-gray-200">Adicionar Produtos</h3>
+                <div class="relative">
+                    <label for="productSearchInput" class="block text-sm font-medium text-gray-300 mb-1">Produto (Nome ou Cód.)</label>
+                    <input type="text" id="productSearchInput" class="form-input" placeholder="Digite nome ou código..." autocomplete="off">
+                    <div id="productResults" class="absolute z-20 w-full bg-gray-700 border border-gray-600 rounded-lg shadow-lg mt-1 max-h-48 overflow-y-auto hidden">
+                        <!-- Resultados da busca de produtos -->
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                        <label for="itemQuantity" class="block text-sm font-medium text-gray-300 mb-1">Qtd.</label>
+                        <input type="number" id="itemQuantity" min="1" value="1" class="form-input">
+                    </div>
+                     <div>
+                        <label for="itemUnitPrice" class="block text-sm font-medium text-gray-300 mb-1">Preço Unit.</label>
+                        <input type="text" id="itemUnitPrice" class="form-input bg-gray-600" placeholder="R$ 0,00" disabled>
+                        <input type="hidden" id="itemUnitPriceNumeric">
+                    </div>
+                </div>
+
+                <!-- Desconto (R$ ou %) - CUSTOMIZADO -->
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div class="md:col-span-1 relative" id="itemDiscountTypeSelect">
+                        <label class="block text-sm font-medium text-gray-300 mb-1">Tipo Desc.</label>
+                        <input type="hidden" id="itemDiscountTypeValue" value="R$">
+                        <button type="button" class="custom-select-trigger form-input">
+                            <span id="itemDiscountTypeDisplay" class="custom-select-value">R$</span>
+                            <svg class="chevron-icon" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 20 20"><path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M6 8l4 4 4-4"/></svg>
+                        </button>
+                        <div id="itemDiscountTypeOptions" class="custom-select-options absolute z-40 hidden">
+                            <div class="custom-select-option" data-value="R$">R$</div>
+                            <div class="custom-select-option" data-value="%">%</div>
+                        </div>
+                    </div>
+                    <div class="md:col-span-2">
+                        <label for="itemDiscountValue" class="block text-sm font-medium text-gray-300 mb-1">Valor Desconto</label>
+                        <input type="number" id="itemDiscountValue" class="form-input" placeholder="0" min="0" value="0">
+                    </div>
+                </div>
+                
+                <button type="button" id="addItemToSaleBtn" class="w-full bg-blue-600 text-white px-4 py-2 rounded-lg shadow-md hover:bg-blue-700 transition duration-300 font-semibold">
+                    Adicionar Produto à Venda
+                </button>
+                <!-- Fim do Sub-Formulário -->
+
+                <hr class="my-4 border-gray-700">
+
+                <!-- Itens Adicionados (Carrinho) -->
+                <h3 class="text-lg font-semibold text-gray-200">Itens da Venda</h3>
+                <div id="saleItemsList" class="space-y-2 max-h-40 overflow-y-auto border p-2 rounded-lg bg-gray-700 border-gray-600">
+                    <p id="emptyCartMessage" class="text-gray-400 text-center text-sm">Nenhum produto adicionado.</p>
+                    <!-- Itens do carrinho são injetados aqui -->
+                </div>
+
+                <!-- Entrega (CUSTOM SELECT) -->
+                <div class="relative" id="deliveryMethodSelect">
+                    <label class="block text-sm font-medium text-gray-300 mb-1">Entrega / Retirada</label>
+                    <input type="hidden" id="deliveryMethodValue" value="Retirada">
+                    <button type="button" class="custom-select-trigger form-input">
+                        <span id="deliveryMethodDisplay" class="custom-select-value">Retirada</span>
+                        <svg class="chevron-icon" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 20 20"><path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M6 8l4 4 4-4"/></svg>
+                    </button>
+                    <div id="deliveryMethodOptions" class="custom-select-options absolute z-40 hidden">
+                        <div class="custom-select-option" data-value="Retirada">Retirada</div>
+                        <div class="custom-select-option" data-value="Entrega">Entrega</div>
+                    </div>
+                </div>
+                
+                <!-- Endereço de Entrega (CUSTOM SELECT) -->
+                <div id="deliveryAddressContainer" class="hidden space-y-2">
+                    <label class="block text-sm font-medium text-gray-300 mb-1">Selecionar Endereço</label>
+                    <div class="relative" id="deliveryAddressSelect">
+                        <input type="hidden" id="deliveryAddressSelectValue">
+                        <button type="button" class="custom-select-trigger form-input">
+                            <span id="deliveryAddressDisplay" class="custom-select-value">Selecione um endereço...</span>
+                            <svg class="chevron-icon" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 20 20"><path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M6 8l4 4 4-4"/></svg>
+                        </button>
+                        <div id="deliveryAddressOptions" class="custom-select-options absolute z-40 hidden">
+                            <!-- Opções preenchidas por JS -->
+                        </div>
+                    </div>
+                    <button type="button" id="openNewAddressModalBtn" class="mt-2 text-sm text-amber-400 hover:text-amber-500 font-medium">+ Adicionar novo endereço</button>
+                </div>
+
+                <!-- Pagamento (CUSTOM SELECT) -->
+                <div class="relative" id="paymentMethodSelect">
+                    <label class="block text-sm font-medium text-gray-300 mb-1">Modalidade de Pagamento</label>
+                    <input type="hidden" id="paymentMethodValue" value="À vista">
+                    <button type="button" class="custom-select-trigger form-input">
+                        <span id="paymentMethodDisplay" class="custom-select-value">À vista</span>
+                        <svg class="chevron-icon" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 20 20"><path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M6 8l4 4 4-4"/></svg>
+                    </button>
+                    <div id="paymentMethodOptions" class="custom-select-options absolute z-40 hidden">
+                        <div class="custom-select-option" data-value="À vista">À vista</div>
+                        <div class="custom-select-option" data-value="Pix">Pix</div>
+                        <div class="custom-select-option" data-value="Débito">Débito</div>
+                        <div class="custom-select-option" data-value="Crédito">Crédito</div>
+                    </div>
+                </div>
+                
+                <div id="paymentDetailsContainer" class="hidden space-y-4 p-4 border rounded-lg bg-gray-700 border-gray-600">
+                    <h4 class="text-md font-semibold text-gray-200">Detalhes do Parcelamento</h4>
+                    <div>
+                        <label for="downPayment" class="block text-sm font-medium text-gray-300 mb-1">Valor de Entrada (R$)</label>
+                        <input type="text" id="downPayment" class="form-input" placeholder="R$ 0,00" value="0">
+                        <input type="hidden" id="downPaymentNumeric" value="0">
+                    </div>
+                    <!-- Parcelas (CUSTOM SELECT) -->
+                    <div class="relative" id="installmentsSelect">
+                        <label class="block text-sm font-medium text-gray-300 mb-1">Parcelas</label>
+                        <input type="hidden" id="installmentsValue" value="1">
+                        <button type="button" class="custom-select-trigger form-input">
+                            <span id="installmentsDisplay" class="custom-select-value">1x</span>
+                            <svg class="chevron-icon" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 20 20"><path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M6 8l4 4 4-4"/></svg>
+                        </button>
+                        <div id="installmentsOptions" class="custom-select-options absolute z-40 hidden">
+                            <!-- Opções de 1x a 12x -->
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Resumo da Venda -->
+                <div id="saleSummary" class="mt-4 p-4 border rounded-lg bg-gray-700 text-gray-200 space-y-2 border-gray-600">
+                    <h4 class="font-bold text-lg">Resumo da Venda</h4>
+                    <div class="flex justify-between text-sm">
+                        <span>Subtotal:</span>
+                        <span id="summarySubtotal" class="font-semibold">R$ 0,00</span>
+                    </div>
+                    <div id="summaryTaxContainer" class="flex justify-between text-sm text-red-400 hidden">
+                        <span>Taxa (Cliente):</span>
+                        <span id="summaryTaxValue" class="font-semibold">R$ 0,00</span>
+                    </div>
+                    <div class="flex justify-between border-t border-gray-600 pt-1">
+                        <span class="font-bold">Total Cliente:</span>
+                        <span id="summaryTotal" class="font-semibold text-lg">R$ 0,00</span>
+                    </div>
+                    <div id="summaryFinancing" class="hidden space-y-2 pt-2 border-t border-gray-600">
+                        <div class="flex justify-between text-sm">
+                            <span>Valor de Entrada:</span>
+                            <span id="summaryDownPayment" class="font-semibold">R$ 0,00</span>
+                        </div>
+                        <div class="flex justify-between text-sm">
+                            <span>Valor a Parcelar:</span>
+                            <span id="summaryToFinance" class="font-semibold">R$ 0,00</span>
+                        </div>
+                        <div class="flex justify-between">
+                            <span class="font-medium">Valor da Parcela:</span>
+                            <span id="summaryInstallmentValue" class="font-semibold text-lg text-green-400">R$ 0,00</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Botão de Submit -->
+                <div class="flex justify-end pt-4 mt-4 border-t border-gray-700">
+                    <button id="submitBtn" type="submit" class="w-full bg-amber-500 text-black px-5 py-3 rounded-lg shadow-md hover:bg-amber-600 transition duration-300 ease-in-out flex items-center justify-center font-semibold">
+                        <span id="submitBtnText">Registrar Venda</span>
+                        <div id="submitSpinner" class="spinner hidden"></div>
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- ======================================= -->
+    <!--    MODAL DE CADASTRO/EDIÇÃO DE CLIENTE  -->
+    <!-- ======================================= -->
+    <div id="clientModal" class="fixed inset-0 bg-black bg-opacity-75 flex items-start justify-center p-4 hidden z-50 overflow-y-auto">
+        <div class="bg-gray-800 p-6 rounded-lg shadow-xl w-full max-w-lg my-8 mt-16 border border-gray-700">
+            <!-- Cabeçalho do Modal -->
+            <div class="flex justify-between items-center mb-6">
+                <h2 id="clientModalTitle" class="text-2xl font-bold text-gray-100">Cadastrar Novo Cliente</h2>
+                <button id="closeClientModalBtn" class="text-gray-400 hover:text-white text-3xl leading-none">&times;</button>
+            </div>
+            <!-- Formulário de Cliente -->
+            <form id="clientForm" class="space-y-4 max-h-[70vh] overflow-y-auto pr-2">
+                <input type="hidden" id="clientId">
+                <div>
+                    <label for="clientName" class="block text-sm font-medium text-gray-300 mb-1">Nome Completo</label>
+                    <input type="text" id="clientName" class="form-input" required>
+                </div>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                        <label for="clientCPF" class="block text-sm font-medium text-gray-300 mb-1">CPF (Opcional)</label>
+                        <input type="text" id="clientCPF" class="form-input" placeholder="000.000.000-00" maxlength="14">
+                    </div>
+                    <div>
+                        <label for="clientPhone" class="block text-sm font-medium text-gray-300 mb-1">Telefone</label>
+                        <input type="text" id="clientPhone" class="form-input" placeholder="(00) 00000-0000" maxlength="15">
+                    </div>
+                </div>
+
+                <h4 class="text-md font-semibold text-gray-200 pt-2 border-t border-gray-700 mt-4">Endereço Principal</h4>
+                
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div class="md:col-span-1">
+                        <label for="clientCEP" class="block text-sm font-medium text-gray-300 mb-1">CEP</label>
+                        <input type="text" id="clientCEP" class="form-input" placeholder="00000-000" maxlength="9">
+                    </div>
+                    <div class="md:col-span-2 flex items-end">
+                        <span id="cepError" class="text-red-400 text-sm"></span>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div class="md:col-span-2">
+                        <label for="clientRua" class="block text-sm font-medium text-gray-300 mb-1">Rua</label>
+                        <input type="text" id="clientRua" class="form-input" required>
+                    </div>
+                    <div class="md:col-span-1">
+                        <label for="clientNumero" class="block text-sm font-medium text-gray-300 mb-1">Número</label>
+                        <input type="text" id="clientNumero" class="form-input" required>
+                    </div>
+                </div>
+
+                <div>
+                    <label for="clientBairro" class="block text-sm font-medium text-gray-300 mb-1">Bairro</label>
+                    <input type="text" id="clientBairro" class="form-input" required>
+                </div>
+                
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div class="md:col-span-2">
+                        <label for="clientCidade" class="block text-sm font-medium text-gray-300 mb-1">Cidade</label>
+                        <input type="text" id="clientCidade" class="form-input" required>
+                    </div>
+                    <div class="md:col-span-1">
+                        <label for="clientEstado" class="block text-sm font-medium text-gray-300 mb-1">Estado</label>
+                        <input type="text" id="clientEstado" class="form-input" required maxlength="2">
+                    </div>
+                </div>
+
+                <div>
+                    <label for="clientReferencia" class="block text-sm font-medium text-gray-300 mb-1">Ponto de Referência (Opcional)</label>
+                    <input type="text" id="clientReferencia" class="form-input">
+                </div>
+
+
+                <!-- Botão de Submit -->
+                <div class="flex justify-end pt-4 mt-4 border-t border-gray-700">
+                    <button id="submitClientBtn" type="submit" class="w-full bg-blue-600 text-white px-5 py-3 rounded-lg shadow-md hover:bg-blue-700 transition duration-300 ease-in-out flex items-center justify-center font-semibold">
+                        <span id="submitClientBtnText">Salvar Cliente</span>
+                        <div id="submitClientSpinner" class="spinner hidden"></div>
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- ========================================== -->
+    <!--    MODAL DE CADASTRO/EDIÇÃO DE PRODUTO     -->
+    <!-- ========================================== -->
+    <div id="productModal" class="fixed inset-0 bg-black bg-opacity-75 flex items-start justify-center p-4 hidden z-50 overflow-y-auto">
+        <div class="bg-gray-800 p-6 rounded-lg shadow-xl w-full max-w-lg my-8 mt-16 border border-gray-700">
+            <!-- Cabeçalho do Modal -->
+            <div class="flex justify-between items-center mb-6">
+                <h2 id="productModalTitle" class="text-2xl font-bold text-gray-100">Cadastrar Novo Produto</h2>
+                <button id="closeProductModalBtn" class="text-gray-400 hover:text-white text-3xl leading-none">&times;</button>
+            </div>
+            
+            <form id="productForm" class="space-y-4 max-h-[70vh] overflow-y-auto pr-2">
+                <input type="hidden" id="productId">
+                
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div class="md:col-span-1">
+                        <label for="productCodeInput" class="block text-sm font-medium text-gray-300 mb-1">Cód. Produto</label>
+                        <input type="text" id="productCodeInput" class="form-input bg-gray-600" disabled>
+                    </div>
+                    <div class="md:col-span-2">
+                        <label for="newProductName" class="block text-sm font-medium text-gray-300 mb-1">Nome do Produto</label>
+                        <input type="text" id="newProductName" class="form-input" required>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                        <label for="newProductCostPrice" class="block text-sm font-medium text-gray-300 mb-1">Preço de Custo (R$)</label>
+                        <input type="text" id="newProductCostPrice" class="form-input" placeholder="R$ 0,00" required>
+                        <input type="hidden" id="newProductCostPriceNumeric">
+                    </div>
+                    <div>
+                        <label for="newProductSalePrice" class="block text-sm font-medium text-gray-300 mb-1">Preço de Venda (R$)</label>
+                        <input type="text" id="newProductSalePrice" class="form-input" placeholder="R$ 0,00" required>
+                        <input type="hidden" id="newProductSalePriceNumeric">
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                        <label for="newProductProfitValue" class="block text-sm font-medium text-gray-300 mb-1">Valor do Lucro (R$)</label>
+                        <input type="text" id="newProductProfitValue" class="form-input bg-gray-600" placeholder="R$ 0,00" disabled>
+                    </div>
+                    <div>
+                        <label for="newProductProfitPercentage" class="block text-sm font-medium text-gray-300 mb-1">Margem de Lucro (%)</label> 
+                        <input type="text" id="newProductProfitPercentage" class="form-input bg-gray-600" placeholder="0,00%" disabled>
+                    </div>
+                </div>
+
+                <div>
+                    <label for="newProductDescription" class="block text-sm font-medium text-gray-300 mb-1">Descrição (Opcional)</label>
+                    <textarea id="newProductDescription" rows="3" class="form-input"></textarea>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                        <label for="newProductStock" class="block text-sm font-medium text-gray-300 mb-1">Estoque Atual</label>
+                        <input type="number" id="newProductStock" class="form-input" min="0" value="0" required>
+                    </div>
+                    <div>
+                        <label for="newProductMinStock" class="block text-sm font-medium text-gray-300 mb-1">Estoque Mínimo</label>
+                        <input type="number" id="newProductMinStock" class="form-input" min="0" value="0" required>
+                    </div>
+                </div>
+
+                <!-- Botão de Submit -->
+                <div class="flex justify-end pt-4 mt-4 border-t border-gray-700">
+                    <button id="submitProductBtn" type="submit" class="w-full bg-green-600 text-white px-5 py-3 rounded-lg shadow-md hover:bg-green-700 transition duration-300 ease-in-out flex items-center justify-center font-semibold">
+                        <span id="submitProductBtnText">Salvar Produto</span>
+                        <div id="submitProductSpinner" class="spinner hidden"></div>
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- =========================== -->
+    <!--    MODAL DE VISUALIZAR VENDA  -->
+    <!-- =========================== -->
+    <div id="viewSaleModal" class="fixed inset-0 bg-black bg-opacity-75 flex items-start justify-center p-4 hidden z-50 overflow-y-auto">
+        <div class="bg-gray-800 p-6 rounded-lg shadow-xl w-full max-w-lg my-8 mt-16 border border-gray-700">
+            <div class="flex justify-between items-center mb-4">
+                <h2 class="text-2xl font-bold text-gray-100">Detalhes da Venda</h2>
+                <button id="closeViewSaleModalBtn" class="text-gray-400 hover:text-white text-3xl leading-none">&times;</button>
+            </div>
+            <div id="viewSaleContent" class="space-y-3 text-gray-200 max-h-[70vh] overflow-y-auto pr-2">
+                <!-- Conteúdo preenchido por JS -->
+            </div>
+        </div>
+    </div>
+
+    <!-- =========================== -->
+    <!--    MODAL DE CONFIRMAR AÇÃO (Excluir / Cancelar) -->
+    <!-- =========================== -->
+    <div id="confirmActionModal" class="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center p-4 hidden z-50">
+        <div class="bg-gray-800 p-6 rounded-lg shadow-xl w-full max-w-sm border border-gray-700">
+            <h2 id="confirmActionTitle" class="text-xl font-bold text-gray-100 mb-4">Confirmar Ação</h2>
+            <p id="confirmActionText" class="text-gray-300 mb-6">Tem certeza?</p>
+            
+            <!-- Campo de Motivo de Cancelamento -->
+            <div id="cancelReasonContainer" class="hidden mb-4">
+                <label for="cancelReason" class="block text-sm font-medium text-gray-300 mb-1">Motivo do Cancelamento (Obrigatório)</label>
+                <textarea id="cancelReason" rows="3" class="form-input" placeholder="Descreva o motivo..."></textarea>
+            </div>
+
+            <div class="flex justify-end gap-4">
+                <button id="cancelActionBtn" class="bg-gray-600 text-gray-100 px-4 py-2 rounded-lg hover:bg-gray-700">Voltar</button>
+                <button id="confirmActionBtn" class="bg-red-600 text-white px-4 py-2 rounded-lg hover:bg-red-700 flex items-center justify-center font-semibold">
+                    <span id="actionBtnText">Confirmar</span>
+                    <div id="actionSpinner" class="spinner hidden"></div>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ================================== -->
+    <!--    MODAL DE INFORMAÇÃO (AVISO)     -->
+    <!-- ================================== -->
+    <div id="infoModal" class="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center p-4 hidden z-50">
+        <div class="bg-gray-800 p-6 rounded-lg shadow-xl w-full max-w-sm border border-gray-700">
+            <h2 id="infoModalTitle" class="text-xl font-bold text-amber-400 mb-4">Aviso</h2>
+            <p id="infoModalText" class="text-gray-300 mb-6"></p>
+            <div class="flex justify-end">
+                <button id="closeInfoModalBtn" class="bg-amber-500 text-black px-5 py-2 rounded-lg shadow-md hover:bg-amber-600 font-semibold">
+                    Entendido
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ================================== -->
+    <!--    MODAL DE CALENDÁRIO             -->
+    <!-- ================================== -->
+    <div id="calendarModal" class="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center p-4 hidden z-50">
+        <div class="bg-gray-800 p-4 rounded-lg shadow-xl w-full max-w-xs border border-gray-700">
+            <div class="calendar-header mb-4">
+                <button id="calendarPrevBtn" class="p-2 rounded-full hover:bg-gray-700">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path></svg>
+                </button>
+                <h3 id="calendarMonthYear" class="text-lg font-semibold text-amber-400"></h3>
+                <button id="calendarNextBtn" class="p-2 rounded-full hover:bg-gray-700">
+                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path></svg>
+                </button>
+            </div>
+            <div class="calendar-grid">
+                <!-- Dias da Semana (DOM) -->
+                <div class="calendar-dow">D</div>
+                <div class="calendar-dow">S</div>
+                <div class="calendar-dow">T</div>
+                <div class="calendar-dow">Q</div>
+                <div class="calendar-dow">Q</div>
+                <div class="calendar-dow">S</div>
+                <div class="calendar-dow">S</div>
+            </div>
+            <div id="calendarDaysGrid" class="calendar-grid mt-2">
+                <!-- Dias do Mês (JS) -->
+            </div>
+            <button id="calendarCloseBtn" class="mt-4 w-full bg-gray-600 text-gray-100 px-4 py-2 rounded-lg hover:bg-gray-700 text-sm">
+                Fechar
+            </button>
+        </div>
+    </div>
+
+    <!-- ================================== -->
+    <!--    MODAL NOVO ENDEREÇO             -->
+    <!-- ================================== -->
+    <div id="newAddressModal" class="fixed inset-0 bg-black bg-opacity-75 flex items-start justify-center p-4 hidden z-50 overflow-y-auto">
+        <div class="bg-gray-800 p-6 rounded-lg shadow-xl w-full max-w-lg my-8 mt-16 border border-gray-700">
+            <div class="flex justify-between items-center mb-6">
+                <h2 id="newAddressModalTitle" class="text-2xl font-bold text-gray-100">Novo Endereço de Entrega</h2>
+                <button id="closeNewAddressModalBtn" class="text-gray-400 hover:text-white text-3xl leading-none">&times;</button>
+            </div>
+            <form id="newAddressForm" class="space-y-4 max-h-[70vh] overflow-y-auto pr-2">
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div class="md:col-span-1">
+                        <label for="newAddressCEP" class="block text-sm font-medium text-gray-300 mb-1">CEP</label>
+                        <input type="text" id="newAddressCEP" class="form-input" placeholder="00000-000" maxlength="9">
+                    </div>
+                    <div class="md:col-span-2 flex items-end">
+                        <span id="newAddressCepError" class="text-red-400 text-sm"></span>
+                    </div>
+                </div>
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div class="md:col-span-2">
+                        <label for="newAddressRua" class="block text-sm font-medium text-gray-300 mb-1">Rua</label>
+                        <input type="text" id="newAddressRua" class="form-input" required>
+                    </div>
+                    <div class="md:col-span-1">
+                        <label for="newAddressNumero" class="block text-sm font-medium text-gray-300 mb-1">Número</label>
+                        <input type="text" id="newAddressNumero" class="form-input" required>
+                    </div>
+                </div>
+                <div>
+                    <label for="newAddressBairro" class="block text-sm font-medium text-gray-300 mb-1">Bairro</label>
+                    <input type="text" id="newAddressBairro" class="form-input" required>
+                </div>
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div class="md:col-span-2">
+                        <label for="newAddressCidade" class="block text-sm font-medium text-gray-300 mb-1">Cidade</label>
+                        <input type="text" id="newAddressCidade" class="form-input" required>
+                    </div>
+                    <div class="md:col-span-1">
+                        <label for="newAddressEstado" class="block text-sm font-medium text-gray-300 mb-1">Estado</label>
+                        <input type="text" id="newAddressEstado" class="form-input" required maxlength="2">
+                    </div>
+                </div>
+                <div>
+                    <label for="newAddressReferencia" class="block text-sm font-medium text-gray-300 mb-1">Ponto de Referência (Opcional)</label>
+                    <input type="text" id="newAddressReferencia" class="form-input">
+                </div>
+                <div class="flex justify-end pt-4 mt-4 border-t border-gray-700">
+                    <button id="submitNewAddressBtn" type="submit" class="w-full bg-amber-500 text-black px-5 py-3 rounded-lg shadow-md hover:bg-amber-600 transition duration-300 ease-in-out flex items-center justify-center font-semibold">
+                        <span id="submitNewAddressBtnText">Salvar Endereço</span>
+                        <div id="submitNewAddressSpinner" class="spinner hidden"></div>
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- =========================== -->
+    <!--    MODAL DE RECIBO (CUPOM)  -->
+    <!-- =========================== -->
+    <div id="receiptModal" class="fixed inset-0 bg-black bg-opacity-75 flex items-start justify-center p-4 hidden z-50 overflow-y-auto">
+        <div class="bg-gray-800 p-6 rounded-lg shadow-xl w-full max-w-sm my-8 mt-16 border border-gray-700 print-hide">
+            <div class="flex justify-between items-center mb-4">
+                <h2 class="text-2xl font-bold text-gray-100">Comprovante de Venda</h2>
+                <button id="closeReceiptModalBtn" class="text-gray-400 hover:text-white text-3xl leading-none">&times;</button>
+            </div>
+            <div class="flex justify-end gap-4">
+                <button id="printReceiptBtn" class="w-full bg-amber-500 text-black px-4 py-2 rounded-lg hover:bg-amber-600 font-semibold">
+                    Imprimir Recibo
+                </button>
+            </div>
+        </div>
+        <div id="receiptContentWrapper" class="bg-white text-black p-4 rounded-lg w-full max-w-sm" style="font-family: 'Courier New', Courier, monospace;">
+            <div id="receiptContent" class="max-h-[70vh] overflow-y-auto">
+                <!-- Conteúdo do Recibo preenchido por JS -->
+            </div>
+        </div>
+    </div>
+
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            
+            // --- Acesso ao Firebase (disponibilizado via 'window') ---
+            const { 
+                db, auth, collection, addDoc, onSnapshot, query, serverTimestamp, 
+                doc, updateDoc, deleteDoc, getDocs, getDoc, arrayUnion, where,
+                onAuthStateChanged, signInWithEmailAndPassword, signOut
+            } = window.firebase;
+            
+            // --- REFERÊNCIAS DE COLEÇÃO ---
+            const salesCollection = collection(db, "vendas");
+            const clientsCollection = collection(db, "clientes");
+            const productsCollection = collection(db, "produtos");
+            
+            // --- Taxas do Cartão ---
+            const cardRates = {
+                debit: 0.0137, 
+                credit: [
+                    0, 0.0420, 0.0609, 0.0701, 0.0791, 0.0880, 0.0967, 
+                    0.1259, 0.1342, 0.1425, 0.1506, 0.1587, 0.1666
+                ]
+            };
+
+            // --- Ícones SVG ---
+            const editIconSVG = `<svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-amber-400" viewBox="0 0 20 20" fill="currentColor"><path d="M17.414 2.586a2 2 0 00-2.828 0L7 10.172V13h2.828l7.586-7.586a2 2 0 000-2.828zM5 12V7.172l5-5L14.828 7l-5 5H5zM3 17h14v-2H3v2z" /></svg>`;
+            const deleteIconSVG = `<svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-red-500" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 6h6v10H7V6z" clip-rule="evenodd" /></svg>`;
+            const viewIconSVG = `<svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-gray-300" viewBox="0 0 20 20" fill="currentColor"><path d="M10 12a2 2 0 100-4 2 2 0 000 4z" /><path fill-rule="evenodd" d="M.458 10C1.732 5.943 5.522 3 10 3s8.268 2.943 9.542 7c-1.274 4.057-5.03 7-9.542 7S1.732 14.057.458 10zM14 10a4 4 0 11-8 0 4 4 0 018 0z" clip-rule="evenodd" /></svg>`;
+            const disabledIconSVG = `<svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-gray-600" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd" /></svg>`;
+            const trashIconSVG = `<svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-red-500 hover:text-red-400" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 6h6v10H7V6z" clip-rule="evenodd" /></svg>`;
+            const receiptIconSVG = `<svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-blue-400" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M5 2a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V4a2 2 0 00-2-2H5zm3 4a1 1 0 000 2h4a1 1 0 100-2H8zm0 3a1 1 0 100 2h4a1 1 0 100-2H8zm0 3a1 1 0 100 2h2a1 1 0 100-2H8z" clip-rule="evenodd" /></svg>`;
+
+            // --- Estado Global da Aplicação ---
+            let sales = []; 
+            let clients = []; 
+            let products = []; 
+            
+            let filteredSales = []; 
+            let filteredClients = []; 
+            let filteredProducts = []; 
+            
+            const ITEMS_PER_PAGE = 10;
+            let currentSalesPage = 1;
+            let currentClientsPage = 1;
+            let currentProductsPage = 1;
+            
+            let onSalesPageClick, onClientsPageClick, onProductsPageClick;
+
+            let currentSaleCode = 0; 
+            let currentProductCode = 0; 
+            let currentEditId = null;
+            let currentDeleteInfo = { id: null, type: null };
+            let selectedCustomerId = null;
+            let selectedProductId = null;
+            let tempSaleItems = []; 
+            let tempSelectedProduct = null; 
+            let firebaseListenersAttached = false; 
+            
+            // --- Estado do Calendário Customizado ---
+            let calendarTargetInput = null;
+            let calendarCurrentDate = new Date();
+
+            // --- Seletores do DOM (Auth) ---
+            const authScreen = document.getElementById('authScreen');
+            const authMessage = document.getElementById('authMessage');
+            const loginForm = document.getElementById('loginForm');
+            const authEmail = document.getElementById('authEmail');
+            const authPassword = document.getElementById('authPassword');
+            const loginBtn = document.getElementById('loginBtn');
+            const loginBtnText = document.getElementById('loginBtnText');
+            const loginSpinner = document.getElementById('loginSpinner');
+            const logoutBtn = document.getElementById('logoutBtn');
+            const userName = document.getElementById('userName');
+
+            // --- Seletores do DOM (App) ---
+            const appContainer = document.getElementById('appContainer');
+            const navVendas = document.getElementById('navVendas');
+            const navClientes = document.getElementById('navClientes');
+            const navProdutos = document.getElementById('navProdutos');
+            const pageVendas = document.getElementById('pageVendas');
+            const pageClientes = document.getElementById('pageClientes');
+            const pageProdutos = document.getElementById('pageProdutos');
+            const allNavTabs = [navVendas, navClientes, navProdutos];
+            const allPages = [pageVendas, pageClientes, pageProdutos];
+            const openModalBtn = document.getElementById('openModalBtn');
+            const salesTableBody = document.getElementById('salesTableBody');
+            const loadingMessageVendas = document.getElementById('loadingMessageVendas');
+            const totalSalesValue = document.getElementById('totalSalesValue');
+            const totalSalesCount = document.getElementById('totalSalesCount');
+            const salesValueTitle = document.getElementById('salesValueTitle');
+            const salesCountTitle = document.getElementById('salesCountTitle');
+            const closeModalBtn = document.getElementById('closeModalBtn');
+            const saleModal = document.getElementById('saleModal');
+            const saleForm = document.getElementById('saleForm');
+            const submitBtn = document.getElementById('submitBtn');
+            const submitBtnText = document.getElementById('submitBtnText');
+            const submitSpinner = document.getElementById('submitSpinner');
+            const filtroDataInicio = document.getElementById('filtroDataInicio');
+            const filtroDataFim = document.getElementById('filtroDataFim');
+            const filterDateBtn = document.getElementById('filterDateBtn');
+            const searchVendas = document.getElementById('searchVendas');
+            const paginationVendas = document.getElementById('paginationVendas');
+            const customerSearchInput = document.getElementById('customerSearchInput');
+            const customerResults = document.getElementById('customerResults');
+            const productSearchInput = document.getElementById('productSearchInput');
+            const productResults = document.getElementById('productResults');
+            const itemQuantity = document.getElementById('itemQuantity');
+            const itemUnitPrice = document.getElementById('itemUnitPrice');
+            const itemUnitPriceNumeric = document.getElementById('itemUnitPriceNumeric');
+            
+            // --- Novos Seletores (Desconto % - CUSTOM) ---
+            const itemDiscountTypeSelect = document.getElementById('itemDiscountTypeSelect');
+            const itemDiscountTypeValue = document.getElementById('itemDiscountTypeValue');
+            const itemDiscountTypeDisplay = document.getElementById('itemDiscountTypeDisplay');
+            const itemDiscountTypeOptions = document.getElementById('itemDiscountTypeOptions');
+            const itemDiscountValue = document.getElementById('itemDiscountValue');
+            
+            const saleItemsList = document.getElementById('saleItemsList');
+            const emptyCartMessage = document.getElementById('emptyCartMessage'); 
+            
+            const deliveryMethodSelect = document.getElementById('deliveryMethodSelect');
+            const deliveryMethodValue = document.getElementById('deliveryMethodValue');
+            const deliveryMethodDisplay = document.getElementById('deliveryMethodDisplay');
+            const deliveryMethodOptions = document.getElementById('deliveryMethodOptions');
+            const deliveryAddressContainer = document.getElementById('deliveryAddressContainer');
+            const deliveryAddressSelect = document.getElementById('deliveryAddressSelect');
+            const deliveryAddressSelectValue = document.getElementById('deliveryAddressSelectValue');
+            const deliveryAddressDisplay = document.getElementById('deliveryAddressDisplay');
+            const deliveryAddressOptions = document.getElementById('deliveryAddressOptions');
+            const openNewAddressModalBtn = document.getElementById('openNewAddressModalBtn');
+            const paymentMethodSelect = document.getElementById('paymentMethodSelect');
+            const paymentMethodValue = document.getElementById('paymentMethodValue');
+            const paymentMethodDisplay = document.getElementById('paymentMethodDisplay');
+            const paymentMethodOptions = document.getElementById('paymentMethodOptions');
+            const paymentDetailsContainer = document.getElementById('paymentDetailsContainer');
+            const downPayment = document.getElementById('downPayment');
+            const downPaymentNumeric = document.getElementById('downPaymentNumeric');
+            const installmentsSelect = document.getElementById('installmentsSelect');
+            const installmentsValue = document.getElementById('installmentsValue');
+            const installmentsDisplay = document.getElementById('installmentsDisplay');
+            const installmentsOptions = document.getElementById('installmentsOptions');
+            
+            const saleSummary = document.getElementById('saleSummary');
+            const summarySubtotal = document.getElementById('summarySubtotal');
+            const summaryTaxContainer = document.getElementById('summaryTaxContainer');
+            const summaryTaxValue = document.getElementById('summaryTaxValue');
+            const summaryTotal = document.getElementById('summaryTotal');
+            const summaryFinancing = document.getElementById('summaryFinancing');
+            const summaryDownPayment = document.getElementById('summaryDownPayment');
+            const summaryToFinance = document.getElementById('summaryToFinance');
+            const summaryInstallmentValue = document.getElementById('summaryInstallmentValue');
+            const openClientModalBtn = document.getElementById('openClientModalBtn');
+            const clientModal = document.getElementById('clientModal');
+            const closeClientModalBtn = document.getElementById('closeClientModalBtn');
+            const clientsTableBody = document.getElementById('clientsTableBody');
+            const loadingMessageClientes = document.getElementById('loadingMessageClientes');
+            const clientForm = document.getElementById('clientForm');
+            const submitClientBtn = document.getElementById('submitClientBtn');
+            const submitClientBtnText = document.getElementById('submitClientBtnText');
+            const submitClientSpinner = document.getElementById('submitClientSpinner');
+            const clientModalTitle = document.getElementById('clientModalTitle');
+            const clientId = document.getElementById('clientId');
+            const clientName = document.getElementById('clientName');
+            const clientCPF = document.getElementById('clientCPF');
+            const clientPhone = document.getElementById('clientPhone');
+            const clientCEP = document.getElementById('clientCEP');
+            const cepError = document.getElementById('cepError');
+            const clientRua = document.getElementById('clientRua');
+            const clientNumero = document.getElementById('clientNumero');
+            const clientBairro = document.getElementById('clientBairro');
+            const clientCidade = document.getElementById('clientCidade');
+            const clientEstado = document.getElementById('clientEstado');
+            const clientReferencia = document.getElementById('clientReferencia');
+            const searchClientes = document.getElementById('searchClientes');
+            const paginationClientes = document.getElementById('paginationClientes');
+            const openProductModalBtn = document.getElementById('openProductModalBtn');
+            const productModal = document.getElementById('productModal');
+            const closeProductModalBtn = document.getElementById('closeProductModalBtn');
+            const productsTableBody = document.getElementById('productsTableBody');
+            const loadingMessageProdutos = document.getElementById('loadingMessageProdutos');
+            const productForm = document.getElementById('productForm');
+            const submitProductBtn = document.getElementById('submitProductBtn');
+            const submitProductBtnText = document.getElementById('submitProductBtnText');
+            const submitProductSpinner = document.getElementById('submitProductSpinner');
+            const productModalTitle = document.getElementById('productModalTitle');
+            const productId = document.getElementById('productId');
+            const productCodeInput = document.getElementById('productCodeInput');
+            const newProductName = document.getElementById('newProductName');
+            const newProductCostPrice = document.getElementById('newProductCostPrice');
+            const newProductCostPriceNumeric = document.getElementById('newProductCostPriceNumeric');
+            const newProductSalePrice = document.getElementById('newProductSalePrice');
+            const newProductSalePriceNumeric = document.getElementById('newProductSalePriceNumeric');
+            const newProductProfitValue = document.getElementById('newProductProfitValue');
+            const newProductProfitPercentage = document.getElementById('newProductProfitPercentage');
+            const newProductDescription = document.getElementById('newProductDescription');
+            const newProductStock = document.getElementById('newProductStock');
+            const newProductMinStock = document.getElementById('newProductMinStock');
+            const searchProdutos = document.getElementById('searchProdutos');
+            const paginationProdutos = document.getElementById('paginationProdutos');
+            const viewSaleModal = document.getElementById('viewSaleModal');
+            const closeViewSaleModalBtn = document.getElementById('closeViewSaleModalBtn');
+            const viewSaleContent = document.getElementById('viewSaleContent');
+            
+            // --- Seletores de Modais de Ação/Aviso ---
+            const confirmActionModal = document.getElementById('confirmActionModal');
+            const confirmActionTitle = document.getElementById('confirmActionTitle');
+            const confirmActionText = document.getElementById('confirmActionText');
+            const cancelReasonContainer = document.getElementById('cancelReasonContainer');
+            const cancelReason = document.getElementById('cancelReason');
+            const cancelActionBtn = document.getElementById('cancelActionBtn');
+            const confirmActionBtn = document.getElementById('confirmActionBtn');
+            const actionBtnText = document.getElementById('actionBtnText');
+            const actionSpinner = document.getElementById('actionSpinner');
+
+            const infoModal = document.getElementById('infoModal');
+            const infoModalTitle = document.getElementById('infoModalTitle');
+            const infoModalText = document.getElementById('infoModalText');
+            const closeInfoModalBtn = document.getElementById('closeInfoModalBtn');
+            
+            // --- Seletores do Calendário ---
+            const calendarModal = document.getElementById('calendarModal');
+            const calendarPrevBtn = document.getElementById('calendarPrevBtn');
+            const calendarNextBtn = document.getElementById('calendarNextBtn');
+            const calendarMonthYear = document.getElementById('calendarMonthYear');
+            const calendarDaysGrid = document.getElementById('calendarDaysGrid');
+            const calendarCloseBtn = document.getElementById('calendarCloseBtn');
+
+            const newAddressModal = document.getElementById('newAddressModal');
+            const closeNewAddressModalBtn = document.getElementById('closeNewAddressModalBtn');
+            const newAddressForm = document.getElementById('newAddressForm');
+            const newAddressCEP = document.getElementById('newAddressCEP');
+            const newAddressCepError = document.getElementById('newAddressCepError');
+            const newAddressRua = document.getElementById('newAddressRua');
+            const newAddressNumero = document.getElementById('newAddressNumero');
+            const newAddressBairro = document.getElementById('newAddressBairro');
+            const newAddressCidade = document.getElementById('newAddressCidade');
+            const newAddressEstado = document.getElementById('newAddressEstado');
+            const newAddressReferencia = document.getElementById('newAddressReferencia');
+            const submitNewAddressBtn = document.getElementById('submitNewAddressBtn');
+            const submitNewAddressBtnText = document.getElementById('submitNewAddressBtnText');
+            const submitNewAddressSpinner = document.getElementById('submitNewAddressSpinner');
+            const receiptModal = document.getElementById('receiptModal');
+            const receiptContent = document.getElementById('receiptContent');
+            const closeReceiptModalBtn = document.getElementById('closeReceiptModalBtn');
+            const printReceiptBtn = document.getElementById('printReceiptBtn');
+
+            // --- Inicialização ---
+
+            // --- Lógica do CUSTOM SELECT ---
+            function initCustomSelect(trigger, optionsContainer, valueInput, displaySpan) {
+                const triggerBtn = trigger.querySelector('button');
+                // Adiciona listener nas opções
+                optionsContainer.addEventListener('click', (e) => {
+                    const option = e.target.closest('.custom-select-option');
+                    if (!option) return;
+                    
+                    const newValue = option.dataset.value;
+                    const newText = option.textContent;
+                    
+                    valueInput.value = newValue;
+                    displaySpan.textContent = newText;
+                    
+                    optionsContainer.querySelectorAll('.custom-select-option').forEach(opt => opt.classList.remove('selected'));
+                    option.classList.add('selected');
+
+                    optionsContainer.classList.add('hidden');
+                    valueInput.dispatchEvent(new Event('change'));
+                });
+                
+                // CORREÇÃO: Lógica de Toggle (Abrir/Fechar)
+                triggerBtn.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    const wasOpen = !optionsContainer.classList.contains('hidden');
+                    closeAllSelects(); // Fecha todos os outros
+                    if (!wasOpen) {
+                        optionsContainer.classList.remove('hidden'); // Abre o atual
+                    }
+                    // Se estava aberto, closeAllSelects() já o fechou.
+                });
+            }
+            
+            function closeAllSelects() {
+                document.querySelectorAll('.custom-select-options').forEach(opt => opt.classList.add('hidden'));
+            }
+            document.addEventListener('click', closeAllSelects);
+            
+            function populateInstallments() {
+                installmentsOptions.innerHTML = ''; 
+                for (let i = 1; i <= 12; i++) {
+                    const optionDiv = document.createElement('div');
+                    optionDiv.className = 'custom-select-option';
+                    optionDiv.dataset.value = i;
+                    optionDiv.textContent = `${i}x`;
+                    if(i === 1) optionDiv.classList.add('selected');
+                    installmentsOptions.appendChild(optionDiv);
+                }
+            }
+            populateInstallments(); 
+            
+            // Inicializa TODOS os selects customizados
+            initCustomSelect(deliveryMethodSelect, deliveryMethodOptions, deliveryMethodValue, deliveryMethodDisplay);
+            initCustomSelect(paymentMethodSelect, paymentMethodOptions, paymentMethodValue, paymentMethodDisplay);
+            initCustomSelect(installmentsSelect, installmentsOptions, installmentsValue, installmentsDisplay);
+            // CORREÇÃO: Inicializa o select de desconto
+            initCustomSelect(itemDiscountTypeSelect, itemDiscountTypeOptions, itemDiscountTypeValue, itemDiscountTypeDisplay);
+            // CORREÇÃO: Inicializa o select de endereço
+            initCustomSelect(deliveryAddressSelect, deliveryAddressOptions, deliveryAddressSelectValue, deliveryAddressDisplay);
+
+            
+            // --- Funções de Máscara ---
+            function maskCPF(value) {
+                return value
+                    .replace(/\D/g, '')
+                    .replace(/(\d{3})(\d)/, '$1.$2')
+                    .replace(/(\d{3})(\d)/, '$1.$2')
+                    .replace(/(\d{3})(\d{1,2})/, '$1-$2')
+                    .replace(/(-\d{2})\d+?$/, '$1');
+            }
+
+            function maskPhone(value) {
+                return value
+                    .replace(/\D/g, '')
+                    .replace(/(\d{2})(\d)/, '($1) $2')
+                    .replace(/(\d{5})(\d)/, '$1-$2')
+                    .replace(/(-\d{4})\d+?$/, '$1');
+            }
+
+            function maskCEP(value) {
+                return value
+                    .replace(/\D/g, '')
+                    .replace(/(\d{5})(\d)/, '$1-$2')
+                    .replace(/(-\d{3})\d+?$/, '$1');
+            }
+
+            function maskCurrency(input, hiddenInput) {
+                let value = input.value.replace(/\D/g, '');
+                hiddenInput.value = (Number(value) / 100).toFixed(2); 
+                
+                let num = (Number(value) / 100).toLocaleString('pt-BR', {
+                    style: 'currency',
+                    currency: 'BRL'
+                });
+                
+                input.value = num;
+            }
+
+            clientCPF.addEventListener('input', (e) => e.target.value = maskCPF(e.target.value));
+            clientPhone.addEventListener('input', (e) => e.target.value = maskPhone(e.target.value));
+            clientCEP.addEventListener('input', (e) => e.target.value = maskCEP(e.target.value));
+            newAddressCEP.addEventListener('input', (e) => e.target.value = maskCEP(e.target.value));
+            newProductCostPrice.addEventListener('input', () => {
+                maskCurrency(newProductCostPrice, newProductCostPriceNumeric);
+                calculateProfit();
+            });
+            newProductSalePrice.addEventListener('input', () => {
+                maskCurrency(newProductSalePrice, newProductSalePriceNumeric);
+                calculateProfit();
+            });
+            downPayment.addEventListener('input', () => {
+                maskCurrency(downPayment, downPaymentNumeric);
+                updateSaleSummary(); 
+            });
+            
+            // --- Busca CEP (Genérica) ---
+            async function fetchCEP(cepValue, ruaInput, bairroInput, cidadeInput, estadoInput, erroSpan, numeroInput) {
+                const cep = cepValue.replace(/\D/g, '');
+                erroSpan.textContent = '';
+                if (cep.length === 8) {
+                    try {
+                        const response = await fetch(`https://viacep.com.br/ws/${cep}/json/`);
+                        if (!response.ok) throw new Error('CEP não encontrado');
+                        const data = await response.json();
+                        if (data.erro) {
+                            erroSpan.textContent = 'CEP não encontrado.';
+                        } else {
+                            ruaInput.value = data.logradouro; 
+                            bairroInput.value = data.bairro;
+                            cidadeInput.value = data.localidade;
+                            estadoInput.value = data.uf;
+                            numeroInput.focus(); 
+                        }
+                    } catch (error) {
+                        erroSpan.textContent = 'Erro ao buscar CEP.';
+                    }
+                } else if (cep.length > 0) {
+                    erroSpan.textContent = 'CEP inválido.';
+                }
+            }
+
+            clientCEP.addEventListener('blur', (e) => fetchCEP(e.target.value, clientRua, clientBairro, clientCidade, clientEstado, cepError, clientNumero));
+            newAddressCEP.addEventListener('blur', (e) => fetchCEP(e.target.value, newAddressRua, newAddressBairro, newAddressCidade, newAddressEstado, newAddressCepError, newAddressNumero));
+
+            // --- Funções de Navegação ---
+            function navigateTo(pageId, tabElement) {
+                allPages.forEach(page => page.classList.add('hidden'));
+                allNavTabs.forEach(tab => tab.classList.remove('tab-active'));
+                document.getElementById(pageId).classList.remove('hidden');
+                tabElement.classList.add('tab-active');
+            }
+
+            navVendas.addEventListener('click', () => navigateTo('pageVendas', navVendas));
+            navClientes.addEventListener('click', () => navigateTo('pageClientes', navClientes));
+            navProdutos.addEventListener('click', () => navigateTo('pageProdutos', navProdutos));
+
+            // --- Funções de Formatação e Data ---
+            function formatCurrency(value) {
+                const numValue = Number(value) || 0;
+                return numValue.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+            }
+
+            function formatDate(date) {
+                if (!date) return 'Data inválida';
+                const jsDate = (date.toDate) ? date.toDate() : (date instanceof Date ? date : new Date(date));
+                return jsDate.toLocaleString('pt-BR', {
+                    day: '2-digit', month: '2-digit', year: 'numeric',
+                    hour: '2-digit', minute: '2-digit'
+                });
+            }
+            
+            function formatDateForInput(date) {
+                // Formato DD/MM/AAAA para o input customizado
+                return date.toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit', year: 'numeric' });
+            }
+            
+            function parseInputDate(str) {
+                // Converte DD/MM/AAAA de volta para um objeto Date
+                const parts = str.split('/');
+                if (parts.length === 3) {
+                    return new Date(parts[2], parts[1] - 1, parts[0]);
+                }
+                return new Date();
+            }
+            
+            function formatAddress(addr) {
+                if (!addr || !addr.rua) return 'Endereço não cadastrado';
+                let fullAddr = `${addr.rua}, ${addr.numero}, ${addr.bairro}, ${addr.cidade} - ${addr.estado}`;
+                if (addr.referencia) {
+                    fullAddr += ` (Ref: ${addr.referencia})`;
+                }
+                return fullAddr;
+            }
+            
+            function setDefaultDateFilters() {
+                const now = new Date();
+                const firstDay = new Date(now.getFullYear(), now.getMonth(), 1);
+                const lastDay = new Date(now.getFullYear(), now.getMonth() + 1, 0);
+                
+                filtroDataInicio.value = formatDateForInput(firstDay);
+                filtroDataFim.value = formatDateForInput(lastDay);
+            }
+            setDefaultDateFilters(); 
+
+            // --- Funções de Modal Genéricas ---
+            function showModal(modalElement) {
+                modalElement.classList.remove('hidden');
+                document.body.classList.add('overflow-hidden');
+            }
+
+            function hideModal(modalElement, formElement = null) {
+                modalElement.classList.add('hidden');
+                document.body.classList.remove('overflow-hidden');
+                if (formElement) formElement.reset();
+                if (formElement && formElement.id === 'productForm') {
+                    newProductCostPriceNumeric.value = '';
+                    newProductSalePriceNumeric.value = '';
+                }
+                if (formElement && formElement.id === 'clientForm') cepError.textContent = '';
+                if (formElement && formElement.id === 'newAddressForm') newAddressCepError.textContent = '';
+            }
+            
+            // --- Funções de Modal de Aviso (Substituto do Alert) ---
+            function showInfoModal(title, text) {
+                infoModalTitle.textContent = title;
+                infoModalText.textContent = text;
+                showModal(infoModal);
+            }
+            closeInfoModalBtn.addEventListener('click', () => hideModal(infoModal));
+            
+            // --- Funções do Calendário Customizado ---
+            function openCalendarModal(target) {
+                calendarTargetInput = target;
+                const dateValue = parseInputDate(target.value) || new Date();
+                calendarCurrentDate = new Date(dateValue.getFullYear(), dateValue.getMonth(), 1);
+                renderCalendar();
+                showModal(calendarModal);
+            }
+
+            function renderCalendar() {
+                const month = calendarCurrentDate.getMonth();
+                const year = calendarCurrentDate.getFullYear();
+                
+                calendarMonthYear.textContent = new Date(year, month).toLocaleString('pt-BR', {
+                    month: 'long', year: 'numeric'
+                }).toUpperCase();
+                
+                calendarDaysGrid.innerHTML = '';
+                
+                const firstDayOfMonth = new Date(year, month, 1).getDay();
+                const daysInMonth = new Date(year, month + 1, 0).getDate();
+                const today = new Date();
+                
+                let selectedDate = null;
+                if (calendarTargetInput.value) {
+                    selectedDate = parseInputDate(calendarTargetInput.value);
+                }
+
+                // Preenche os dias vazios
+                for (let i = 0; i < firstDayOfMonth; i++) {
+                    calendarDaysGrid.innerHTML += `<div class="calendar-day empty"></div>`;
+                }
+                
+                // Preenche os dias do mês
+                for (let day = 1; day <= daysInMonth; day++) {
+                    const dayEl = document.createElement('div');
+                    dayEl.className = 'calendar-day';
+                    dayEl.textContent = day;
+                    
+                    const thisDate = new Date(year, month, day);
+                    
+                    if (thisDate.toDateString() === today.toDateString()) {
+                        dayEl.classList.add('today');
+                    }
+                    if (selectedDate && thisDate.toDateString() === selectedDate.toDateString()) {
+                        dayEl.classList.add('selected');
+                    }
+                    
+                    dayEl.addEventListener('click', () => selectDate(day, month, year));
+                    calendarDaysGrid.appendChild(dayEl);
+                }
+            }
+
+            function selectDate(day, month, year) {
+                const selected = new Date(year, month, day);
+                calendarTargetInput.value = formatDateForInput(selected);
+                hideModal(calendarModal);
+            }
+            
+            calendarPrevBtn.addEventListener('click', () => {
+                calendarCurrentDate.setMonth(calendarCurrentDate.getMonth() - 1);
+                renderCalendar();
+            });
+            
+            calendarNextBtn.addEventListener('click', () => {
+                calendarCurrentDate.setMonth(calendarCurrentDate.getMonth() + 1);
+                renderCalendar();
+            });
+            
+            calendarCloseBtn.addEventListener('click', () => hideModal(calendarModal));
+            filtroDataInicio.addEventListener('click', () => openCalendarModal(filtroDataInicio));
+            filtroDataFim.addEventListener('click', () => openCalendarModal(filtroDataFim));
+            
+            // --- Funções Específicas: VENDAS (Filtro, Paginação, Render) ---
+            
+            function renderSalesAndSummary() {
+                currentSalesPage = 1; 
+                applyFiltersAndRenderSales();
+            }
+
+            function applyFiltersAndRenderSales() {
+                const startDate = parseInputDate(filtroDataInicio.value);
+                startDate.setHours(0, 0, 0, 0);
+                const endDate = parseInputDate(filtroDataFim.value);
+                endDate.setHours(23, 59, 59, 999);
+                
+                let dateFiltered = sales.filter(sale => {
+                    const saleDate = sale.date; 
+                    return saleDate >= startDate && saleDate <= endDate;
+                });
+                
+                const query = searchVendas.value.toLowerCase().trim();
+                if (query) {
+                    filteredSales = dateFiltered.filter(sale => 
+                        (sale.codigoVenda && sale.codigoVenda.toString().includes(query)) ||
+                        (sale.customerName && sale.customerName.toLowerCase().includes(query)) || 
+                        (sale.status && sale.status.toLowerCase().includes(query))
+                    );
+                } else {
+                    filteredSales = dateFiltered;
+                }
+                
+                filteredSales.sort((a, b) => (b.codigoVenda || 0) - (a.codigoVenda || 0));
+                updateSummaryCards(filteredSales);
+                renderPaginationControls(paginationVendas, filteredSales.length, currentSalesPage, ITEMS_PER_PAGE, onSalesPageClick);
+                renderSalesTable();
+            }
+
+            onSalesPageClick = (page) => {
+                currentSalesPage = page;
+                renderSalesTable(); 
+                renderPaginationControls(paginationVendas, filteredSales.length, currentSalesPage, ITEMS_PER_PAGE, onSalesPageClick); 
+            };
+
+            function renderSalesTable() {
+                salesTableBody.innerHTML = '';
+                
+                if (filteredSales.length === 0) {
+                    loadingMessageVendas.innerHTML = '<td colspan="7" class="p-4 text-center text-gray-400">Nenhuma venda encontrada para este período/busca.</td>';
+                    salesTableBody.appendChild(loadingMessageVendas);
+                    return;
+                }
+                
+                const start = (currentSalesPage - 1) * ITEMS_PER_PAGE;
+                const end = start + ITEMS_PER_PAGE;
+                const paginatedSales = filteredSales.slice(start, end);
+
+                paginatedSales.forEach(sale => {
+                    const isCanceled = sale.status === 'cancelada'; 
+                    const tr = document.createElement('tr');
+                    
+                    tr.className = isCanceled 
+                        ? 'opacity-60 text-gray-500 line-through' 
+                        : 'hover:bg-gray-700';
+                    
+                    tr.innerHTML = `
+                        <td class="p-3 whitespace-nowrap text-sm font-bold">#${sale.codigoVenda || 1}</td>
+                        <td class="p-3 whitespace-nowrap text-sm">${formatDate(sale.date)}</td>
+                        <td class="p-3 whitespace-nowrap font-medium text-sm text-gray-100">${sale.customerName}</td>
+                        <td class="p-3 whitespace-nowrap font-bold text-sm">${formatCurrency(sale.totalPrice)}</td>
+                        <td class="p-3 whitespace-nowrap text-sm">${sale.paymentMethod} ${sale.installments ? `(${sale.installments}x)` : ''}</td>
+                        
+                        <td class="p-3 whitespace-nowrap text-sm font-semibold">
+                            ${isCanceled 
+                                ? `<span class="text-red-500">Cancelada</span>`
+                                : '<span class="text-green-400">Ativa</span>'
+                            }
+                        </td>
+
+                        <td class="p-3 whitespace-nowrap text-sm">
+                            <div class="flex gap-2">
+                                <button class="action-btn" data-id="${sale.id}" data-action="view-sale" title="Visualizar">${viewIconSVG}</button>
+                                <button class="action-btn" data-id="${sale.id}" data-action="view-receipt" title="Gerar Recibo">${receiptIconSVG}</button>
+                                <button class="action-btn" data-id="${sale.id}" data-action="delete-sale" title="Cancelar Venda" ${isCanceled ? 'disabled' : ''}>
+                                    ${isCanceled ? disabledIconSVG : deleteIconSVG}
+                                </button>
+                            </div>
+                        </td>
+                    `;
+                    salesTableBody.appendChild(tr);
+                });
+            }
+
+            function updateSummaryCards(dataToSummarize) {
+                const activeSales = dataToSummarize.filter(sale => sale.status !== 'cancelada');
+                
+                const totalValue = activeSales.reduce((acc, sale) => acc + (sale.totalPrice || 0), 0);
+                const totalCount = activeSales.length;
+                
+                totalSalesValue.textContent = formatCurrency(totalValue);
+                totalSalesCount.textContent = totalCount;
+                
+                const start = parseInputDate(filtroDataInicio.value);
+                const end = parseInputDate(filtroDataFim.value);
+                const today = new Date();
+                
+                const isCurrentMonth = start.getMonth() === today.getMonth() && start.getFullYear() === today.getFullYear();
+                const periodText = isCurrentMonth ? "(Mês Atual)" : `(${start.toLocaleDateString('pt-BR')} a ${end.toLocaleDateString('pt-BR')})`;
+
+                salesValueTitle.textContent = `Valor Total de Vendas ${periodText}`;
+                salesCountTitle.textContent = `Número de Vendas ${periodText}`;
+            }
+
+            // --- Funções: Vendas (Formulário) ---
+            function updateSaleSummary() {
+                const subtotal = tempSaleItems.reduce((acc, item) => acc + item.subtotal, 0);
+                summarySubtotal.textContent = formatCurrency(subtotal);
+                
+                const payMethod = paymentMethodValue.value;
+                const numParcelas = parseInt(installmentsValue.value) || 1;
+                const entrada = parseFloat(downPaymentNumeric.value) || 0;
+                
+                let totalFinalCliente = subtotal;
+                let taxaValor = 0;
+                let valorParcelarCliente = 0;
+                let valorParcela = 0;
+
+                summaryTaxContainer.classList.add('hidden');
+                summaryFinancing.classList.add('hidden');
+                
+                if (payMethod === 'Débito') {
+                    totalFinalCliente = subtotal;
+                } else if (payMethod === 'Crédito') {
+                    summaryFinancing.classList.remove('hidden');
+                    const taxa = cardRates.credit[numParcelas];
+                    const valorParcelarOriginal = subtotal - entrada;
+                    
+                    if (numParcelas <= 3) {
+                        totalFinalCliente = subtotal;
+                        valorParcelarCliente = valorParcelarOriginal;
+                        valorParcela = valorParcelarOriginal > 0 ? valorParcelarOriginal / numParcelas : 0;
+                    } else {
+                        const valorParcelarComTaxa = valorParcelarOriginal > 0 ? valorParcelarOriginal / (1 - taxa) : 0;
+                        taxaValor = valorParcelarComTaxa - valorParcelarOriginal;
+                        totalFinalCliente = subtotal + taxaValor;
+                        
+                        valorParcelarCliente = valorParcelarComTaxa;
+                        valorParcela = valorParcelarComTaxa > 0 ? valorParcelarComTaxa / numParcelas : 0;
+
+                        summaryTaxContainer.classList.remove('hidden');
+                        summaryTaxValue.textContent = formatCurrency(taxaValor);
+                    }
+                    
+                    summaryDownPayment.textContent = formatCurrency(entrada);
+                    summaryToFinance.textContent = formatCurrency(valorParcelarCliente);
+                    summaryInstallmentValue.textContent = `${numParcelas}x de ${formatCurrency(valorParcela)}`;
+                }
+                
+                summaryTotal.textContent = formatCurrency(totalFinalCliente);
+            }
+
+            async function handleFormSubmit(event) {
+                event.preventDefault();
+                if (!selectedCustomerId) {
+                    showInfoModal('Cliente Inválido', 'Por favor, selecione um cliente.');
+                    return;
+                }
+                if (tempSaleItems.length === 0) {
+                    showInfoModal('Venda Vazia', 'Por favor, adicione pelo menos um produto à venda.');
+                    return;
+                }
+                
+                setSubmitLoading(true, submitBtn, submitBtnText, submitSpinner);
+                
+                const subtotal = tempSaleItems.reduce((acc, item) => acc + item.subtotal, 0);
+                const payMethod = paymentMethodValue.value;
+                const numParcelas = parseInt(installmentsValue.value) || 1;
+                const entrada = parseFloat(downPaymentNumeric.value) || 0;
+                
+                let totalFinalCliente = subtotal;
+                let valorLiquido = subtotal; 
+                let valorParcela = 0;
+                
+                if (payMethod === 'Débito') {
+                    const taxa = cardRates.debit;
+                    valorLiquido = subtotal * (1 - taxa);
+                } else if (payMethod === 'Crédito') {
+                    const taxa = cardRates.credit[numParcelas];
+                    const valorParcelarOriginal = subtotal - entrada;
+                    
+                    if (numParcelas <= 3) {
+                        totalFinalCliente = subtotal;
+                        valorLiquido = (valorParcelarOriginal * (1 - taxa)) + entrada;
+                        valorParcela = valorParcelarOriginal > 0 ? valorParcelarOriginal / numParcelas : 0;
+                    } else {
+                        const valorParcelarComTaxa = valorParcelarOriginal > 0 ? valorParcelarOriginal / (1 - taxa) : 0;
+                        totalFinalCliente = valorParcelarComTaxa + entrada;
+                        valorLiquido = subtotal; 
+                        valorParcela = valorParcelarComTaxa > 0 ? valorParcelarComTaxa / numParcelas : 0;
+                    }
+                }
+                
+                const selectedCustomer = clients.find(c => c.id === selectedCustomerId);
+                const newSaleCode = currentSaleCode + 1; 
+
+                const newSale = {
+                    codigoVenda: newSaleCode,
+                    customerId: selectedCustomer.id,
+                    customerName: selectedCustomer.nome,
+                    
+                    items: tempSaleItems, 
+                    subtotal: subtotal, 
+                    totalPrice: totalFinalCliente, 
+                    valorLiquido: valorLiquido, 
+                    
+                    deliveryMethod: deliveryMethodValue.value,
+                    deliveryAddress: deliveryMethodValue.value === 'Entrega' ? deliveryAddressSelectValue.value : null,
+                    paymentMethod: payMethod,
+                    status: 'ativa', 
+                    date: serverTimestamp() 
+                };
+
+                if (payMethod === 'Crédito') {
+                    newSale.downPayment = entrada;
+                    newSale.installments = numParcelas;
+                    newSale.installmentValue = valorParcela;
+                }
+
+                try {
+                    for (const item of tempSaleItems) {
+                        const productRef = doc(db, 'produtos', item.productId);
+                        const productSnap = await getDoc(productRef);
+                        
+                        if (!productSnap.exists()) {
+                            throw new Error(`Produto ${item.productName} não encontrado.`);
+                        }
+                        
+                        const currentStock = productSnap.data().estoqueAtual;
+                        const newStock = currentStock - item.quantity;
+                        
+                        if (newStock < 0) {
+                            throw new Error(`Estoque insuficiente para ${item.productName}. Restam ${currentStock}.`);
+                        }
+                        
+                        await updateDoc(productRef, { estoqueAtual: newStock });
+                    }
+                    
+                    await addDoc(salesCollection, newSale);
+                    resetSaleModal();
+                    
+                } catch (error) {
+                    console.error("Erro ao adicionar venda ou atualizar estoque: ", error);
+                    showInfoModal('Erro na Venda', `Erro: ${error.message}. A venda não foi registrada.`);
+                } finally {
+                    setSubmitLoading(false, submitBtn, submitBtnText, submitSpinner);
+                }
+            }
+
+            function resetSaleModal() {
+                hideModal(saleModal, saleForm);
+                deliveryAddressContainer.classList.add('hidden');
+                paymentDetailsContainer.classList.add('hidden');
+                summaryFinancing.classList.add('hidden');
+                summaryTaxContainer.classList.add('hidden'); 
+                
+                resetSaleItemForm();
+                
+                tempSaleItems = [];
+                renderSaleItemsList();
+                updateSaleSummary(); 
+
+                downPayment.value = '0';
+                downPaymentNumeric.value = '0';
+                customerSearchInput.value = '';
+                
+                deliveryMethodValue.value = 'Retirada';
+                deliveryMethodDisplay.textContent = 'Retirada';
+                deliveryAddressSelectValue.value = '';
+                deliveryAddressDisplay.textContent = 'Selecione um endereço...';
+                deliveryAddressOptions.innerHTML = '';
+                paymentMethodValue.value = 'À vista';
+                paymentMethodDisplay.textContent = 'À vista';
+                installmentsValue.value = '1';
+                installmentsDisplay.textContent = '1x';
+                
+                selectedCustomerId = null;
+            }
+
+            // ==========================================================
+            // --- LÓGICA DE BUSCA DE CLIENTE ---
+            // ==========================================================
+            
+            function filterClientsByQuery(query) {
+                const queryLower = query.toLowerCase().trim();
+                const queryCPF = query.replace(/\D/g, '');
+
+                return clients.filter(client => {
+                    if (queryLower === '' && queryCPF === '') {
+                        return false; 
+                    }
+                    
+                    const nomeMatch = client.nome ? client.nome.toLowerCase().includes(queryLower) : false;
+                    const cpfMatch = client.cpf && queryCPF.length > 0 ? client.cpf.replace(/\D/g, '').includes(queryCPF) : false;
+                    
+                    return nomeMatch || cpfMatch;
+                });
+            }
+
+            customerSearchInput.addEventListener('input', (e) => {
+                const query = e.target.value;
+                
+                if (query.length < 1) {
+                    customerResults.classList.add('hidden');
+                    return;
+                }
+                
+                const filtered = filterClientsByQuery(query); 
+                
+                customerResults.innerHTML = '';
+                if (filtered.length === 0) {
+                    customerResults.innerHTML = '<div class="p-2 text-gray-400">Nenhum cliente encontrado</div>';
+                } else {
+                    filtered.slice(0, 10).forEach(client => { 
+                        const div = document.createElement('div');
+                        div.className = 'p-2 hover:bg-gray-600 cursor-pointer text-gray-100';
+                        div.textContent = `${client.nome} ${client.cpf ? '('+client.cpf+')' : ''}`; 
+                        div.addEventListener('click', () => selectCustomer(client));
+                        customerResults.appendChild(div);
+                    });
+                }
+                customerResults.classList.remove('hidden');
+            });
+
+            function applyFiltersAndRenderClients() {
+                const query = searchClientes.value;
+                
+                if (query) {
+                    const queryLower = query.toLowerCase().trim();
+                    const queryCPF = query.replace(/\D/g, '');
+                    
+                    filteredClients = clients.filter(client => {
+                        const nomeMatch = client.nome ? client.nome.toLowerCase().includes(queryLower) : false;
+                        const cpfMatch = client.cpf && queryCPF.length > 0 ? client.cpf.replace(/\D/g, '').includes(queryCPF) : false;
+                        return nomeMatch || cpfMatch;
+                    });
+
+                } else {
+                    filteredClients = [...clients]; 
+                }
+                
+                filteredClients.sort((a, b) => a.nome.localeCompare(b.nome)); 
+
+                currentClientsPage = 1; 
+                renderPaginationControls(paginationClientes, filteredClients.length, currentClientsPage, ITEMS_PER_PAGE, onClientsPageClick);
+                
+                renderClientsTable();
+            }
+            
+            onClientsPageClick = (page) => {
+                currentClientsPage = page;
+                renderClientsTable();
+                renderPaginationControls(paginationClientes, filteredClients.length, currentClientsPage, ITEMS_PER_PAGE, onClientsPageClick);
+            };
+
+            function selectCustomer(client) {
+                selectedCustomerId = client.id;
+                customerSearchInput.value = client.nome;
+                customerResults.classList.add('hidden');
+                
+                deliveryAddressOptions.innerHTML = ''; 
+                
+                let hasAddress = false;
+                
+                if (client.rua) { 
+                    const mainAddressText = formatAddress(client);
+                    addAddressOption(mainAddressText, mainAddressText, true);
+                    hasAddress = true;
+                }
+                
+                if (client.enderecosEntrega && Array.isArray(client.enderecosEntrega)) {
+                    client.enderecosEntrega.forEach(addr => {
+                        const addrText = formatAddress(addr);
+                        addAddressOption(addrText, addrText);
+                    });
+                }
+                
+                if (!hasAddress) {
+                    addAddressOption('Nenhum endereço cadastrado', '', false, true); 
+                }
+            }
+            
+            function addAddressOption(text, value, isSelected = false, isPlaceholder = false) {
+                const optionDiv = document.createElement('div');
+                optionDiv.className = 'custom-select-option';
+                optionDiv.dataset.value = value;
+                optionDiv.textContent = text;
+                
+                if(isPlaceholder) {
+                    deliveryAddressDisplay.textContent = text;
+                    deliveryAddressSelectValue.value = value;
+                }
+                
+                if (isSelected) {
+                    optionDiv.classList.add('selected');
+                    deliveryAddressDisplay.textContent = text;
+                    deliveryAddressSelectValue.value = value;
+                }
+                
+                // O listener é adicionado dinamicamente, não precisa re-inicializar
+                optionDiv.addEventListener('click', () => {
+                    deliveryAddressDisplay.textContent = text;
+                    deliveryAddressSelectValue.value = value;
+                    deliveryAddressOptions.classList.add('hidden');
+                    deliveryAddressOptions.querySelectorAll('.custom-select-option').forEach(opt => opt.classList.remove('selected'));
+                    optionDiv.classList.add('selected');
+                });
+                
+                deliveryAddressOptions.appendChild(optionDiv);
+            }
+
+            productSearchInput.addEventListener('input', (e) => {
+                const query = e.target.value.toLowerCase();
+                if (query.length < 1) {
+                    productResults.classList.add('hidden');
+                    return;
+                }
+                const filtered = products.filter(p =>
+                    (p.nome && p.nome.toLowerCase().includes(query)) ||
+                    (p.codigoProduto && p.codigoProduto.toString().includes(query)) ||
+                    (p.codigoProduto && p.codigoProduto.toString().padStart(6, '0').includes(query))
+                );
+                
+                productResults.innerHTML = '';
+                if (filtered.length === 0) {
+                    productResults.innerHTML = '<div class="p-2 text-gray-400">Nenhum produto encontrado</div>';
+                } else {
+                    filtered.slice(0, 10).forEach(product => { 
+                        const div = document.createElement('div');
+                        div.className = 'p-2 hover:bg-gray-600 cursor-pointer text-gray-100';
+                        div.textContent = `[${product.codigoProduto.toString().padStart(6, '0')}] ${product.nome} - ${formatCurrency(product.precoVenda)}`;
+                        div.addEventListener('click', () => selectProductForItem(product));
+                        productResults.appendChild(div);
+                    });
+                }
+                productResults.classList.remove('hidden');
+            });
+
+            function selectProductForItem(product) {
+                tempSelectedProduct = product; 
+                
+                productSearchInput.value = `[${product.codigoProduto.toString().padStart(6, '0')}] ${product.nome}`;
+                itemUnitPriceNumeric.value = product.precoVenda;
+                itemUnitPrice.value = formatCurrency(product.precoVenda);
+                productResults.classList.add('hidden');
+                itemQuantity.focus();
+            }
+
+            document.addEventListener('click', (e) => {
+                if (customerSearchInput && !customerSearchInput.contains(e.target)) customerResults.classList.add('hidden');
+                if (productSearchInput && !productSearchInput.contains(e.target)) productResults.classList.add('hidden');
+            });
+
+            // --- Funções do Carrinho de Venda ---
+
+            addItemToSaleBtn.addEventListener('click', () => {
+                if (!tempSelectedProduct) {
+                    showInfoModal('Produto Inválido', 'Por favor, selecione um produto da lista.');
+                    return;
+                }
+                
+                const qty = parseInt(itemQuantity.value) || 1;
+                if(qty > tempSelectedProduct.estoqueAtual) {
+                    showInfoModal('Estoque Insuficiente', `Estoque insuficiente para ${tempSelectedProduct.nome}. Restam ${tempSelectedProduct.estoqueAtual}.`);
+                    return;
+                }
+
+                const price = parseFloat(itemUnitPriceNumeric.value) || 0;
+                
+                const discountType = itemDiscountTypeValue.value;
+                const discountVal = parseFloat(itemDiscountValue.value) || 0;
+                let finalDiscountAmount = 0;
+                
+                if (discountType === 'R$') {
+                    finalDiscountAmount = discountVal;
+                } else if (discountType === '%') {
+                    finalDiscountAmount = (price * qty) * (discountVal / 100);
+                }
+
+                const subtotal = (price * qty) - finalDiscountAmount;
+                
+                const newItem = {
+                    productId: tempSelectedProduct.id,
+                    productName: tempSelectedProduct.nome,
+                    codigoProduto: tempSelectedProduct.codigoProduto,
+                    quantity: qty,
+                    unitPrice: price,
+                    discount: finalDiscountAmount, 
+                    discountType: discountType, 
+                    discountValue: discountVal, 
+                    subtotal: subtotal
+                };
+                
+                tempSaleItems.push(newItem);
+                
+                renderSaleItemsList(); 
+                updateSaleSummary();   
+                resetSaleItemForm();   
+            });
+            
+            function resetSaleItemForm() {
+                tempSelectedProduct = null;
+                productSearchInput.value = '';
+                itemQuantity.value = '1';
+                itemUnitPrice.value = '';
+                itemUnitPriceNumeric.value = '';
+                itemDiscountTypeValue.value = 'R$';
+                itemDiscountTypeDisplay.textContent = 'R$';
+                itemDiscountValue.value = '0';
+            }
+            
+            function renderSaleItemsList() {
+                saleItemsList.innerHTML = ''; 
+                
+                if (tempSaleItems.length === 0) {
+                    saleItemsList.appendChild(emptyCartMessage); 
+                    return;
+                }
+                
+                emptyCartMessage.remove(); 
+                
+                tempSaleItems.forEach((item, index) => {
+                    const itemDiv = document.createElement('div');
+                    itemDiv.className = 'sale-item p-2 border-b border-gray-600 text-gray-100';
+                    
+                    let discountText = '';
+                    if (item.discount > 0) {
+                        if (item.discountType === '%') {
+                            discountText = `(Desc: ${item.discountValue}%)`;
+                        } else {
+                            discountText = `(Desc: ${formatCurrency(item.discount)})`;
+                        }
+                    }
+                    
+                    itemDiv.innerHTML = `
+                        <div class="text-sm">
+                            <span class="font-semibold">${item.productName}</span>
+                            <br>
+                            <span class="text-xs text-gray-400">
+                                ${item.quantity}x ${formatCurrency(item.unitPrice)} ${discountText}
+                            </span>
+                        </div>
+                        <div class="text-sm font-bold text-right">${formatCurrency(item.subtotal)}</div>
+                        <button type="button" class="remove-sale-item-btn" data-index="${index}" title="Remover Item">
+                            ${trashIconSVG}
+                        </button>
+                    `;
+                    saleItemsList.appendChild(itemDiv);
+                });
+            }
+            
+            saleItemsList.addEventListener('click', (e) => {
+                const removeBtn = e.target.closest('.remove-sale-item-btn');
+                if (removeBtn) {
+                    const indexToRemove = parseInt(removeBtn.dataset.index);
+                    tempSaleItems.splice(indexToRemove, 1); 
+                    renderSaleItemsList(); 
+                    updateSaleSummary();   
+                }
+            });
+
+            deliveryMethodValue.addEventListener('change', (e) => {
+                if (e.target.value === 'Entrega') {
+                    deliveryAddressContainer.classList.remove('hidden');
+                } else {
+                    deliveryAddressContainer.classList.add('hidden');
+                }
+            });
+
+            paymentMethodValue.addEventListener('change', (e) => {
+                const paymentType = e.target.value;
+                if (paymentType === 'Crédito') {
+                    paymentDetailsContainer.classList.remove('hidden');
+                } else {
+                    paymentDetailsContainer.classList.add('hidden');
+                }
+                updateSaleSummary(); 
+            });
+
+            installmentsValue.addEventListener('change', updateSaleSummary);
+
+            openModalBtn.addEventListener('click', () => {
+                resetSaleModal();
+                showModal(saleModal);
+            });
+            closeModalBtn.addEventListener('click', () => resetSaleModal());
+            saleForm.addEventListener('submit', handleFormSubmit);
+
+            // --- Funções Específicas: CLIENTES (Render Tabela) ---
+            
+            function renderClientsAndPagination() {
+                currentClientsPage = 1; 
+                applyFiltersAndRenderClients();
+            }
+
+            function renderClientsTable() {
+                clientsTableBody.innerHTML = '';
+                
+                if (filteredClients.length === 0) {
+                    loadingMessageClientes.innerHTML = '<td colspan="4" class="p-4 text-center text-gray-400">Nenhum cliente encontrado.</td>';
+                    clientsTableBody.appendChild(loadingMessageClientes);
+                    return;
+                }
+                
+                const start = (currentClientsPage - 1) * ITEMS_PER_PAGE;
+                const end = start + ITEMS_PER_PAGE;
+                const paginatedClients = filteredClients.slice(start, end);
+
+                paginatedClients.forEach(client => {
+                    const tr = document.createElement('tr');
+                    tr.className = 'hover:bg-gray-700';
+                    tr.innerHTML = `
+                        <td class="p-3 whitespace-nowrap font-medium text-gray-100">${client.nome}</td>
+                        <td class="p-3 whitespace-nowrap text-gray-300">${client.telefone || ''}</td>
+                        <td class="p-3 whitespace-nowrap text-gray-300">${client.cpf || ''}</td>
+                        <td class="p-3 whitespace-nowrap">
+                            <div class="flex gap-2">
+                                <button class="action-btn" data-id="${client.id}" data-action="edit-client" title="Editar">${editIconSVG}</button>
+                                <button class="action-btn" data-id="${client.id}" data-action="delete-client" title="Excluir">${deleteIconSVG}</button>
+                            </div>
+                        </td>
+                    `;
+                    clientsTableBody.appendChild(tr);
+                });
+            }
+
+            async function handleClientFormSubmit(event) {
+                event.preventDefault();
+                
+                const cpfValue = clientCPF.value;
+
+                if (cpfValue) {
+                    try {
+                        const q = query(clientsCollection, where("cpf", "==", cpfValue));
+                        const querySnapshot = await getDocs(q);
+                        
+                        let cpfExists = false;
+                        if (!querySnapshot.empty) {
+                            if (!currentEditId) {
+                                cpfExists = true;
+                            } else {
+                                querySnapshot.forEach((doc) => {
+                                    if (doc.id !== currentEditId) {
+                                        cpfExists = true;
+                                    }
+                                });
+                            }
+                        }
+
+                        if (cpfExists) {
+                            showInfoModal('CPF Inválido', 'Este CPF já está cadastrado em outra conta.');
+                            return;
+                        }
+                    } catch (error) {
+                        console.error("Erro ao verificar CPF: ", error);
+                        showInfoModal('Erro', 'Erro ao verificar CPF. Tente novamente.');
+                        return;
+                    }
+                }
+
+                setSubmitLoading(true, submitClientBtn, submitClientBtnText, submitClientSpinner);
+
+                const clientData = {
+                    nome: clientName.value,
+                    cpf: cpfValue, 
+                    telefone: clientPhone.value,
+                    cep: clientCEP.value,
+                    rua: clientRua.value,
+                    numero: clientNumero.value,
+                    bairro: clientBairro.value,
+                    cidade: clientCidade.value,
+                    estado: clientEstado.value,
+                    referencia: clientReferencia.value
+                };
+
+                try {
+                    if (currentEditId) {
+                        const clientRef = doc(db, 'clientes', currentEditId);
+                        await updateDoc(clientRef, clientData); 
+                    } else {
+                        clientData.createdAt = serverTimestamp();
+                        clientData.enderecosEntrega = []; 
+                        await addDoc(clientsCollection, clientData);
+                    }
+                    hideModal(clientModal, clientForm);
+                } catch (error) {
+                    console.error("Erro ao salvar cliente: ", error);
+                } finally {
+                    setSubmitLoading(false, submitClientBtn, submitClientBtnText, submitClientSpinner);
+                    currentEditId = null;
+                }
+            }
+
+            function openNewClientModal() {
+                currentEditId = null;
+                clientModalTitle.textContent = 'Cadastrar Novo Cliente';
+                submitClientBtnText.textContent = 'Salvar Cliente';
+                clientForm.reset();
+                cepError.textContent = '';
+                showModal(clientModal);
+            }
+            
+            function openEditClientModal(id) {
+                currentEditId = id;
+                const client = clients.find(c => c.id === id);
+                if (!client) return;
+
+                clientModalTitle.textContent = 'Editar Cliente';
+                submitClientBtnText.textContent = 'Atualizar Cliente';
+                
+                clientName.value = client.nome || '';
+                clientCPF.value = client.cpf ? maskCPF(client.cpf) : '';
+                clientPhone.value = client.telefone ? maskPhone(client.telefone) : '';
+                clientCEP.value = client.cep ? maskCEP(client.cep) : '';
+                clientRua.value = client.rua || '';
+                clientNumero.value = client.numero || '';
+                clientBairro.value = client.bairro || '';
+                clientCidade.value = client.cidade || '';
+                clientEstado.value = client.estado || '';
+                clientReferencia.value = client.referencia || ''; 
+                
+                showModal(clientModal);
+            }
+
+            openClientModalBtn.addEventListener('click', openNewClientModal);
+            closeClientModalBtn.addEventListener('click', () => hideModal(clientModal, clientForm));
+            clientForm.addEventListener('submit', handleClientFormSubmit);
+
+            clientsTableBody.addEventListener('click', (e) => {
+                const button = e.target.closest('button');
+                if (!button) return;
+                const id = button.dataset.id;
+                const action = button.dataset.action;
+                
+                if (action === 'edit-client') openEditClientModal(id);
+                if (action === 'delete-client') openConfirmActionModal(id, 'cliente');
+            });
+
+            // --- Funções Específicas: PRODUTOS (Filtro, Paginação, Render) ---
+
+            function calculateProfit() {
+                const cost = parseFloat(newProductCostPriceNumeric.value) || 0;
+                const sale = parseFloat(newProductSalePriceNumeric.value) || 0;
+
+                if (cost === 0 && sale === 0) {
+                    newProductProfitValue.value = formatCurrency(0);
+                    newProductProfitPercentage.value = '0,00%';
+                    return;
+                }
+                
+                const profitVal = sale - cost;
+                const profitPerc = (sale > 0) ? (profitVal / sale) * 100 : 0; 
+
+                newProductProfitValue.value = formatCurrency(profitVal);
+                newProductProfitPercentage.value = profitPerc.toFixed(2) + '%';
+            }
+
+            function renderProductsAndPagination() {
+                currentProductsPage = 1; 
+                applyFiltersAndRenderProducts();
+            }
+
+            function applyFiltersAndRenderProducts() {
+                const query = searchProdutos.value.toLowerCase();
+                if (query) {
+                    filteredProducts = products.filter(product => 
+                        (product.nome && product.nome.toLowerCase().includes(query)) ||
+                        (product.codigoProduto && product.codigoProduto.toString().padStart(6, '0').includes(query))
+                    );
+                } else {
+                    filteredProducts = [...products];
+                }
+                
+                filteredProducts.sort((a, b) => (a.codigoProduto || 0) - (b.codigoProduto || 0));
+
+                renderPaginationControls(paginationProdutos, filteredProducts.length, currentProductsPage, ITEMS_PER_PAGE, onProductsPageClick);
+                
+                renderProductsTable();
+            }
+            
+            onProductsPageClick = (page) => {
+                currentProductsPage = page;
+                renderProductsTable();
+                renderPaginationControls(paginationProdutos, filteredProducts.length, currentProductsPage, ITEMS_PER_PAGE, onProductsPageClick);
+            };
+
+            function renderProductsTable() {
+                productsTableBody.innerHTML = '';
+                
+                if (filteredProducts.length === 0) {
+                    loadingMessageProdutos.innerHTML = '<td colspan="5" class="p-4 text-center text-gray-400">Nenhum produto encontrado.</td>';
+                    productsTableBody.appendChild(loadingMessageProdutos);
+                    return;
+                }
+
+                const start = (currentProductsPage - 1) * ITEMS_PER_PAGE;
+                const end = start + ITEMS_PER_PAGE;
+                const paginatedProducts = filteredProducts.slice(start, end);
+                
+                paginatedProducts.forEach(product => {
+                    const tr = document.createElement('tr');
+                    tr.className = 'hover:bg-gray-700';
+                    
+                    const isLowStock = product.estoqueAtual <= product.estoqueMinimo;
+                    
+                    tr.innerHTML = `
+                        <td class="p-3 whitespace-nowrap font-medium text-sm text-gray-100">${(product.codigoProduto || 0).toString().padStart(6, '0')}</td>
+                        <td class="p-3 whitespace-nowrap font-medium text-sm text-gray-100">${product.nome}</td>
+                        <td class="p-3 whitespace-nowrap text-sm text-gray-300">${formatCurrency(product.precoVenda)}</td>
+                        <td class="p-3 whitespace-nowrap text-sm ${isLowStock ? 'text-red-500 font-bold' : 'text-gray-300'}">
+                            ${product.estoqueAtual}
+                        </td>
+                        <td class="p-3 whitespace-nowrap">
+                            <div class="flex gap-2">
+                                <button class="action-btn" data-id="${product.id}" data-action="edit-product" title="Editar">${editIconSVG}</button>
+                                <button class="action-btn" data-id="${product.id}" data-action="delete-product" title="Excluir">${deleteIconSVG}</button>
+                            </div>
+                        </td>
+                    `;
+                    productsTableBody.appendChild(tr);
+                });
+            }
+
+            async function handleProductFormSubmit(event) {
+                event.preventDefault();
+                setSubmitLoading(true, submitProductBtn, submitProductBtnText, submitProductSpinner);
+                
+                const cost = parseFloat(newProductCostPriceNumeric.value) || 0;
+                const sale = parseFloat(newProductSalePriceNumeric.value) || 0;
+                const profitVal = sale - cost;
+                const profitPerc = (sale > 0) ? (profitVal / sale) * 100 : 0; 
+
+                const productData = {
+                    nome: newProductName.value,
+                    precoCusto: cost,
+                    precoVenda: sale,
+                    lucroValor: profitVal,
+                    lucroPorcentagem: profitPerc,
+                    descricao: newProductDescription.value,
+                    estoqueAtual: parseInt(newProductStock.value) || 0,
+                    estoqueMinimo: parseInt(newProductMinStock.value) || 0,
+                };
+
+                try {
+                    if (currentEditId) {
+                        const productRef = doc(db, 'produtos', currentEditId);
+                        await updateDoc(productRef, productData);
+                    } else {
+                        productData.codigoProduto = currentProductCode + 1; 
+                        productData.createdAt = serverTimestamp();
+                        await addDoc(productsCollection, productData);
+                    }
+                    hideModal(productModal, productForm);
+                } catch (error) {
+                    console.error("Erro ao salvar produto: ", error);
+                } finally {
+                    setSubmitLoading(false, submitProductBtn, submitProductBtnText, submitProductSpinner);
+                    currentEditId = null;
+                }
+            }
+
+            function openNewProductModal() {
+                currentEditId = null;
+                productModalTitle.textContent = 'Cadastrar Novo Produto';
+                submitProductBtnText.textContent = 'Salvar Produto';
+                productForm.reset();
+                
+                newProductCostPriceNumeric.value = '';
+                newProductSalePriceNumeric.value = '';
+                newProductCostPrice.value = '';
+                newProductSalePrice.value = '';
+                newProductStock.value = '0';
+                newProductMinStock.value = '0';
+
+                productCodeInput.value = (currentProductCode + 1).toString().padStart(6, '0');
+                
+                calculateProfit(); 
+                showModal(productModal);
+            }
+            
+            function openEditProductModal(id) {
+                currentEditId = id;
+                const product = products.find(p => p.id === id);
+                if (!product) return;
+
+                productModalTitle.textContent = 'Editar Produto';
+                submitProductBtnText.textContent = 'Atualizar Produto'; 
+                
+                productCodeInput.value = (product.codigoProduto || 0).toString().padStart(6, '0');
+                newProductName.value = product.nome;
+                
+                newProductCostPriceNumeric.value = product.precoCusto || 0;
+                newProductCostPrice.value = formatCurrency(product.precoCusto);
+                newProductSalePriceNumeric.value = product.precoVenda || 0;
+                newProductSalePrice.value = formatCurrency(product.precoVenda);
+                
+                newProductDescription.value = product.descricao || '';
+                newProductStock.value = product.estoqueAtual || 0;
+                newProductMinStock.value = product.estoqueMinimo || 0;
+                
+                calculateProfit(); 
+                showModal(productModal);
+            }
+
+            openProductModalBtn.addEventListener('click', openNewProductModal);
+            closeProductModalBtn.addEventListener('click', () => hideModal(productModal, productForm));
+            productForm.addEventListener('submit', handleProductFormSubmit);
+
+            productsTableBody.addEventListener('click', (e) => {
+                const button = e.target.closest('button');
+                if (!button) return;
+                const id = button.dataset.id;
+                const action = button.dataset.action;
+                
+                if (action === 'edit-product') openEditProductModal(id);
+                if (action === 'delete-product') openConfirmActionModal(id, 'produto');
+            });
+
+            // --- Funções: Visualizar Venda ---
+            function openViewSaleModal(id) {
+                const sale = sales.find(s => s.id === id);
+                if (!sale) return;
+
+                let itemsContent = '';
+                if (sale.items && Array.isArray(sale.items)) {
+                    itemsContent = sale.items.map(item => {
+                        let discountText = '';
+                        if (item.discount > 0) {
+                            if (item.discountType === '%') {
+                                discountText = `(Desc: ${item.discountValue}%)`;
+                            } else {
+                                discountText = `(Desc: ${formatCurrency(item.discount)})`;
+                            }
+                        }
+                        
+                        return `
+                        <div class="p-2 bg-gray-700 rounded-md">
+                            <p><strong>Produto:</strong> ${item.productName}</p>
+                            <p><strong>Qtd:</strong> ${item.quantity}</p>
+                            <p><strong>Preço Unit.:</strong> ${formatCurrency(item.unitPrice)}</p>
+                            ${item.discount > 0 ? `<p><strong>Desconto:</strong> ${discountText}</p>` : ''}
+                            <p><strong>Subtotal:</strong> ${formatCurrency(item.subtotal)}</p>
+                        </div>
+                    `}).join('');
+                } 
+
+                let content = `
+                    <p><strong>Cód. Venda:</strong> #${sale.codigoVenda}</p>
+                    <p><strong>Data:</strong> ${formatDate(sale.date)}</p>
+                    <p><strong>Status:</strong> <span class="font-bold ${sale.status === 'cancelada' ? 'text-red-500' : 'text-green-400'}">${sale.status === 'cancelada' ? 'Cancelada' : 'Ativa'}</span></p>
+                    ${sale.status === 'cancelada' ? `<p><strong>Motivo:</strong> ${sale.motivoCancelamento || 'Não informado'}</p>` : ''}
+                    <hr class="my-3 border-gray-700">
+                    <p><strong>Cliente:</strong> ${sale.customerName}</p>
+                    <hr class="my-3 border-gray-700">
+                    <h4 class="font-semibold mb-2">Itens da Venda:</h4>
+                    <div class="space-y-2 max-h-32 overflow-y-auto">${itemsContent}</div>
+                    <hr class="my-3 border-gray-700">
+                    <p><strong>Subtotal:</strong> ${formatCurrency(sale.subtotal || sale.totalPrice)}</p>
+                    <p><strong>Total (Pago):</strong> <span class="font-bold text-lg">${formatCurrency(sale.totalPrice)}</span></p>
+                    <hr class="my-3 border-gray-700">
+                    <p><strong>Pagamento:</strong> ${sale.paymentMethod}</p>
+                `;
+
+                if (sale.paymentMethod === 'Crédito') {
+                    content += `
+                        <p><strong>Entrada:</strong> ${formatCurrency(sale.downPayment)}</p>
+                        <p><strong>Parcelas:</strong> ${sale.installments}x de ${formatCurrency(sale.installmentValue)}</p>
+                    `;
+                }
+
+                content += `<hr class="my-3 border-gray-700">
+                            <p><strong>Entrega:</strong> ${sale.deliveryMethod}</p>`;
+                
+                if (sale.deliveryMethod === 'Entrega') {
+                    content += `<p><strong>Endereço:</strong> ${sale.deliveryAddress || 'Não informado'}</p>`;
+                }
+
+                viewSaleContent.innerHTML = content;
+                showModal(viewSaleModal);
+            }
+            
+            closeViewSaleModalBtn.addEventListener('click', () => hideModal(viewSaleModal));
+
+            salesTableBody.addEventListener('click', (e) => {
+                const button = e.target.closest('button');
+                if (!button) return;
+                const id = button.dataset.id;
+                const action = button.dataset.action;
+                
+                if (action === 'view-sale') openViewSaleModal(id);
+                if (action === 'delete-sale') openConfirmActionModal(id, 'venda');
+                if (action === 'view-receipt') openReceiptModal(id);
+            });
+
+            // --- Funções: Excluir / Cancelar Genérico (COM MOTIVO) ---
+            
+            function openConfirmActionModal(id, type) {
+                currentDeleteInfo = { id, type };
+                cancelReasonContainer.classList.add('hidden'); // Esconde por padrão
+                cancelReason.value = '';
+                
+                let item = '';
+                if (type === 'cliente') {
+                    item = 'este cliente';
+                    confirmActionTitle.textContent = 'Confirmar Exclusão';
+                    confirmActionText.textContent = `Tem certeza que deseja excluir ${item}? Esta ação não pode ser desfeita.`;
+                    actionBtnText.textContent = 'Excluir';
+                } else if (type === 'produto') {
+                    item = 'este produto';
+                    confirmActionTitle.textContent = 'Confirmar Exclusão';
+                    confirmActionText.textContent = `Tem certeza que deseja excluir ${item}? Esta ação não pode ser desfeita.`;
+                    actionBtnText.textContent = 'Excluir';
+                } else if (type === 'venda') {
+                    item = 'esta venda';
+                    confirmActionTitle.textContent = 'Confirmar Cancelamento';
+                    confirmActionText.textContent = `Tem certeza que deseja cancelar ${item}? O estoque dos produtos será estornado.`;
+                    actionBtnText.textContent = 'Cancelar Venda';
+                    cancelReasonContainer.classList.remove('hidden'); // Mostra o motivo
+                }
+                showModal(confirmActionModal);
+            }
+
+
+            cancelActionBtn.addEventListener('click', () => hideModal(confirmActionModal));
+            
+            confirmActionBtn.addEventListener('click', async () => {
+                setSubmitLoading(true, confirmActionBtn, actionBtnText, actionSpinner);
+                const { id, type } = currentDeleteInfo;
+                
+                let collectionName = '';
+                if (type === 'cliente') collectionName = 'clientes';
+                if (type === 'produto') collectionName = 'produtos';
+                if (type === 'venda') collectionName = 'vendas';
+
+                try {
+                    const itemRef = doc(db, collectionName, id);
+
+                    if (type === 'venda') {
+                        // VERIFICA MOTIVO OBRIGATÓRIO
+                        const motivo = cancelReason.value.trim();
+                        if (!motivo) {
+                            showInfoModal('Campo Obrigatório', 'Você deve fornecer um motivo para o cancelamento.');
+                            setSubmitLoading(false, confirmActionBtn, actionBtnText, actionSpinner);
+                            return; // Para a execução
+                        }
+
+                        const saleSnap = await getDoc(itemRef);
+                        if (!saleSnap.exists()) throw new Error("Venda não encontrada");
+                        
+                        const saleData = saleSnap.data();
+                        
+                        if (saleData.status === 'ativa' && saleData.items) {
+                            for (const item of saleData.items) {
+                                const productRef = doc(db, 'produtos', item.productId);
+                                const productSnap = await getDoc(productRef);
+                                
+                                if (productSnap.exists()) {
+                                    const currentStock = productSnap.data().estoqueAtual;
+                                    const newStock = currentStock + item.quantity;
+                                    await updateDoc(productRef, { estoqueAtual: newStock });
+                                }
+                            }
+                        }
+                        
+                        await updateDoc(itemRef, {
+                            status: 'cancelada',
+                            motivoCancelamento: motivo // Salva o motivo
+                        });
+                        
+                    } else {
+                        await deleteDoc(itemRef);
+                    }
+                    
+                    hideModal(confirmActionModal);
+                } catch (error) {
+                    console.error("Erro ao processar ação: ", error);
+                    showInfoModal('Erro', `Erro: ${error.message}`);
+                } finally {
+                    setSubmitLoading(false, confirmActionBtn, actionBtnText, actionSpinner);
+                    currentDeleteInfo = { id: null, type: null };
+                }
+            });
+
+
+            // --- Funções do Modal Novo Endereço ---
+            openNewAddressModalBtn.addEventListener('click', () => {
+                if (!selectedCustomerId) {
+                    showInfoModal('Cliente Inválido', 'Por favor, selecione um cliente antes de adicionar um novo endereço.');
+                    return;
+                }
+                newAddressForm.reset();
+                newAddressCepError.textContent = '';
+                showModal(newAddressModal);
+            });
+
+            closeNewAddressModalBtn.addEventListener('click', () => hideModal(newAddressModal, newAddressForm));
+
+            newAddressForm.addEventListener('submit', async (e) => {
+                e.preventDefault();
+                setSubmitLoading(true, submitNewAddressBtn, submitNewAddressBtnText, submitNewAddressSpinner);
+
+                const newAddressObj = {
+                    cep: newAddressCEP.value,
+                    rua: newAddressRua.value,
+                    numero: newAddressNumero.value,
+                    bairro: newAddressBairro.value,
+                    cidade: newAddressCidade.value,
+                    estado: newAddressEstado.value,
+                    referencia: newAddressReferencia.value
+                };
+
+                try {
+                    const clientRef = doc(db, 'clientes', selectedCustomerId);
+                    await updateDoc(clientRef, {
+                        enderecosEntrega: arrayUnion(newAddressObj)
+                    });
+                    
+                    const newAddressText = formatAddress(newAddressObj);
+                    
+                    addAddressOption(newAddressText, newAddressText, true);
+
+                    hideModal(newAddressModal, newAddressForm);
+                } catch (error) {
+                    console.error("Erro ao salvar novo endereço: ", error);
+                } finally {
+                    setSubmitLoading(false, submitNewAddressBtn, submitNewAddressBtnText, submitNewAddressSpinner);
+                }
+            });
+            
+            // --- Funções do Modal de Recibo (CUPOM) ---
+            
+            function openReceiptModal(id) {
+                const sale = sales.find(s => s.id === id);
+                if (!sale) return;
+                
+                const client = clients.find(c => c.id === sale.customerId);
+                
+                let itemsListHTML = '';
+                sale.items.forEach(item => {
+                    let discountText = '';
+                    if (item.discount > 0) {
+                        if (item.discountType === '%') {
+                            discountText = `(Desc: ${item.discountValue}%)`;
+                        } else {
+                            discountText = `(Desc: ${formatCurrency(item.discount)})`;
+                        }
+                    }
+
+                    itemsListHTML += `
+                        <div class="py-1">
+                            <p class="font-semibold">${item.productName}</p>
+                            <div class="flex justify-between text-sm">
+                                <span>${item.quantity} UN x ${formatCurrency(item.unitPrice)}</span>
+                                <span>${formatCurrency(item.quantity * item.unitPrice)}</span>
+                            </div>
+                            ${item.discount > 0 ? `
+                            <div class="flex justify-between text-sm">
+                                <span>Desconto:</span>
+                                <span>-${formatCurrency(item.discount)}</span>
+                            </div>` : ''}
+                        </div>
+                    `;
+                });
+                
+                const receiptHTML = `
+                    <div class="text-center p-2 receipt-logo">
+                        <h1 class="text-3xl font-bold text-black" style="font-family: 'Times New Roman', serif;">AURA</h1>
+                        <p class="text-lg font-light text-gray-800" style="letter-spacing: 0.15em;">PREMIUM</p>
+                        <p class="text-xs">Rua Fictícia, 123 - Centro</p>
+                        <p class="text-xs">CNPJ: 00.000.000/0001-00</p>
+                    </div>
+                    <hr class="border-t-2 border-dashed border-black my-2">
+                    <div class="text-center text-xs">
+                        <p>COMPROVANTE DE VENDA</p>
+                        <p>VENDA #${sale.codigoVenda} - ${formatDate(sale.date)}</p>
+                        ${sale.status === 'cancelada' ? '<p class="font-bold text-lg">--- VENDA CANCELADA ---</p>' : ''}
+                    </div>
+                    <hr class="border-t-2 border-dashed border-black my-2">
+                    <div class="text-xs">
+                        <p><strong>CLIENTE:</strong> ${sale.customerName}</p>
+                        ${client && client.cpf ? `<p><strong>CPF:</strong> ${client.cpf}</p>` : ''}
+                        ${client && client.telefone ? `<p><strong>Telefone:</strong> ${client.telefone}</p>` : ''}
+                    </div>
+                    <hr class="border-t-2 border-dashed border-black my-2">
+                    <div class="text-xs">${itemsListHTML}</div>
+                    <hr class="border-t-2 border-dashed border-black my-2">
+                    <div class="text-xs space-y-1">
+                        <div class="flex justify-between font-semibold">
+                            <span>Subtotal:</span>
+                            <span>${formatCurrency(sale.subtotal)}</span>
+                        </div>
+                        <div class="flex justify-between font-bold text-base">
+                            <span>TOTAL:</span>
+                            <span>${formatCurrency(sale.totalPrice)}</span>
+                        </div>
+                    </div>
+                    <hr class="border-t-2 border-dashed border-black my-2">
+                    <div class="text-xs">
+                        <p><strong>Forma de Pagamento:</strong> ${sale.paymentMethod}</p>
+                        ${sale.paymentMethod === 'Crédito' ? `
+                            <p><strong>Entrada:</strong> ${formatCurrency(sale.downPayment)}</p>
+                            <p><strong>Parcelas:</strong> ${sale.installments}x de ${formatCurrency(sale.installmentValue)}</p>
+                        ` : ''}
+                    </div>
+                    ${sale.status === 'cancelada' ? `
+                    <hr class="border-t-2 border-dashed border-black my-2">
+                    <div class="text-xs">
+                        <p class="font-bold">MOTIVO CANCELAMENTO:</p>
+                        <p>${sale.motivoCancelamento || 'Não informado'}</p>
+                    </div>` : ''}
+                    <hr class="border-t-2 border-dashed border-black my-2">
+                    <div class="text-center text-xs mt-2">
+                        <p>Obrigado pela preferência!</p>
+                        <p>Este documento não é cupom fiscal.</p>
+                    </div>
+                `;
+                
+                receiptContent.innerHTML = receiptHTML;
+                showModal(receiptModal);
+            }
+            
+            closeReceiptModalBtn.addEventListener('click', () => hideModal(receiptModal));
+            printReceiptBtn.addEventListener('click', () => {
+                window.print();
+            });
+            
+
+            // --- Função de Paginação ---
+            function renderPaginationControls(container, totalItems, currentPage, itemsPerPage, onPageClick) {
+                container.innerHTML = '';
+                const totalPages = Math.ceil(totalItems / itemsPerPage);
+                if (totalPages <= 1) return;
+
+                const maxButtons = 5; 
+                let startPage, endPage;
+
+                if (totalPages <= maxButtons) {
+                    startPage = 1;
+                    endPage = totalPages;
+                } else {
+                    const maxPagesBeforeCurrent = Math.floor(maxButtons / 2);
+                    const maxPagesAfterCurrent = Math.ceil(maxButtons / 2) - 1;
+                    
+                    if (currentPage <= maxPagesBeforeCurrent) {
+                        startPage = 1;
+                        endPage = maxButtons;
+                    } else if (currentPage + maxPagesAfterCurrent >= totalPages) {
+                        startPage = totalPages - maxButtons + 1;
+                        endPage = totalPages;
+                    } else {
+                        startPage = currentPage - maxPagesBeforeCurrent;
+                        endPage = currentPage + maxPagesAfterCurrent;
+                    }
+                }
+
+                if (startPage > 1) {
+                    container.appendChild(createPaginationButton(1, '1', onPageClick));
+                    if (startPage > 2) {
+                        container.appendChild(createPaginationButton(0, '...', onPageClick, true));
+                    }
+                }
+
+                for (let i = startPage; i <= endPage; i++) {
+                    container.appendChild(createPaginationButton(i, i.toString(), onPageClick, false, i === currentPage));
+                }
+
+                if (endPage < totalPages) {
+                    if (endPage < totalPages - 1) {
+                        container.appendChild(createPaginationButton(0, '...', onPageClick, true));
+                    }
+                    container.appendChild(createPaginationButton(totalPages, totalPages.toString(), onPageClick));
+                }
+            }
+
+            function createPaginationButton(page, text, onClick, isDisabled = false, isActive = false) {
+                const button = document.createElement('button');
+                button.className = 'pagination-btn';
+                button.textContent = text;
+                if (isActive) button.classList.add('active'); 
+                if (isDisabled) {
+                    button.disabled = true;
+                    button.classList.add('cursor-not-allowed');
+                } else {
+                    button.addEventListener('click', () => onClick(page));
+                }
+                return button;
+            }
+
+            // --- Funções de Loading ---
+            function setSubmitLoading(isLoading, btn, btnText, spinner) {
+                if (isLoading) {
+                    btn.disabled = true;
+                    btnText.classList.add('hidden');
+                    spinner.classList.remove('hidden');
+                } else {
+                    btn.disabled = false;
+                    btnText.classList.remove('hidden');
+                    spinner.classList.add('hidden');
+                }
+            }
+            
+            // --- LÓGICA DE AUTENTICAÇÃO ---
+            
+            function showAuthMessage(message) {
+                authMessage.textContent = message;
+                authMessage.classList.remove('hidden');
+            }
+
+            loginForm.addEventListener('submit', async (e) => {
+                e.preventDefault();
+                setSubmitLoading(true, loginBtn, loginBtnText, loginSpinner);
+                authMessage.classList.add('hidden');
+                
+                const email = authEmail.value;
+                const password = authPassword.value;
+                
+                try {
+                    await signInWithEmailAndPassword(auth, email, password);
+                } catch (error) {
+                    console.error("Erro ao fazer login:", error);
+                    showAuthMessage("E-mail ou senha incorretos.");
+                } finally {
+                    setSubmitLoading(false, loginBtn, loginBtnText, loginSpinner);
+                }
+            });
+            
+            logoutBtn.addEventListener('click', async () => {
+                try {
+                    await signOut(auth);
+                } catch (error) {
+                    console.error("Erro ao sair:", error);
+                }
+            });
+
+
+            // --- Conexões com Firebase (Listeners) ---
+            
+            onAuthStateChanged(auth, (user) => {
+                if (user) {
+                    authScreen.classList.add('hidden'); 
+                    appContainer.classList.remove('hidden'); 
+                    userName.textContent = `Olá, ${user.email}`;
+                    
+                    if (!firebaseListenersAttached) {
+                        setupFirebaseListeners();
+                        firebaseListenersAttached = true;
+                    }
+                } else {
+                    authScreen.classList.remove('hidden'); 
+                    appContainer.classList.add('hidden'); 
+                    userName.textContent = '';
+                    loginForm.reset();
+                    
+                    sales = [];
+                    clients = [];
+                    products = [];
+                    firebaseListenersAttached = false; 
+                }
+            });
+
+            function setupFirebaseListeners() {
+                onSnapshot(query(salesCollection), (snapshot) => {
+                    sales = [];
+                    snapshot.forEach((doc) => {
+                        const data = doc.data();
+                        if (data.date && data.date.toDate) {
+                            data.date = data.date.toDate();
+                        } else {
+                            data.date = new Date(); 
+                        }
+                        sales.push({ id: doc.id, ...data });
+                    });
+                    
+                    currentSaleCode = Math.max(0, ...sales.map(s => s.codigoVenda || 0));
+                    applyFiltersAndRenderSales();
+                    
+                }, (error) => console.error("Erro ao carregar vendas: ", error));
+
+                onSnapshot(query(clientsCollection), (snapshot) => {
+                    clients = [];
+                    snapshot.forEach((doc) => clients.push({ id: doc.id, ...doc.data() }));
+                    
+                    applyFiltersAndRenderClients();
+
+                    if(selectedCustomerId) {
+                        const updatedClient = clients.find(c => c.id === selectedCustomerId);
+                        if(updatedClient) {
+                            const oldSelectedAddress = deliveryAddressSelectValue.value; 
+                            
+                            deliveryAddressOptions.innerHTML = '';
+                            if (updatedClient.rua) { 
+                                const mainAddressText = formatAddress(updatedClient);
+                                addAddressOption(mainAddressText, mainAddressText, oldSelectedAddress === mainAddressText);
+                            }
+                            if (updatedClient.enderecosEntrega && Array.isArray(updatedClient.enderecosEntrega)) {
+                                updatedClient.enderecosEntrega.forEach(addr => {
+                                    const addrText = formatAddress(addr);
+                                    addAddressOption(addrText, addrText, oldSelectedAddress === addrText);
+                                });
+                            }
+                        }
+                    }
+
+                }, (error) => console.error("Erro ao carregar clientes: ", error));
+
+                onSnapshot(query(productsCollection), (snapshot) => {
+                    products = [];
+                    snapshot.forEach((doc) => products.push({ id: doc.id, ...doc.data() }));
+                    
+                    currentProductCode = Math.max(0, ...products.map(p => p.codigoProduto || 0));
+                    applyFiltersAndRenderProducts(); 
+                }, (error) => console.error("Erro ao carregar produtos: ", error));
+            }
+
+            // --- Listeners de Filtro e Busca ---
+            filterDateBtn.addEventListener('click', renderSalesAndSummary);
+            searchVendas.addEventListener('input', renderSalesAndSummary);
+            searchClientes.addEventListener('input', renderClientsAndPagination);
+            searchProdutos.addEventListener('input', renderProductsAndPagination);
+
+        });
+    </script>
+
+</body>
+</html>
