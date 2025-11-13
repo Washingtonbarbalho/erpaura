@@ -15,6 +15,30 @@ body {
     animation: spin 1s linear infinite;
 }
 
+/* NOVO: Spinner para a tela de carregamento (maior) */
+#content-frame-loader {
+    position: absolute;
+    inset: 0;
+    background-color: rgba(17, 24, 39, 0.75); /* bg-gray-900 bg-opacity-75 */
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 10;
+}
+#content-frame-loader .spinner-overlay {
+    border: 6px solid rgba(255, 255, 255, .1);
+    border-left-color: #f59e0b; /* amber-500 */
+    border-radius: 50%;
+    width: 60px;
+    height: 60px;
+    animation: spin 1s linear infinite;
+}
+/* Esconde o loader por padrão */
+#content-frame-loader.hidden {
+    display: none;
+}
+
+
 @keyframes spin {
     to { transform: rotate(360deg); }
 }
