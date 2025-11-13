@@ -2,36 +2,49 @@ document.addEventListener('DOMContentLoaded', () => {
     const links = document.querySelectorAll('.nav-link');
     const iframe = document.getElementById('content-frame');
 
-    // Mapeia o ID do link para o arquivo HTML correspondente
+    // Mapeamento ATUALIZADO para a nova estrutura de pastas
     const pages = {
-        'nav-vendas': 'vendas.html',
-        'nav-carne': 'carne.html',
-        'nav-analise': 'analise.html',
-        'nav-admin': 'admin.html'
+        'nav-vendas': { file: 'modules/vendas/vendas.html', hash: '#vendas' },
+        'nav-clientes': { file: 'modules/vendas/vendas.html', hash: '#clientes' },
+        'nav-produtos': { file: 'modules/vendas/vendas.html', hash: '#produtos' },
+        
+        // Você precisará refatorar os outros módulos e atualizar os caminhos aqui
+        'nav-carne-novo': { file: 'modules/carne/carne.html', hash: '#novo' },
+        'nav-carne-gerenciar': { file: 'modules/carne/carne.html', hash: '#gerenciar' },
+        'nav-analise': { file: 'modules/analise/analise.html', hash: '' },
+        'nav-estoque': { file: 'modules/admin/admin.html', hash: '#estoque' },
+        'nav-financeiro': { file: 'modules/admin/admin.html', hash: '#financeiro' },
+        'nav-relatorio': { file: 'modules/admin/admin.html', hash: '#relatorios' },
     };
 
     links.forEach(link => {
         link.addEventListener('click', (e) => {
             e.preventDefault();
 
-            // Remove a classe ativa de todos os links
             links.forEach(l => l.classList.remove('nav-active'));
-
-            // Adiciona a classe ativa ao link clicado
             link.classList.add('nav-active');
 
-            // Obtém o nome da página alvo
-            const pageFile = pages[link.id];
+            const pageInfo = pages[link.id];
             
-            // Altera o 'src' do iframe para carregar a nova página
-            if (pageFile && iframe.src.endsWith(pageFile) === false) {
-                iframe.src = pageFile;
+            if (pageInfo) {
+                const newSrc = pageInfo.file + pageInfo.hash;
+                
+                // Extrai o src atual do iframe
+                const currentPath = iframe.src.replace(window.location.origin, '');
+                
+                // Compara o caminho relativo + hash
+                if (currentPath.split('#')[0] !== pageInfo.file || currentPath.split('#')[1] !== (pageInfo.hash || '').substring(1)) {
+                    iframe.src = newSrc;
+                }
             }
         });
     });
 
     // Garante que o link 'vendas' esteja ativo no carregamento inicial
-    document.getElementById('nav-vendas').classList.add('nav-active');
-    // Carrega a página inicial (vendas.html)
-    iframe.src = 'vendas.html';
+    const initialLink = document.getElementById('nav-vendas');
+    if (initialLink) {
+        initialLink.classList.add('nav-active');
+        const initialPage = pages[initialLink.id];
+        iframe.src = initialPage.file + initialPage.hash;
+    }
 });
