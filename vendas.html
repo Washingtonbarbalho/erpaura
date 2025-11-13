@@ -2951,32 +2951,6 @@
                         setupFirebaseListeners();
                         firebaseListenersAttached = true;
                     }
-
-function handleHashChange() {
-                    const hash = window.location.hash;
-                    console.log("Hash detectado:", hash);
-                    
-                    let tabToClick;
-                    if (hash === '#clientes') {
-                        tabToClick = document.getElementById('tab-clientes');
-                    } else if (hash === '#produtos') {
-                        tabToClick = document.getElementById('tab-produtos');
-                    } else {
-                        // O padrão é #vendas ou qualquer outra coisa
-                        tabToClick = document.getElementById('tab-vendas');
-                    }
-
-                    if (tabToClick) {
-                        tabToClick.click();
-                    }
-                }
-
-                // Chama a função na carga inicial da página
-                handleHashChange();
-
-                // Opcional: Ouve mudanças no hash (útil se o iframe não recarregar)
-                window.addEventListener('hashchange', handleHashChange);
-
                 } else {
                     authScreen.classList.remove('hidden'); 
                     appContainer.classList.add('hidden'); 
@@ -3055,3 +3029,4 @@ function handleHashChange() {
 
 </body>
 </html>
+
