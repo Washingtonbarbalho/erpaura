@@ -2,49 +2,49 @@ document.addEventListener('DOMContentLoaded', () => {
     const links = document.querySelectorAll('.nav-link');
     const iframe = document.getElementById('content-frame');
 
-    // Mapeamento ATUALIZADO para a nova estrutura de pastas
+    // Mapeamento atualizado: 
+    // Mapeia o ID do link para o arquivo HTML e o HASH da aba
     const pages = {
-        'nav-vendas': { file: 'modules/vendas/vendas.html', hash: '#vendas' },
-        'nav-clientes': { file: 'modules/vendas/vendas.html', hash: '#clientes' },
-        'nav-produtos': { file: 'modules/vendas/vendas.html', hash: '#produtos' },
-        
-        // Você precisará refatorar os outros módulos e atualizar os caminhos aqui
-        'nav-carne-novo': { file: 'modules/carne/carne.html', hash: '#novo' },
-        'nav-carne-gerenciar': { file: 'modules/carne/carne.html', hash: '#gerenciar' },
-        'nav-analise': { file: 'modules/analise/analise.html', hash: '' },
-        'nav-estoque': { file: 'modules/admin/admin.html', hash: '#estoque' },
-        'nav-financeiro': { file: 'modules/admin/admin.html', hash: '#financeiro' },
-        'nav-relatorio': { file: 'modules/admin/admin.html', hash: '#relatorios' },
+        'nav-vendas': { file: 'vendas.html', hash: '#vendas' },
+        'nav-clientes': { file: 'vendas.html', hash: '#clientes' },
+        'nav-produtos': { file: 'vendas.html', hash: '#produtos' },
+        'nav-carne-novo': { file: 'carne.html', hash: '#novo' },
+        'nav-carne-gerenciar': { file: 'carne.html', hash: '#gerenciar' },
+        'nav-analise': { file: 'analise.html', hash: '' },
+        'nav-estoque': { file: 'admin.html', hash: '#estoque' },
+        'nav-financeiro': { file: 'admin.html', hash: '#financeiro' },
+        'nav-relatorio': { file: 'admin.html', hash: '#relatorios' },
     };
 
     links.forEach(link => {
         link.addEventListener('click', (e) => {
             e.preventDefault();
 
+            // Remove a classe ativa de todos os links
             links.forEach(l => l.classList.remove('nav-active'));
+
+            // Adiciona a classe ativa ao link clicado
             link.classList.add('nav-active');
 
+            // Obtém as informações da página (arquivo e hash)
             const pageInfo = pages[link.id];
             
             if (pageInfo) {
                 const newSrc = pageInfo.file + pageInfo.hash;
                 
-                // Extrai o src atual do iframe
-                const currentPath = iframe.src.replace(window.location.origin, '');
-                
-                // Compara o caminho relativo + hash
-                if (currentPath.split('#')[0] !== pageInfo.file || currentPath.split('#')[1] !== (pageInfo.hash || '').substring(1)) {
-                    iframe.src = newSrc;
+                // Altera o 'src' do iframe para carregar a nova página/aba
+                // Verificamos se o src é diferente para evitar recargas desnecessárias
+                // (embora mudar o hash vá recarregar de qualquer forma, é uma boa prática)
+                const currentSrc = iframe.src.split('/').pop(); // ex: "vendas.html#clientes"
+                if (currentSrc !== newSrc) {
+                     iframe.src = newSrc;
                 }
             }
         });
     });
 
     // Garante que o link 'vendas' esteja ativo no carregamento inicial
-    const initialLink = document.getElementById('nav-vendas');
-    if (initialLink) {
-        initialLink.classList.add('nav-active');
-        const initialPage = pages[initialLink.id];
-        iframe.src = initialPage.file + initialPage.hash;
-    }
+    document.getElementById('nav-vendas').classList.add('nav-active');
+    // Carrega a página inicial (vendas.html)
+    iframe.src = pages['nav-vendas'].file + pages['nav-vendas'].hash;
 });
