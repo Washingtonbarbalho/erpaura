@@ -1,0 +1,1780 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale1.0">
+    <title>Aura Premium - Sistema Administrativo</title>
+    <!-- Carrega o Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Fonte Poppins -->
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap');
+        body {
+            font-family: 'Poppins', sans-serif;
+            background-color: #111827; /* bg-gray-900 */
+            color: #f3f4f6; /* text-gray-100 */
+        }
+        /* Estilo para spinner de carregamento */
+        .spinner {
+            border: 4px solid rgba(255, 255, 255, .1);
+            border-left-color: #f59e0b; /* amber-500 */
+            border-radius: 50%;
+            width: 24px;
+            height: 24px;
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+        /* Classe para aba ativa (Menu Principal) */
+        .nav-active {
+            background-color: #374151; /* bg-gray-700 */
+            color: #f59e0b; /* amber-500 */
+            font-weight: 600;
+        }
+         /* Classe para aba ativa (Sub-menu Financeiro) */
+        .finance-tab-active {
+            border-bottom-color: #f59e0b; /* border-amber-500 */
+            color: #f59e0b; /* text-amber-500 */
+            font-weight: 500;
+        }
+        .finance-tab {
+            border-bottom-color: transparent;
+            color: #9ca3af; /* text-gray-400 */
+        }
+
+        /* Estilo para Inputs e Selects no tema escuro */
+        .form-input, .form-select, .form-textarea {
+            background-color: #374151; /* bg-gray-700 */
+            border: 1px solid #4b5563; /* border-gray-600 */
+            color: #f3f4f6; /* text-gray-100 */
+            border-radius: 0.5rem; /* rounded-lg */
+            padding: 0.5rem; /* p-2 */
+            width: 100%;
+        }
+        .form-input:focus, .form-select:focus, .form-textarea:focus {
+            outline: none;
+            border-color: #f59e0b; /* border-amber-500 */
+            box-shadow: 0 0 0 2px #f59e0b33;
+        }
+        /* Estilo customizado para input date (calendário) */
+        .form-input[type="date"] {
+            color-scheme: dark;
+        }
+        /* Placeholder para inputs escuros */
+        .form-input::placeholder, .form-textarea::placeholder {
+            color: #9ca3af; /* text-gray-400 */
+        }
+        
+        /* --- ESTILOS DO CUSTOM SELECT --- */
+        .custom-select-trigger {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            cursor: pointer;
+        }
+        .custom-select-options {
+            background-color: #374151; /* bg-gray-700 */
+            border: 1px solid #4b5563; /* border-gray-600 */
+            border-radius: 0.5rem; /* rounded-lg */
+            max-height: 200px;
+            overflow-y: auto;
+            width: 100%;
+            margin-top: 4px;
+        }
+        .custom-select-option {
+            padding: 0.5rem;
+            cursor: pointer;
+            color: #f3f4f6; /* text-gray-100 */
+        }
+        .custom-select-option:hover, .custom-select-option.selected {
+            background-color: #4b5563; /* bg-gray-600 */
+        }
+        .custom-select-option.selected {
+            font-weight: 600;
+        }
+        .custom-select-value {
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+        .chevron-icon {
+            width: 20px;
+            height: 20px;
+            stroke: #9ca3af; /* text-gray-400 */
+            flex-shrink: 0;
+        }
+        
+        /* Cor de fundo para Autocomplete do browser */
+        input:-webkit-autofill,
+        input:-webkit-autofill:hover, 
+        input:-webkit-autofill:focus, 
+        input:-webkit-autofill:active  {
+            -webkit-box-shadow: 0 0 0 30px #374151 inset !important; /* bg-gray-700 */
+            -webkit-text-fill-color: #f3f4f6 !important; /* text-gray-100 */
+        }
+    </style>
+    <!-- Configuração do Firebase -->
+    <script type="module">
+      // Usando a mesma configuração dos outros sistemas
+      import { initializeApp } from "https://www.gstatic.com/firebasejs/12.5.0/firebase-app.js";
+      import { 
+          getAuth, 
+          onAuthStateChanged, 
+          signInWithEmailAndPassword, 
+          signOut
+      } from "https://www.gstatic.com/firebasejs/12.5.0/firebase-auth.js";
+      import { 
+          getFirestore, 
+          collection, 
+          addDoc, 
+          onSnapshot, 
+          query, 
+          serverTimestamp, 
+          doc, 
+          updateDoc, 
+          deleteDoc, 
+          getDocs, 
+          getDoc, 
+          arrayUnion,
+          where,
+          Timestamp, // Importar Timestamp
+          runTransaction // Necessário para atualizações de estoque seguras
+      } from "https://www.gstatic.com/firebasejs/12.5.0/firebase-firestore.js";
+      
+      // Configuração do Firebase (copiada do vendas.html)
+      const firebaseConfig = {
+        apiKey: "AIzaSyC7_OEoz9p1TpLhQEFu9M7Nh3UtbBQbqNE",
+        authDomain: "sistema-de-vendas-17583.firebaseapp.com",
+        projectId: "sistema-de-vendas-17583",
+        storageBucket: "sistema-de-vendas-17583.firebasestorage.app",
+        messagingSenderId: "809093367439",
+        appId: "1:809093367439:web:bc03a5aae5a638735252fa"
+      };
+
+      // Inicializa Firebase
+      const app = initializeApp(firebaseConfig);
+      const db = getFirestore(app);
+      const auth = getAuth(app); 
+
+      // Disponibiliza no 'window' para o script principal
+      window.firebase = {
+          db,
+          auth, 
+          collection,
+          addDoc,
+          onSnapshot,
+          query,
+          serverTimestamp,
+          doc,
+          updateDoc,
+          deleteDoc,
+          getDocs,
+          getDoc, 
+          arrayUnion,
+          where,
+          Timestamp, // Exportar Timestamp
+          runTransaction, // Exporta a transação
+          onAuthStateChanged,
+          signInWithEmailAndPassword,
+          signOut
+      };
+    </script>
+</head>
+<body class="bg-gray-900 text-gray-100">
+    <!-- ======================= -->
+    <!--     TELA DE LOGIN -->
+    <!-- ======================= -->
+    <div id="authScreen" class="flex items-center justify-center min-h-screen hidden">
+        <div class="bg-gray-800 p-8 rounded-lg shadow-xl w-full max-w-md border border-gray-700">
+            
+            <!-- Logo Aura Premium -->
+            <div class="text-center mb-8">
+                <h1 class="text-5xl font-bold text-amber-400" style="font-family: 'Times New Roman', serif;">AURA</h1>
+                <p class="text-2xl font-light text-gray-200" style="letter-spacing: 0.2em;">PREMIUM</p>
+                <p class="text-lg text-amber-400 mt-2">Sistema Administrativo</p>
+            </div>
+            <!-- Mensagem de Erro -->
+            <div id="authMessage" class="hidden p-3 rounded-lg mb-4 text-sm bg-red-900 text-red-100"></div>
+            <!-- Formulário de Login (Email e Senha) -->
+            <form id="loginForm" class="space-y-4">
+                <div>
+                    <label for="authEmail" class="block text-sm font-medium text-gray-300 mb-1">E-mail</label>
+                    <input type="email" id="authEmail" class="form-input" required>
+                </div>
+                <div>
+                    <label for="authPassword" class="block text-sm font-medium text-gray-300 mb-1">Senha</label>
+                    <input type="password" id="authPassword" class="form-input" required>
+                </div>
+                <button id="loginBtn" type="submit" class="w-full bg-amber-500 text-black px-5 py-3 rounded-lg shadow-md hover:bg-amber-600 transition flex items-center justify-center font-semibold">
+                    <span id="loginBtnText">Entrar</span>
+                    <div id="loginSpinner" class="spinner hidden"></div>
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <!-- ======================= -->
+    <!--     CONTEÚDO PRINCIPAL (APP) -->
+    <!-- ======================= -->
+    <div id="appContainer" class="hidden"> <!-- Começa oculto -->
+        
+        <!-- Cabeçalho -->
+        <header class="bg-gray-800 shadow-md border-b border-gray-700 sticky top-0 z-40">
+            <div class="container mx-auto px-4 md:px-8 py-4 flex justify-between items-center">
+                <!-- Logo Aura Premium -->
+                <div class="flex items-center gap-3">
+                    <div>
+                        <h1 class="text-3xl font-bold text-amber-400" style="font-family: 'Times New Roman', serif;">AURA</h1>
+                        <p class="text-sm font-light text-gray-200" style="letter-spacing: 0.1em;">PREMIUM</p>
+                    </div>
+                    <span class="text-gray-500 text-xl">/</span>
+                    <span class="text-xl text-gray-300 font-light">Administrativo</span>
+                </div>
+                <!-- Seção de Logout -->
+                <div class="flex items-center gap-4">
+                    <span id="userName" class="text-sm text-gray-300 hidden md:block"></span>
+                    <button id="logoutBtn" class="text-sm text-red-500 hover:text-red-400 font-medium flex items-center gap-1">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                          <path fill-rule="evenodd" d="M3 3a1 1 0 00-1 1v12a1 1 0 102 0V4a1 1 0 00-1-1zm10.293 9.293a1 1 0 001.414 1.414l3-3a1 1 0 000-1.414l-3-3a1 1 0 10-1.414 1.414L14.586 9H7a1 1 0 100 2h7.586l-1.293 1.293z" clip-rule="evenodd" />
+                        </svg>
+                        Sair
+                    </button>
+                </div>
+            </div>
+        </header>
+
+        <!-- Navegação Principal (Fase 1.3) -->
+        <nav class="bg-gray-800 border-b-2 border-amber-500">
+            <div class="container mx-auto px-4 md:px-8 flex space-x-4">
+                <button id="navDashboard" class="main-nav-tab py-3 px-5 text-sm font-medium text-gray-300 hover:text-amber-400 nav-active">
+                    Dashboard
+                </button>
+                <button id="navEstoque" class="main-nav-tab py-3 px-5 text-sm font-medium text-gray-300 hover:text-amber-400">
+                    Estoque
+                </button>
+                <button id="navFinanceiro" class="main-nav-tab py-3 px-5 text-sm font-medium text-gray-300 hover:text-amber-400">
+                    Financeiro
+                </button>
+                <button id="navRelatorios" class="main-nav-tab py-3 px-5 text-sm font-medium text-gray-300 hover:text-amber-400">
+                    Relatórios
+                </button>
+            </div>
+        </nav>
+
+        <main class="container mx-auto p-4 md:p-8">
+            <!-- ============================= -->
+            <!--     PÁGINA 1: DASHBOARD (Fase 1) -->
+            <!-- ============================= -->
+            <div id="pageDashboard" class="app-page">
+                <h2 class="text-2xl font-bold text-gray-100 mb-6">Dashboard</h2>
+                <div class="bg-gray-800 p-6 rounded-lg shadow-md border border-gray-700">
+                    <h3 class="text-xl font-semibold text-amber-400 mb-2">Bem-vindo ao Painel Administrativo</h3>
+                    <p class="text-gray-300">
+                        Use o menu acima para navegar entre os módulos de Estoque, Financeiro e Relatórios.
+                    </p>
+                    <div class="mt-6 grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div class="p-4 bg-gray-700 rounded-lg">
+                            <h4 class="font-semibold text-lg text-gray-200">Financeiro</h4>
+                            <p class="text-gray-400 text-sm">Acesse o módulo financeiro para gerenciar contas a pagar, receber e ver o fluxo de caixa.</p>
+                        </div>
+                         <div class="p-4 bg-gray-700 rounded-lg">
+                            <h4 class="font-semibold text-lg text-gray-200">Relatórios</h4>
+                            <p class="text-gray-400 text-sm">Acesse o módulo de relatórios para ver o desempenho das vendas.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ============================= -->
+            <!--     PÁGINA 2: ESTOQUE (Fase 2 Refatorada)  -->
+            <!-- ============================= -->
+            <div id="pageEstoque" class="app-page hidden">
+                <div class="flex justify-between items-center mb-6">
+                    <h2 class="text-2xl font-bold text-gray-100">Controle de Estoque</h2>
+                    <button id="openStockAdjustmentModalBtn" class="bg-amber-500 text-black px-5 py-2 rounded-lg shadow-md hover:bg-amber-600 font-semibold">
+                        + Ajustar Estoque
+                    </button>
+                </div>
+
+                <div class="bg-gray-800 p-6 rounded-lg shadow-md border border-gray-700 max-h-[70vh] overflow-y-auto">
+                    <h3 class="text-xl font-semibold text-blue-400 mb-4">Produtos com Estoque Baixo</h3>
+                    <div class="overflow-x-auto">
+                        <table class="w-full">
+                            <thead class="bg-gray-700">
+                                <tr>
+                                    <th class="p-2 text-left text-sm font-semibold text-amber-400 uppercase">Produto</th>
+                                    <th class="p-2 text-center text-sm font-semibold text-amber-400 uppercase">Atual</th>
+                                    <th class="p-2 text-center text-sm font-semibold text-amber-400 uppercase">Mín.</th>
+                                </tr>
+                            </thead>
+                            <tbody id="lowStockTableBody" class="divide-y divide-gray-700">
+                                <tr id="loadingMessageEstoqueBaixo">
+                                    <td colspan="3" class="p-4 text-center text-gray-400">Carregando...</td>
+                                </tr>
+                                <!-- Produtos com estoque baixo são injetados aqui -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ================================== -->
+            <!--     PÁGINA 3: FINANCEIRO (Fase 4)    -->
+            <!-- ================================== -->
+            <div id="pageFinanceiro" class="app-page hidden">
+                <h2 class="text-2xl font-bold text-gray-100 mb-6">Financeiro</h2>
+                
+                <!-- Abas do Módulo Financeiro -->
+                <div class="mb-6 border-b border-gray-700">
+                    <nav class="flex -mb-px space-x-6">
+                        <button id="finTabReceber" class="finance-tab-btn whitespace-nowrap py-3 px-1 border-b-2 text-sm font-medium finance-tab-active">
+                            Contas a Receber (Carnês)
+                        </button>
+                        <button id="finTabPagar" class="finance-tab-btn whitespace-nowrap py-3 px-1 border-b-2 text-sm font-medium finance-tab">
+                            Contas a Pagar
+                        </button>
+                        <button id="finTabFluxo" class="finance-tab-btn whitespace-nowrap py-3 px-1 border-b-2 text-sm font-medium finance-tab">
+                            Fluxo de Caixa (Extrato)
+                        </button>
+                    </nav>
+                </div>
+
+                <!-- Aba 1: Contas a Receber (Carnês) (Fase 4.1) -->
+                <div id="finPageReceber" class="finance-page">
+                    <!-- Cards de Resumo -->
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+                        <div class="bg-gray-800 p-6 rounded-lg shadow-md border border-gray-700">
+                            <h2 class="text-lg font-semibold text-gray-400 mb-2">Total a Receber (Pendente)</h2> 
+                            <p id="finTotalReceber" class="text-3xl font-bold text-green-400">R$ 0,00</p>
+                        </div>
+                        <div class="bg-gray-800 p-6 rounded-lg shadow-md border border-gray-700">
+                            <h2 class="text-lg font-semibold text-gray-400 mb-2">Total Vencido</h2> 
+                            <p id="finTotalVencido" class="text-3xl font-bold text-red-500">R$ 0,00</p>
+                        </div>
+                    </div>
+                    <!-- Tabela de Contas a Receber -->
+                    <div class="bg-gray-800 p-6 rounded-lg shadow-md border border-gray-700">
+                        <h3 class="text-xl font-semibold text-blue-400 mb-4">Parcelas Pendentes</h3>
+                        <div class="mb-4">
+                            <label for="finSearchReceber" class="block text-sm font-medium text-gray-300 mb-1">Buscar Cliente (Nome ou CPF)</label>
+                            <input type="search" id="finSearchReceber" class="form-input" placeholder="Buscar por Nome ou CPF...">
+                        </div>
+                        <div class="overflow-x-auto max-h-[60vh] overflow-y-auto">
+                            <table class="w-full">
+                                <thead class="bg-gray-700 sticky top-0">
+                                    <tr>
+                                        <th class="p-2 text-left text-sm font-semibold text-amber-400 uppercase">Cliente</th>
+                                        <th class="p-2 text-left text-sm font-semibold text-amber-400 uppercase">Vencimento</th>
+                                        <th class="p-2 text-right text-sm font-semibold text-amber-400 uppercase">Valor Pendente</th>
+                                        <th class="p-2 text-center text-sm font-semibold text-amber-400 uppercase">Status</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="finReceberTableBody" class="divide-y divide-gray-700">
+                                    <tr id="loadingMessageFinReceber">
+                                        <td colspan="4" class="p-4 text-center text-gray-400">Carregando...</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Aba 2: Contas a Pagar (Fase 4.2) -->
+                <div id="finPagePagar" class="finance-page hidden">
+                    <div class="flex justify-between items-center mb-6">
+                        <h3 class="text-xl font-semibold text-blue-400">Gerenciamento de Contas a Pagar</h3>
+                        <button id="openContasPagarModalBtn" class="bg-amber-500 text-black px-5 py-2 rounded-lg shadow-md hover:bg-amber-600 font-semibold">
+                            + Adicionar Conta
+                        </button>
+                    </div>
+                    <!-- Tabela de Contas a Pagar -->
+                    <div class="bg-gray-800 p-6 rounded-lg shadow-md border border-gray-700">
+                        <div class="mb-4">
+                            <label for="finFiltroPagar" class="block text-sm font-medium text-gray-300 mb-1">Filtrar por Status</label>
+                            <select id="finFiltroPagar" class="form-select">
+                                <option value="Pendente">Pendentes</option>
+                                <option value="Paga">Pagas</option>
+                                <option value="Todas">Todas</option>
+                            </select>
+                        </div>
+                        <div class="overflow-x-auto max-h-[60vh] overflow-y-auto">
+                            <table class="w-full">
+                                <thead class="bg-gray-700 sticky top-0">
+                                    <tr>
+                                        <th class="p-2 text-left text-sm font-semibold text-amber-400 uppercase">Descrição</th>
+                                        <th class="p-2 text-left text-sm font-semibold text-amber-400 uppercase">Vencimento</th>
+                                        <th class="p-2 text-right text-sm font-semibold text-amber-400 uppercase">Valor</th>
+                                        <th class="p-2 text-center text-sm font-semibold text-amber-400 uppercase">Status</th>
+                                        <th class="p-2 text-center text-sm font-semibold text-amber-400 uppercase">Ações</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="finPagarTableBody" class="divide-y divide-gray-700">
+                                    <tr id="loadingMessageFinPagar">
+                                        <td colspan="5" class="p-4 text-center text-gray-400">Carregando...</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Aba 3: Fluxo de Caixa (Extrato) (Fase 4.3) -->
+                <div id="finPageFluxo" class="finance-page hidden">
+                    <!-- Filtros de Data -->
+                    <div class="bg-gray-800 p-4 rounded-lg shadow-md mb-6 border border-gray-700">
+                        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                            <div>
+                                <label for="finFluxoDataInicio" class="block text-sm font-medium text-gray-300 mb-1">Data Início</label>
+                                <input type="date" id="finFluxoDataInicio" class="form-input">
+                            </div>
+                            <div>
+                                <label for="finFluxoDataFim" class="block text-sm font-medium text-gray-300 mb-1">Data Fim</label>
+                                <input type="date" id="finFluxoDataFim" class="form-input">
+                            </div>
+                            <div class="flex items-end">
+                                <button id="finFluxoFilterBtn" class="bg-gray-600 text-white px-5 py-2 rounded-lg shadow-md hover:bg-gray-700 w-full font-medium">
+                                    Filtrar Período
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                    <!-- Cards de Resumo -->
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
+                        <div class="bg-gray-800 p-6 rounded-lg shadow-md border border-gray-700">
+                            <h2 class="text-lg font-semibold text-gray-400 mb-2">Total Entradas</h2> 
+                            <p id="finFluxoEntradas" class="text-3xl font-bold text-green-400">R$ 0,00</p>
+                        </div>
+                        <div class="bg-gray-800 p-6 rounded-lg shadow-md border border-gray-700">
+                            <h2 class="text-lg font-semibold text-gray-400 mb-2">Total Saídas</h2> 
+                            <p id="finFluxoSaidas" class="text-3xl font-bold text-red-500">R$ 0,00</p>
+                        </div>
+                        <div class="bg-gray-800 p-6 rounded-lg shadow-md border border-gray-700">
+                            <h2 class="text-lg font-semibold text-gray-400 mb-2">Saldo do Período</h2> 
+                            <p id="finFluxoSaldo" class="text-3xl font-bold text-blue-400">R$ 0,00</p>
+                        </div>
+                    </div>
+                    <!-- Tabela de Extrato -->
+                    <div class="bg-gray-800 p-6 rounded-lg shadow-md border border-gray-700">
+                        <h3 class="text-xl font-semibold text-blue-400 mb-4">Extrato de Movimentações</h3>
+                        <div class="overflow-x-auto max-h-[60vh] overflow-y-auto">
+                            <table class="w-full">
+                                <thead class="bg-gray-700 sticky top-0">
+                                    <tr>
+                                        <th class="p-2 text-left text-sm font-semibold text-amber-400 uppercase">Data</th>
+                                        <th class="p-2 text-left text-sm font-semibold text-amber-400 uppercase">Descrição</th>
+                                        <th class="p-2 text-left text-sm font-semibold text-amber-400 uppercase">Tipo</th>
+                                        <th class="p-2 text-right text-sm font-semibold text-amber-400 uppercase">Valor</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="finFluxoTableBody" class="divide-y divide-gray-700">
+                                    <tr id="loadingMessageFinFluxo">
+                                        <td colspan="4" class="p-4 text-center text-gray-400">Aguardando filtro...</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- =================================== -->
+            <!--     PÁGINA 4: RELATÓRIOS (Fase 3)    -->
+            <!-- =================================== -->
+            <div id="pageRelatorios" class="app-page hidden">
+                <h2 class="text-2xl font-bold text-gray-100 mb-6">Relatórios</h2>
+                
+                <!-- Filtros de Data -->
+                <div class="bg-gray-800 p-4 rounded-lg shadow-md mb-6 border border-gray-700">
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                        <div>
+                            <label for="filtroDataInicio" class="block text-sm font-medium text-gray-300 mb-1">Data Início</label>
+                            <input type="date" id="filtroDataInicio" class="form-input">
+                        </div>
+                        <div>
+                            <label for="filtroDataFim" class="block text-sm font-medium text-gray-300 mb-1">Data Fim</label>
+                            <input type="date" id="filtroDataFim" class="form-input">
+                        </div>
+                        <div class="flex items-end">
+                            <button id="filterDateBtn" class="bg-gray-600 text-white px-5 py-2 rounded-lg shadow-md hover:bg-gray-700 w-full font-medium">
+                                Filtrar Período
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Cards de Resumo (Relatório 3.1) -->
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+                    <div class="bg-gray-800 p-6 rounded-lg shadow-md border border-gray-700">
+                        <h2 class="text-lg font-semibold text-gray-400 mb-2">Total Faturado (Bruto)</h2> 
+                        <p id="reportTotalFaturado" class="text-3xl font-bold text-green-400">R$ 0,00</p>
+                    </div>
+                    <div class="bg-gray-800 p-6 rounded-lg shadow-md border border-gray-700">
+                        <h2 class="text-lg font-semibold text-gray-400 mb-2">Lucro Bruto (Estimado)</h2> 
+                        <p id="reportTotalLucro" class="text-3xl font-bold text-amber-400">R$ 0,00</p>
+                    </div>
+                    <div class="bg-gray-800 p-6 rounded-lg shadow-md border border-gray-700">
+                        <h2 class="text-lg font-semibold text-gray-400 mb-2">Vendas Realizadas</h2> 
+                        <p id="reportTotalVendas" class="text-3xl font-bold text-blue-400">0</p>
+                    </div>
+                </div>
+
+                <!-- Relatórios em Tabela -->
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                    <!-- Relatório 3.2: Produtos Mais Vendidos -->
+                    <div class="bg-gray-800 p-6 rounded-lg shadow-md border border-gray-700 max-h-[70vh] overflow-y-auto">
+                        <h3 class="text-xl font-semibold text-blue-400 mb-4">Produtos Mais Vendidos</h3>
+                        <div class="overflow-x-auto">
+                            <table class="w-full">
+                                <thead class="bg-gray-700">
+                                    <tr>
+                                        <th class="p-2 text-left text-sm font-semibold text-amber-400 uppercase">Produto</th>
+                                        <th class="p-2 text-center text-sm font-semibold text-amber-400 uppercase">Qtd.</th>
+                                        <th class="p-2 text-right text-sm font-semibold text-amber-400 uppercase">Total (R$)</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="topProductsTableBody" class="divide-y divide-gray-700">
+                                    <tr id="loadingMessageTopProducts">
+                                        <td colspan="3" class="p-4 text-center text-gray-400">Filtrando dados...</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                    
+                    <!-- Relatório 3.3: Clientes -->
+                    <div class="bg-gray-800 p-6 rounded-lg shadow-md border border-gray-700 max-h-[70vh] overflow-y-auto">
+                        <h3 class="text-xl font-semibold text-blue-400 mb-4">Relatório de Clientes</h3>
+                        <div class="mb-4">
+                            <label for="searchRelatorioClientes" class="block text-sm font-medium text-gray-300 mb-1">Buscar Cliente (Nome ou CPF)</label>
+                            <input type="search" id="searchRelatorioClientes" class="form-input" placeholder="Buscar por Nome ou CPF...">
+                        </div>
+                        <div class="overflow-x-auto">
+                            <table class="w-full">
+                                <thead class="bg-gray-700">
+                                    <tr>
+                                        <th class="p-2 text-left text-sm font-semibold text-amber-400 uppercase">Cliente</th>
+                                        <th class="p-2 text-right text-sm font-semibold text-amber-400 uppercase">Total Gasto (R$)</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="topClientsTableBody" class="divide-y divide-gray-700">
+                                    <tr id="loadingMessageTopClients">
+                                        <td colspan="2" class="p-4 text-center text-gray-400">Filtrando dados...</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- =================================================================================== -->
+    <!-- =================================== MODAIS ======================================== -->
+    <!-- =================================================================================== -->
+
+    <!-- ================================== -->
+    <!--    MODAL DE AJUSTE DE ESTOQUE (Fase 2) -->
+    <!-- ================================== -->
+    <div id="modalAjusteEstoque" class="fixed inset-0 bg-black bg-opacity-75 flex items-start justify-center p-4 hidden z-50 overflow-y-auto">
+        <div class="bg-gray-800 p-6 rounded-lg shadow-xl w-full max-w-lg my-8 mt-16 border border-gray-700">
+            <!-- Cabeçalho -->
+            <div class="flex justify-between items-center mb-6">
+                <h2 class="text-2xl font-bold text-gray-100">Ajustar Estoque</h2>
+                <button id="closeStockAdjustmentModalBtn" class="text-gray-400 hover:text-white text-3xl leading-none">&times;</button>
+            </div>
+            
+            <!-- Formulário -->
+            <form id="stockAdjustmentForm" class="space-y-4 max-h-[70vh] overflow-y-auto pr-2">
+                <!-- Busca de Produto -->
+                <div class="relative">
+                    <label for="productSearchInput" class="block text-sm font-medium text-gray-300 mb-1">Buscar Produto (Nome ou Cód.)</label>
+                    <input type="text" id="productSearchInput" class="form-input" placeholder="Digite nome ou código..." autocomplete="off">
+                    <div id="productResults" class="absolute z-30 w-full bg-gray-700 border border-gray-600 rounded-lg shadow-lg mt-1 max-h-48 overflow-y-auto hidden">
+                        <!-- Resultados da busca de produtos -->
+                    </div>
+                </div>
+                
+                <!-- Produto Selecionado -->
+                <div id="selectedProductDisplay" class="hidden p-3 bg-gray-700 rounded-lg text-sm">
+                    <p><strong>Produto:</strong> <span id="selectedProductName"></span></p>
+                    <p><strong>Estoque Atual:</strong> <span id="selectedProductStock"></span></p>
+                </div>
+
+                <!-- Tipo de Ajuste (CUSTOM SELECT) -->
+                <div class="relative" id="adjustmentTypeSelect">
+                    <label class="block text-sm font-medium text-gray-300 mb-1">Tipo de Ajuste</label>
+                    <input type="hidden" id="adjustmentTypeValue" value="Entrada">
+                    <button type="button" class="custom-select-trigger form-input">
+                        <span id="adjustmentTypeDisplay" class="custom-select-value">Entrada (Adicionar)</span>
+                        <svg class="chevron-icon" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 20 20"><path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M6 8l4 4 4-4"/></svg>
+                    </button>
+                    <div id="adjustmentTypeOptions" class="custom-select-options absolute z-20 hidden">
+                        <div class="custom-select-option selected" data-value="Entrada">Entrada (Adicionar)</div>
+                        <div class="custom-select-option" data-value="Saída">Saída (Remover)</div>
+                    </div>
+                </div>
+
+                <!-- Quantidade e Motivo -->
+                <div>
+                    <label for="adjustmentQuantity" class="block text-sm font-medium text-gray-300 mb-1">Quantidade</label>
+                    <input type="number" id="adjustmentQuantity" class="form-input" min="1" placeholder="0" required>
+                </div>
+                <div>
+                    <label for="adjustmentReason" class="block text-sm font-medium text-gray-300 mb-1">Motivo do Ajuste</label>
+                    <textarea id="adjustmentReason" rows="3" class="form-textarea" placeholder="Ex: Compra de fornecedor, Ajuste de balanço, Quebra/Perda..." required></textarea>
+                </div>
+
+                <!-- Botão de Submit -->
+                <div class="flex justify-end pt-4 mt-4 border-t border-gray-700">
+                    <button id="submitAdjustmentBtn" type="submit" class="w-full bg-amber-500 text-black px-5 py-3 rounded-lg shadow-md hover:bg-amber-600 transition duration-300 ease-in-out flex items-center justify-center font-semibold">
+                        <span id="submitAdjustmentBtnText">Confirmar Ajuste</span>
+                        <div id="submitAdjustmentSpinner" class="spinner hidden"></div>
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- ================================== -->
+    <!--    MODAL DE CONTAS A PAGAR (Fase 4)  -->
+    <!-- ================================== -->
+    <div id="modalContasPagar" class="fixed inset-0 bg-black bg-opacity-75 flex items-start justify-center p-4 hidden z-50 overflow-y-auto">
+        <div class="bg-gray-800 p-6 rounded-lg shadow-xl w-full max-w-lg my-8 mt-16 border border-gray-700">
+            <!-- Cabeçalho -->
+            <div class="flex justify-between items-center mb-6">
+                <h2 id="contasPagarModalTitle" class="text-2xl font-bold text-gray-100">Adicionar Conta a Pagar</h2>
+                <button id="closeContasPagarModalBtn" class="text-gray-400 hover:text-white text-3xl leading-none">&times;</button>
+            </div>
+            
+            <!-- Formulário -->
+            <form id="contasPagarForm" class="space-y-4 max-h-[70vh] overflow-y-auto pr-2">
+                <div>
+                    <label for="contaDescricao" class="block text-sm font-medium text-gray-300 mb-1">Descrição</label>
+                    <input type="text" id="contaDescricao" class="form-input" placeholder="Ex: Aluguel, Fornecedor X, Energia" required>
+                </div>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                        <label for="contaValor" class="block text-sm font-medium text-gray-300 mb-1">Valor (R$)</label>
+                        <input type="number" id="contaValor" class="form-input" min="0.01" step="0.01" placeholder="0,00" required>
+                    </div>
+                     <div>
+                        <label for="contaVencimento" class="block text-sm font-medium text-gray-300 mb-1">Data Vencimento</label>
+                        <input type="date" id="contaVencimento" class="form-input" required>
+                    </div>
+                </div>
+                <div>
+                    <label for="contaStatus" class="block text-sm font-medium text-gray-300 mb-1">Status Inicial</label>
+                    <select id="contaStatus" class="form-select">
+                        <option value="Pendente">Pendente</option>
+                        <option value="Paga">Paga (já foi paga)</option>
+                    </select>
+                </div>
+
+                <!-- Botão de Submit -->
+                <div class="flex justify-end pt-4 mt-4 border-t border-gray-700">
+                    <button id="submitContasPagarBtn" type="submit" class="w-full bg-amber-500 text-black px-5 py-3 rounded-lg shadow-md hover:bg-amber-600 transition duration-300 ease-in-out flex items-center justify-center font-semibold">
+                        <span id="submitContasPagarBtnText">Salvar Conta</span>
+                        <div id="submitContasPagarSpinner" class="spinner hidden"></div>
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+
+    <!-- ================================== -->
+    <!--    MODAL DE INFORMAÇÃO (AVISO)     -->
+    <!-- ================================== -->
+    <div id="infoModal" class="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center p-4 hidden z-50">
+        <div class="bg-gray-800 p-6 rounded-lg shadow-xl w-full max-w-sm border border-gray-700">
+            <h2 id="infoModalTitle" class="text-xl font-bold text-amber-400 mb-4">Aviso</h2>
+            <p id="infoModalText" class="text-gray-300 mb-6"></p>
+            <div class="flex justify-end">
+                <button id="closeInfoModalBtn" class="bg-amber-500 text-black px-5 py-2 rounded-lg shadow-md hover:bg-amber-600 font-semibold">
+                    Entendido
+                </button>
+            </div>
+        </div>
+    </div>
+
+
+    <script type="module">
+        document.addEventListener('DOMContentLoaded', () => {
+            
+            // --- Acesso ao Firebase (disponibilizado via 'window') ---
+            const { 
+                db, auth, collection, addDoc, onSnapshot, query, serverTimestamp, 
+                doc, updateDoc, deleteDoc, getDocs, getDoc, arrayUnion, where,
+                Timestamp,
+                runTransaction,
+                onAuthStateChanged, signInWithEmailAndPassword, signOut
+            } = window.firebase;
+            
+            // --- REFERÊNCIAS DE COLEÇÃO (EXISTENTES) ---
+            const productsCollection = collection(db, "produtos");
+            const salesCollection = collection(db, "vendas");
+            const vendasCarneCollection = collection(db, "vendasCarne");
+            const clientsCollection = collection(db, "clientes");
+            // (Novas coleções para Fase 4)
+            const parcelasCarneCollection = collection(db, "parcelasCarne");
+            const pagamentosHistoricoCollection = collection(db, "pagamentosHistorico");
+
+
+            // --- REFERÊNCIAS DE COLEÇÃO (NOVAS) ---
+            const movimentacoesEstoqueCollection = collection(db, "movimentacoesEstoque");
+            const contasAPagarCollection = collection(db, "contasAPagar");
+
+            
+            // --- Estado Global da Aplicação ---
+            let allProducts = [];
+            let allSales = [];
+            let allVendasCarne = [];
+            let allClients = [];
+            let allParcelas = []; // Fase 4
+            let allPagamentos = []; // Fase 4
+            let allContasPagar = []; // Fase 4
+            
+            let firebaseListenersAttached = false; 
+            let currentUser = null; // Armazena o usuário logado
+            
+            // --- Estado do Formulário (Estoque) ---
+            let tempSelectedProduct = null; 
+
+            // --- Seletores do DOM (Auth) ---
+            const authScreen = document.getElementById('authScreen');
+            const authMessage = document.getElementById('authMessage');
+            const loginForm = document.getElementById('loginForm');
+            const authEmail = document.getElementById('authEmail');
+            const authPassword = document.getElementById('authPassword');
+            const loginBtn = document.getElementById('loginBtn');
+            const loginBtnText = document.getElementById('loginBtnText');
+            const loginSpinner = document.getElementById('loginSpinner');
+            const logoutBtn = document.getElementById('logoutBtn');
+            const userName = document.getElementById('userName');
+
+            // --- Seletores do DOM (App) ---
+            const appContainer = document.getElementById('appContainer');
+
+            // --- Seletores (Navegação) ---
+            const navDashboard = document.getElementById('navDashboard');
+            const navEstoque = document.getElementById('navEstoque');
+            const navFinanceiro = document.getElementById('navFinanceiro');
+            const navRelatorios = document.getElementById('navRelatorios');
+            const allNavTabs = [navDashboard, navEstoque, navFinanceiro, navRelatorios];
+            
+            // --- Seletores (Páginas) ---
+            const pageDashboard = document.getElementById('pageDashboard');
+            const pageEstoque = document.getElementById('pageEstoque');
+            const pageFinanceiro = document.getElementById('pageFinanceiro');
+            const pageRelatorios = document.getElementById('pageRelatorios');
+            const allPages = [pageDashboard, pageEstoque, pageFinanceiro, pageRelatorios];
+
+            // --- Seletores (Fase 2: Estoque - Página) ---
+            const openStockAdjustmentModalBtn = document.getElementById('openStockAdjustmentModalBtn');
+            const lowStockTableBody = document.getElementById('lowStockTableBody');
+            const loadingMessageEstoqueBaixo = document.getElementById('loadingMessageEstoqueBaixo');
+            
+            // --- Seletores (Fase 2: Estoque - Modal) ---
+            const modalAjusteEstoque = document.getElementById('modalAjusteEstoque');
+            const closeStockAdjustmentModalBtn = document.getElementById('closeStockAdjustmentModalBtn');
+            const stockAdjustmentForm = document.getElementById('stockAdjustmentForm');
+            const productSearchInput = document.getElementById('productSearchInput');
+            const productResults = document.getElementById('productResults');
+            const selectedProductDisplay = document.getElementById('selectedProductDisplay');
+            const selectedProductName = document.getElementById('selectedProductName');
+            const selectedProductStock = document.getElementById('selectedProductStock');
+            const adjustmentTypeSelect = document.getElementById('adjustmentTypeSelect');
+            const adjustmentTypeValue = document.getElementById('adjustmentTypeValue');
+            const adjustmentTypeDisplay = document.getElementById('adjustmentTypeDisplay');
+            const adjustmentTypeOptions = document.getElementById('adjustmentTypeOptions');
+            const adjustmentQuantity = document.getElementById('adjustmentQuantity');
+            const adjustmentReason = document.getElementById('adjustmentReason');
+            const submitAdjustmentBtn = document.getElementById('submitAdjustmentBtn');
+            const submitAdjustmentBtnText = document.getElementById('submitAdjustmentBtnText');
+            const submitAdjustmentSpinner = document.getElementById('submitAdjustmentSpinner');
+
+            // --- Seletores (Fase 3: Relatórios) ---
+            const filtroDataInicio = document.getElementById('filtroDataInicio');
+            const filtroDataFim = document.getElementById('filtroDataFim');
+            const filterDateBtn = document.getElementById('filterDateBtn');
+            const reportTotalFaturado = document.getElementById('reportTotalFaturado');
+            const reportTotalLucro = document.getElementById('reportTotalLucro');
+            const reportTotalVendas = document.getElementById('reportTotalVendas');
+            const topProductsTableBody = document.getElementById('topProductsTableBody');
+            const loadingMessageTopProducts = document.getElementById('loadingMessageTopProducts');
+            const searchRelatorioClientes = document.getElementById('searchRelatorioClientes');
+            const topClientsTableBody = document.getElementById('topClientsTableBody');
+            const loadingMessageTopClients = document.getElementById('loadingMessageTopClients');
+
+            // --- Seletores (Fase 4: Financeiro) ---
+            const finTabReceber = document.getElementById('finTabReceber');
+            const finTabPagar = document.getElementById('finTabPagar');
+            const finTabFluxo = document.getElementById('finTabFluxo');
+            const allFinanceTabs = [finTabReceber, finTabPagar, finTabFluxo];
+            const finPageReceber = document.getElementById('finPageReceber');
+            const finPagePagar = document.getElementById('finPagePagar');
+            const finPageFluxo = document.getElementById('finPageFluxo');
+            const allFinancePages = [finPageReceber, finPagePagar, finPageFluxo];
+            
+            // Aba 1: Contas a Receber
+            const finTotalReceber = document.getElementById('finTotalReceber');
+            const finTotalVencido = document.getElementById('finTotalVencido');
+            const finSearchReceber = document.getElementById('finSearchReceber');
+            const finReceberTableBody = document.getElementById('finReceberTableBody');
+            const loadingMessageFinReceber = document.getElementById('loadingMessageFinReceber');
+            
+            // Aba 2: Contas a Pagar
+            const openContasPagarModalBtn = document.getElementById('openContasPagarModalBtn');
+            const finFiltroPagar = document.getElementById('finFiltroPagar');
+            const finPagarTableBody = document.getElementById('finPagarTableBody');
+            const loadingMessageFinPagar = document.getElementById('loadingMessageFinPagar');
+            
+            // Aba 3: Fluxo de Caixa
+            const finFluxoDataInicio = document.getElementById('finFluxoDataInicio');
+            const finFluxoDataFim = document.getElementById('finFluxoDataFim');
+            const finFluxoFilterBtn = document.getElementById('finFluxoFilterBtn');
+            const finFluxoEntradas = document.getElementById('finFluxoEntradas');
+            const finFluxoSaidas = document.getElementById('finFluxoSaidas');
+            const finFluxoSaldo = document.getElementById('finFluxoSaldo');
+            const finFluxoTableBody = document.getElementById('finFluxoTableBody');
+            const loadingMessageFinFluxo = document.getElementById('loadingMessageFinFluxo');
+            
+            // Modal Contas a Pagar (Fase 4)
+            const modalContasPagar = document.getElementById('modalContasPagar');
+            const contasPagarModalTitle = document.getElementById('contasPagarModalTitle');
+            const closeContasPagarModalBtn = document.getElementById('closeContasPagarModalBtn');
+            const contasPagarForm = document.getElementById('contasPagarForm');
+            const contaDescricao = document.getElementById('contaDescricao');
+            const contaValor = document.getElementById('contaValor');
+            const contaVencimento = document.getElementById('contaVencimento');
+            const contaStatus = document.getElementById('contaStatus');
+            const submitContasPagarBtn = document.getElementById('submitContasPagarBtn');
+            const submitContasPagarBtnText = document.getElementById('submitContasPagarBtnText');
+            const submitContasPagarSpinner = document.getElementById('submitContasPagarSpinner');
+
+
+            // --- Seletores (Modais Genéricos) ---
+            const infoModal = document.getElementById('infoModal');
+            const infoModalTitle = document.getElementById('infoModalTitle');
+            const infoModalText = document.getElementById('infoModalText');
+            const closeInfoModalBtn = document.getElementById('closeInfoModalBtn');
+            
+            // ==========================================================
+            // --- INICIALIZAÇÃO E UTILITÁRIOS ---
+            // ==========================================================
+
+            // --- Lógica do CUSTOM SELECT ---
+            function initCustomSelect(trigger, optionsContainer, valueInput, displaySpan) {
+                const triggerBtn = trigger.querySelector('button');
+                // Adiciona listener nas opções
+                optionsContainer.addEventListener('click', (e) => {
+                    const option = e.target.closest('.custom-select-option');
+                    if (!option) return;
+                    
+                    const newValue = option.dataset.value;
+                    const newText = option.textContent;
+                    
+                    valueInput.value = newValue;
+                    displaySpan.textContent = newText;
+                    
+                    optionsContainer.querySelectorAll('.custom-select-option').forEach(opt => opt.classList.remove('selected'));
+                    option.classList.add('selected');
+                    optionsContainer.classList.add('hidden');
+                    valueInput.dispatchEvent(new Event('change')); // Dispara evento 'change'
+                });
+                
+                // Lógica de Toggle (Abrir/Fechar)
+                triggerBtn.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    const wasOpen = !optionsContainer.classList.contains('hidden');
+                    closeAllSelects(); // Fecha todos os outros
+                    if (!wasOpen) {
+                        optionsContainer.classList.remove('hidden'); // Abre o atual
+                    }
+                });
+            }
+            
+            function closeAllSelects() {
+                document.querySelectorAll('.custom-select-options').forEach(opt => opt.classList.add('hidden'));
+            }
+            document.addEventListener('click', closeAllSelects);
+            
+            // Inicializa os selects customizados da Fase 2
+            initCustomSelect(adjustmentTypeSelect, adjustmentTypeOptions, adjustmentTypeValue, adjustmentTypeDisplay);
+            
+            // --- Funções de Formatação ---
+            function formatCurrency(value) {
+                const numValue = Number(value) || 0;
+                return numValue.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+            }
+            
+            function formatDate(date, includeTime = false) {
+                if (!date) return 'Data inválida';
+                
+                let jsDate;
+                if (date.toDate) { // Objeto Timestamp do Firebase
+                    jsDate = date.toDate();
+                } else if (date instanceof Timestamp) { // Outra forma de Timestamp
+                    jsDate = date.toDate();
+                } else if (!(date instanceof Date)) { // String ou número
+                    jsDate = new Date(date);
+                } else {
+                    jsDate = date;
+                }
+
+                if (isNaN(jsDate.getTime())) {
+                    return "Data inválida";
+                }
+
+                const options = {
+                    day: '2-digit', month: '2-digit', year: 'numeric'
+                };
+                if (includeTime) {
+                    options.hour = '2-digit';
+                    options.minute = '2-digit';
+                }
+                return jsDate.toLocaleString('pt-BR', options);
+            }
+            
+            // Define datas padrão para os filtros (Mês Atual)
+            function setDefaultDateFilters() {
+                const now = new Date();
+                const firstDay = new Date(now.getFullYear(), now.getMonth(), 1);
+                const lastDay = new Date(now.getFullYear(), now.getMonth() + 1, 0);
+                
+                const firstDayStr = firstDay.toISOString().split('T')[0];
+                const lastDayStr = lastDay.toISOString().split('T')[0];
+                
+                // Formato AAAA-MM-DD
+                filtroDataInicio.value = firstDayStr;
+                filtroDataFim.value = lastDayStr;
+                finFluxoDataInicio.value = firstDayStr;
+                finFluxoDataFim.value = lastDayStr;
+            }
+
+            // --- Funções de Modal Genéricas ---
+            function showModal(modalElement) {
+                modalElement.classList.remove('hidden');
+                document.body.classList.add('overflow-hidden');
+            }
+            function hideModal(modalElement, formElement = null) {
+                modalElement.classList.add('hidden');
+                document.body.classList.remove('overflow-hidden');
+                if (formElement) formElement.reset();
+            }
+            
+            function showInfoModal(title, text) {
+                infoModalTitle.textContent = title;
+                infoModalText.textContent = text;
+                showModal(infoModal);
+            }
+            closeInfoModalBtn.addEventListener('click', () => hideModal(infoModal));
+
+            // --- Funções de Loading ---
+            function setSubmitLoading(isLoading, btn, btnText, spinner) {
+                if (isLoading) {
+                    btn.disabled = true;
+                    btnText.classList.add('hidden');
+                    spinner.classList.remove('hidden');
+                } else {
+                    btn.disabled = false;
+                    btnText.classList.remove('hidden');
+                    spinner.classList.add('hidden');
+                }
+            }
+
+            // --- Funções de Navegação (Fase 1.3) ---
+            function navigateTo(pageId, tabElement) {
+                allPages.forEach(page => page.classList.add('hidden'));
+                allNavTabs.forEach(tab => tab.classList.remove('nav-active'));
+                
+                document.getElementById(pageId).classList.remove('hidden');
+                tabElement.classList.add('nav-active');
+                
+                // Gatilhos específicos de renderização ao navegar
+                if (pageId === 'pageRelatorios') renderReports();
+                if (pageId === 'pageFinanceiro') renderFinanceiro();
+            }
+            navDashboard.addEventListener('click', () => navigateTo('pageDashboard', navDashboard));
+            navEstoque.addEventListener('click', () => navigateTo('pageEstoque', navEstoque));
+            navFinanceiro.addEventListener('click', () => navigateTo('pageFinanceiro', navFinanceiro));
+            navRelatorios.addEventListener('click', () => navigateTo('pageRelatorios', navRelatorios));
+
+            // ==========================================================
+            // --- FASE 2: LÓGICA DE ESTOQUE (Refatorada para Modal) ---
+            // ==========================================================
+            
+            // Abre o modal
+            openStockAdjustmentModalBtn.addEventListener('click', () => {
+                // Limpa o formulário antes de abrir
+                stockAdjustmentForm.reset();
+                productSearchInput.value = '';
+                resetSelectedProduct();
+                adjustmentTypeValue.value = 'Entrada';
+                adjustmentTypeDisplay.textContent = 'Entrada (Adicionar)';
+                
+                showModal(modalAjusteEstoque);
+            });
+            
+            // Fecha o modal
+            closeStockAdjustmentModalBtn.addEventListener('click', () => {
+                hideModal(modalAjusteEstoque, stockAdjustmentForm);
+            });
+            
+            // --- Busca de Produto (dentro do modal) ---
+            productSearchInput.addEventListener('input', (e) => {
+                const query = e.target.value.toLowerCase();
+                if (query.length < 1) {
+                    productResults.classList.add('hidden');
+                    resetSelectedProduct();
+                    return;
+                }
+                const filtered = allProducts.filter(p =>
+                    (p.nome && p.nome.toLowerCase().includes(query)) ||
+                    (p.codigoProduto && p.codigoProduto.toString().padStart(6, '0').includes(query))
+                );
+                
+                productResults.innerHTML = '';
+                if (filtered.length === 0) {
+                    productResults.innerHTML = '<div class="p-2 text-gray-400">Nenhum produto encontrado</div>';
+                } else {
+                    filtered.slice(0, 10).forEach(product => { 
+                        const div = document.createElement('div');
+                        div.className = 'p-2 hover:bg-gray-600 cursor-pointer text-gray-100';
+                        div.textContent = `[${product.codigoProduto.toString().padStart(6, '0')}] ${product.nome}`;
+                        div.addEventListener('click', () => selectProductForAdjustment(product));
+                        productResults.appendChild(div);
+                    });
+                }
+                productResults.classList.remove('hidden');
+            });
+
+            function selectProductForAdjustment(product) {
+                tempSelectedProduct = product; 
+                
+                productSearchInput.value = `[${product.codigoProduto.toString().padStart(6, '0')}] ${product.nome}`;
+                productResults.classList.add('hidden');
+                
+                // Mostra o display do produto selecionado
+                selectedProductName.textContent = product.nome;
+                selectedProductStock.textContent = product.estoqueAtual;
+                selectedProductDisplay.classList.remove('hidden');
+                
+                adjustmentQuantity.focus();
+            }
+
+            function resetSelectedProduct() {
+                tempSelectedProduct = null;
+                selectedProductDisplay.classList.add('hidden');
+                selectedProductName.textContent = '';
+                selectedProductStock.textContent = '';
+            }
+            
+            // --- Renderizar Tabela de Estoque Baixo (Na página) ---
+            function renderLowStockTable() {
+                lowStockTableBody.innerHTML = '';
+                
+                const lowStockProducts = allProducts.filter(p => p.estoqueAtual <= p.estoqueMinimo);
+                
+                if (lowStockProducts.length === 0) {
+                    loadingMessageEstoqueBaixo.innerHTML = '<td colspan="3" class="p-4 text-center text-gray-400">Nenhum produto com estoque baixo.</td>';
+                    lowStockTableBody.appendChild(loadingMessageEstoqueBaixo);
+                    return;
+                }
+                
+                lowStockProducts.sort((a,b) => a.nome.localeCompare(b.nome));
+                
+                lowStockProducts.forEach(product => {
+                    const tr = document.createElement('tr');
+                    tr.className = 'hover:bg-gray-700';
+                    tr.innerHTML = `
+                        <td class="p-2 whitespace-nowrap text-sm font-medium text-gray-100">${product.nome}</td>
+                        <td class="p-2 text-center text-sm font-bold text-red-500">${product.estoqueAtual}</td>
+                        <td class="p-2 text-center text-sm text-gray-400">${product.estoqueMinimo}</td>
+                    `;
+                    lowStockTableBody.appendChild(tr);
+                });
+            }
+
+            // --- Submit do Formulário de Ajuste (no modal) ---
+            stockAdjustmentForm.addEventListener('submit', handleStockAdjustmentSubmit);
+
+            async function handleStockAdjustmentSubmit(e) {
+                e.preventDefault();
+
+                if (!tempSelectedProduct) {
+                    showInfoModal('Produto Inválido', 'Por favor, selecione um produto da lista.');
+                    return;
+                }
+                
+                const tipo = adjustmentTypeValue.value;
+                const motivo = adjustmentReason.value.trim();
+                const quantidade = parseInt(adjustmentQuantity.value);
+
+                if (isNaN(quantidade) || quantidade <= 0) {
+                    showInfoModal('Quantidade Inválida', 'Por favor, insira uma quantidade válida (maior que 0).');
+                    return;
+                }
+                if (motivo === '') {
+                    showInfoModal('Motivo Obrigatório', 'Por favor, descreva o motivo do ajuste.');
+                    return;
+                }
+                
+                if (tipo === 'Saída' && quantidade > (tempSelectedProduct.estoqueAtual || 0)) {
+                    showInfoModal('Estoque Insuficiente', `Não é possível dar saída de ${quantidade} unidades. Estoque atual: ${tempSelectedProduct.estoqueAtual || 0}.`);
+                    return;
+                }
+                
+                setSubmitLoading(true, submitAdjustmentBtn, submitAdjustmentBtnText, submitAdjustmentSpinner);
+
+                try {
+                    const productRef = doc(db, 'produtos', tempSelectedProduct.id);
+                    let novoEstoque = 0;
+                    
+                    if (tipo === 'Entrada') {
+                        novoEstoque = (tempSelectedProduct.estoqueAtual || 0) + quantidade;
+                    } else { // Saída
+                        novoEstoque = (tempSelectedProduct.estoqueAtual || 0) - quantidade;
+                    }
+                    
+                    await updateDoc(productRef, { estoqueAtual: novoEstoque });
+                    
+                    await addDoc(movimentacoesEstoqueCollection, {
+                        produtoId: tempSelectedProduct.id,
+                        nomeProduto: tempSelectedProduct.nome,
+                        codigoProduto: tempSelectedProduct.codigoProduto,
+                        tipo: tipo,
+                        quantidade: quantidade,
+                        motivo: motivo,
+                        estoqueAnterior: tempSelectedProduct.estoqueAtual,
+                        estoqueNovo: novoEstoque,
+                        usuarioEmail: currentUser?.email || 'admin@admin.com',
+                        data: serverTimestamp()
+                    });
+                    
+                    showInfoModal('Sucesso!', 'Ajuste de estoque realizado e registrado com sucesso.');
+                    hideModal(modalAjusteEstoque, stockAdjustmentForm);
+
+                } catch (error) {
+                    console.error("Erro ao ajustar estoque: ", error);
+                    showInfoModal('Erro', `Ocorreu um erro ao salvar o ajuste: ${error.message}`);
+                } finally {
+                    setSubmitLoading(false, submitAdjustmentBtn, submitAdjustmentBtnText, submitAdjustmentSpinner);
+                }
+            }
+
+            // ==========================================================
+            // --- FASE 3: LÓGICA DE RELATÓRIOS ---
+            // ==========================================================
+            
+            filterDateBtn.addEventListener('click', renderReports);
+            searchRelatorioClientes.addEventListener('input', renderReports);
+            
+            function renderReports() {
+                // 1. Obter e validar datas
+                const startDate = filtroDataInicio.value ? new Date(filtroDataInicio.value + "T00:00:00") : null;
+                const endDate = filtroDataFim.value ? new Date(filtroDataFim.value + "T23:59:59") : null;
+                
+                if (!startDate || !endDate) {
+                    showInfoModal("Datas Inválidas", "Por favor, selecione data de início e fim.");
+                    return;
+                }
+                
+                if (endDate < startDate) {
+                    showInfoModal("Datas Inválidas", "A data final deve ser posterior à data inicial.");
+                    return;
+                }
+
+                // 2. Filtrar dados (Vendas Simples e Vendas Carnê)
+                const vendasFiltradas = allSales.filter(v => 
+                    v.date && v.date >= startDate && v.date <= endDate && v.status !== 'cancelada'
+                );
+                const vendasCarneFiltradas = allVendasCarne.filter(v => 
+                    v.dataVenda && v.dataVenda >= startDate && v.dataVenda <= endDate
+                );
+
+                // 3. Processar dados para os relatórios
+                let totalFaturado = 0;
+                let totalCusto = 0;
+                let totalVendas = 0;
+                let totalRecebidoLiquido = 0; // NOVO: Para calcular o lucro real
+                const productSales = {}; // { productId: { nome, qtd, total } }
+                const clientSales = {}; // { clienteId: { nome, total } }
+
+                // Processa Vendas Simples (vendas)
+                vendasFiltradas.forEach(venda => {
+                    totalFaturado += venda.totalPrice || 0; // Mantém o faturamento bruto
+                    totalVendas++;
+                    
+                    // LÓGICA DE LUCRO (LÍQUIDO)
+                    const metodo = (venda.paymentMethod || "").toLowerCase();
+                    if (metodo.includes('crédito') || metodo.includes('débito')) {
+                        totalRecebidoLiquido += venda.valorLiquido || 0;
+                    } else {
+                        // Pix, À vista, etc.
+                        totalRecebidoLiquido += venda.totalPrice || 0;
+                    }
+                    
+                    // === CORREÇÃO DEFINITIVA (Linhas Adicionadas) ===
+                    // Definir as variáveis 'clienteId' e 'clienteNome'
+                    // extraindo-as do objeto 'venda' atual (venda simples).
+                    const clienteId = venda.customerId;
+                    const clienteNome = venda.customerName;
+                    // ===============================================
+
+                    if (clienteId && clienteNome) {
+                        if (!clientSales[clienteId]) {
+                            clientSales[clienteId] = { nome: clienteNome, total: 0 };
+                        }
+                        // CORREÇÃO DEFINITIVA:
+                        // Usar 'venda.totalPrice' para o relatório de cliente de Vendas Simples.
+                        // O erro 'valorComJuros is not defined' acontecia aqui.
+                        clientSales[clienteId].total += venda.totalPrice || 0;
+                    }
+
+                    (venda.itens || []).forEach(item => {
+                        const product = allProducts.find(p => p.id === item.productId);
+                        const custo = (product?.precoCusto || 0) * item.quantity;
+                        totalCusto += custo;
+
+                        if (!productSales[item.productId]) {
+                            productSales[item.productId] = { nome: item.productName, qtd: 0, total: 0 };
+                        }
+                        productSales[item.productId].qtd += item.quantity;
+                        productSales[item.productId].total += item.subtotal;
+                    });
+                });
+
+                // 4. Renderizar Cards de Resumo
+                reportTotalFaturado.textContent = formatCurrency(totalFaturado);
+                reportTotalLucro.textContent = formatCurrency(totalRecebidoLiquido - totalCusto); // MUDANÇA AQUI
+                reportTotalVendas.textContent = totalVendas;
+
+                // 5. Renderizar Tabela de Produtos Mais Vendidos
+                topProductsTableBody.innerHTML = '';
+                const sortedProducts = Object.values(productSales).sort((a, b) => b.qtd - a.qtd);
+                
+                if (sortedProducts.length === 0) {
+                    loadingMessageTopProducts.innerHTML = '<td colspan="3" class="p-4 text-center text-gray-400">Nenhum produto vendido no período.</td>';
+                    topProductsTableBody.appendChild(loadingMessageTopProducts);
+                } else {
+                    sortedProducts.forEach(prod => {
+                        const tr = document.createElement('tr');
+                        tr.innerHTML = `
+                            <td class="p-2 whitespace-nowrap text-sm font-medium text-gray-100">${prod.nome}</td>
+                            <td class="p-2 text-center text-sm font-bold text-gray-100">${prod.qtd}</td>
+                            <td class="p-2 text-right text-sm text-gray-300">${formatCurrency(prod.total)}</td>
+                        `;
+                        topProductsTableBody.appendChild(tr);
+                    });
+                }
+                
+                // 6. Renderizar Tabela de Clientes
+                topClientsTableBody.innerHTML = '';
+                const searchQuery = searchRelatorioClientes.value.toLowerCase();
+                
+                let sortedClients = Object.values(clientSales).sort((a, b) => b.total - a.total);
+                
+                if (searchQuery) {
+                    const queryCPF = searchQuery.replace(/\D/g, '');
+                    sortedClients = sortedClients.filter(cli => {
+                        const clienteCompleto = allClients.find(c => c.nome === cli.nome); // Busca o CPF
+                        const nomeMatch = cli.nome.toLowerCase().includes(searchQuery);
+                        const cpfMatch = clienteCompleto?.cpf && queryCPF.length > 0 ? clienteCompleto.cpf.replace(/\D/g, '').includes(queryCPF) : false;
+                        return nomeMatch || cpfMatch;
+                    });
+                }
+                
+                if (sortedClients.length === 0) {
+                    loadingMessageTopClients.innerHTML = '<td colspan="2" class="p-4 text-center text-gray-400">Nenhum cliente encontrado.</td>';
+                    topClientsTableBody.appendChild(loadingMessageTopClients);
+                } else {
+                    sortedClients.forEach(cli => {
+                        const tr = document.createElement('tr');
+                        tr.innerHTML = `
+                            <td class="p-2 whitespace-nowrap text-sm font-medium text-gray-100">${cli.nome}</td>
+                            <td class="p-2 text-right text-sm font-bold text-gray-100">${formatCurrency(cli.total)}</td>
+                        `;
+                        topClientsTableBody.appendChild(tr);
+                    });
+                }
+            }
+            
+            // ==========================================================
+            // --- FASE 4: LÓGICA FINANCEIRO ---
+            // ==========================================================
+            
+            // --- Navegação das Abas (Financeiro) ---
+            allFinanceTabs.forEach(tab => {
+                tab.addEventListener('click', (e) => {
+                    allFinanceTabs.forEach(t => t.classList.replace('finance-tab-active', 'finance-tab'));
+                    allFinancePages.forEach(p => p.classList.add('hidden'));
+                    
+                    e.currentTarget.classList.replace('finance-tab', 'finance-tab-active');
+                    
+                    if (e.currentTarget.id === 'finTabReceber') {
+                        finPageReceber.classList.remove('hidden');
+                        renderContasAReceber();
+                    } else if (e.currentTarget.id === 'finTabPagar') {
+                        finPagePagar.classList.remove('hidden');
+                        renderContasAPagar();
+                    } else if (e.currentTarget.id === 'finTabFluxo') {
+                        finPageFluxo.classList.remove('hidden');
+                        renderFluxoDeCaixa();
+                    }
+                });
+            });
+
+            // --- Renderização Principal (Financeiro) ---
+            function renderFinanceiro() {
+                // Renderiza a aba que estiver ativa
+                if (!finPageReceber.classList.contains('hidden')) renderContasAReceber();
+                if (!finPagePagar.classList.contains('hidden')) renderContasAPagar();
+                if (!finPageFluxo.classList.contains('hidden')) renderFluxoDeCaixa();
+            }
+            
+            // --- Aba 1: Contas a Receber (Fase 4.1) ---
+            finSearchReceber.addEventListener('input', renderContasAReceber);
+            
+            function renderContasAReceber() {
+                let totalReceber = 0;
+                let totalVencido = 0;
+                const hoje = new Date();
+                
+                let parcelasPendentes = allParcelas.filter(p => p.status === 'Pendente');
+                
+                // Filtro de Busca
+                const searchQuery = finSearchReceber.value.toLowerCase();
+                if (searchQuery) {
+                    const queryCPF = searchQuery.replace(/\D/g, '');
+                    parcelasPendentes = parcelasPendentes.filter(p => {
+                        const cliente = allClients.find(c => c.id === p.clienteId);
+                        const nomeMatch = p.clienteNome.toLowerCase().includes(searchQuery);
+                        const cpfMatch = cliente?.cpf && queryCPF.length > 0 ? cliente.cpf.replace(/\D/g, '').includes(queryCPF) : false;
+                        return nomeMatch || cpfMatch;
+                    });
+                }
+                
+                finReceberTableBody.innerHTML = '';
+                
+                if (parcelasPendentes.length === 0) {
+                    loadingMessageFinReceber.innerHTML = '<td colspan="4" class="p-4 text-center text-gray-400">Nenhuma parcela pendente encontrada.</td>';
+                    finReceberTableBody.appendChild(loadingMessageFinReceber);
+                } else {
+                    parcelasPendentes.sort((a,b) => a.dataVencimento - b.dataVencimento);
+                    
+                    parcelasPendentes.forEach(p => {
+                        totalReceber += p.valorPendente;
+                        const vencido = p.dataVencimento < hoje;
+                        if (vencido) totalVencido += p.valorPendente;
+                        
+                        const tr = document.createElement('tr');
+                        tr.className = 'hover:bg-gray-700';
+                        tr.innerHTML = `
+                            <td class="p-2 whitespace-nowrap text-sm font-medium text-gray-100">${p.clienteNome}</td>
+                            <td class="p-2 whitespace-nowrap text-sm ${vencido ? 'text-red-400' : 'text-gray-300'}">${formatDate(p.dataVencimento)}</td>
+                            <td class="p-2 text-right text-sm font-bold text-gray-100">${formatCurrency(p.valorPendente)}</td>
+                            <td class="p-2 text-center text-sm">
+                                ${vencido ? 
+                                    '<span class="px-2 py-1 text-xs font-semibold rounded-full bg-red-900 text-red-100">Vencido</span>' : 
+                                    '<span class="px-2 py-1 text-xs font-semibold rounded-full bg-gray-600 text-gray-100">Pendente</span>'
+                                }
+                            </td>
+                        `;
+                        finReceberTableBody.appendChild(tr);
+                    });
+                }
+                
+                // Atualiza Cards
+                finTotalReceber.textContent = formatCurrency(totalReceber);
+                finTotalVencido.textContent = formatCurrency(totalVencido);
+            }
+            
+            // --- Aba 2: Contas a Pagar (Fase 4.2) ---
+            finFiltroPagar.addEventListener('change', renderContasAPagar);
+            openContasPagarModalBtn.addEventListener('click', () => {
+                contasPagarModalTitle.textContent = "Adicionar Conta a Pagar";
+                contasPagarForm.reset();
+                contasPagarForm.dataset.id = ''; // Limpa o ID (para garantir que é 'add')
+                showModal(modalContasPagar);
+            });
+            closeContasPagarModalBtn.addEventListener('click', () => hideModal(modalContasPagar));
+            
+            contasPagarForm.addEventListener('submit', async (e) => {
+                e.preventDefault();
+                setSubmitLoading(true, submitContasPagarBtn, submitContasPagarBtnText, submitContasPagarSpinner);
+                
+                const data = {
+                    descricao: contaDescricao.value,
+                    valor: parseFloat(contaValor.value),
+                    dataVencimento: new Date(contaVencimento.value + "T00:00:00"),
+                    status: contaStatus.value,
+                    dataRegistro: serverTimestamp(),
+                    usuarioEmail: currentUser?.email || 'admin@admin.com'
+                };
+                
+                if(data.status === 'Paga') {
+                    data.dataPagamento = serverTimestamp(); // Registra data do pagamento
+                }
+
+                try {
+                    await addDoc(contasAPagarCollection, data);
+                    showInfoModal("Sucesso!", "Conta a pagar registrada.");
+                    hideModal(modalContasPagar, contasPagarForm);
+                } catch (error) {
+                    console.error("Erro ao salvar conta a pagar: ", error);
+                    showInfoModal("Erro", `Não foi possível salvar a conta: ${error.message}`);
+                } finally {
+                    setSubmitLoading(false, submitContasPagarBtn, submitContasPagarBtnText, submitContasPagarSpinner);
+                }
+            });
+            
+            function renderContasAPagar() {
+                const filtro = finFiltroPagar.value;
+                
+                let contasFiltradas = allContasPagar;
+                if(filtro !== 'Todas') {
+                    contasFiltradas = allContasPagar.filter(c => c.status === filtro);
+                }
+                
+                contasFiltradas.sort((a, b) => a.dataVencimento - b.dataVencimento);
+                
+                finPagarTableBody.innerHTML = '';
+                if(contasFiltradas.length === 0) {
+                    loadingMessageFinPagar.innerHTML = `<td colspan="5" class="p-4 text-center text-gray-400">Nenhuma conta encontrada.</td>`;
+                    finPagarTableBody.appendChild(loadingMessageFinPagar);
+                } else {
+                    contasFiltradas.forEach(conta => {
+                        const tr = document.createElement('tr');
+                        tr.className = 'hover:bg-gray-700';
+                        tr.innerHTML = `
+                            <td class="p-2 whitespace-nowrap text-sm font-medium text-gray-100">${conta.descricao}</td>
+                            <td class="p-2 whitespace-nowrap text-sm text-gray-300">${formatDate(conta.dataVencimento)}</td>
+                            <td class="p-2 text-right text-sm font-bold text-gray-100">${formatCurrency(conta.valor)}</td>
+                            <td class="p-2 text-center text-sm">
+                                ${conta.status === 'Pendente' ? 
+                                    '<span class="px-2 py-1 text-xs font-semibold rounded-full bg-yellow-800 text-yellow-100">Pendente</span>' : 
+                                    '<span class="px-2 py-1 text-xs font-semibold rounded-full bg-green-800 text-green-100">Paga</span>'
+                                }
+                            </td>
+                            <td class="p-2 text-center text-sm">
+                                ${conta.status === 'Pendente' ? 
+                                    `<button class="mark-as-paid-btn text-green-400 hover:text-green-300 font-semibold" data-id="${conta.id}">Marcar como Paga</button>` : 
+                                    `<span class="text-gray-500 text-xs">Pago em ${formatDate(conta.dataPagamento)}</span>`
+                                }
+                            </td>
+                        `;
+                        finPagarTableBody.appendChild(tr);
+                    });
+                }
+                
+                // Adiciona listeners aos botões
+                document.querySelectorAll('.mark-as-paid-btn').forEach(btn => {
+                    btn.addEventListener('click', handleMarkAsPaid);
+                });
+            }
+            
+            async function handleMarkAsPaid(e) {
+                const id = e.target.dataset.id;
+                if (!id) return;
+                
+                e.target.disabled = true;
+                e.target.textContent = 'Salvando...';
+                
+                try {
+                    const contaRef = doc(db, 'contasAPagar', id);
+                    await updateDoc(contaRef, {
+                        status: 'Paga',
+                        dataPagamento: serverTimestamp()
+                    });
+                    showInfoModal("Sucesso", "Conta marcada como paga.");
+                    // O listener do Firebase irá re-renderizar a tabela
+                } catch (error) {
+                    console.error("Erro ao marcar como paga: ", error);
+                    showInfoModal("Erro", "Não foi possível atualizar a conta.");
+                }
+            }
+
+            // --- Aba 3: Fluxo de Caixa (Fase 4.3) ---
+            finFluxoFilterBtn.addEventListener('click', renderFluxoDeCaixa);
+            
+            function renderFluxoDeCaixa() {
+                const startDate = finFluxoDataInicio.value ? new Date(finFluxoDataInicio.value + "T00:00:00") : null;
+                const endDate = finFluxoDataFim.value ? new Date(finFluxoDataFim.value + "T23:59:59") : null;
+                
+                if (!startDate || !endDate) {
+                    showInfoModal("Datas Inválidas", "Por favor, selecione data de início e fim.");
+                    return;
+                }
+                
+                let extrato = [];
+                let totalEntradas = 0;
+                let totalSaidas = 0;
+
+                // 1. Entradas: Pagamentos de Carnês (pagamentosHistorico)
+                allPagamentos.forEach(pag => {
+                    if (pag.dataPagamento >= startDate && pag.dataPagamento <= endDate) {
+                        extrato.push({
+                            data: pag.dataPagamento,
+                            descricao: `Recebimento Carnê: ${pag.clienteNome}`,
+                            tipo: 'Entrada',
+                            valor: pag.valorPago
+                        });
+                        totalEntradas += pag.valorPago;
+                    }
+                });
+                
+                // 2. Entradas: Vendas (Pix, Débito, À vista)
+                allSales.forEach(venda => {
+                    const metodo = (venda.paymentMethod || "").toLowerCase();
+                    // Ajuste para incluir status e tratar valor líquido
+                    if (venda.date >= startDate && venda.date <= endDate && venda.status !== 'cancelada') {
+                        
+                        let valorEntrada = 0;
+                        let descricaoEntrada = "";
+
+                        if (metodo.includes('crédito') || metodo.includes('débito')) {
+                            valorEntrada = venda.valorLiquido || 0;
+                            descricaoEntrada = `Venda Cartão (Líquido): ${venda.customerName || 'Cliente Balcão'}`;
+                        } else if (metodo.includes('pix') || metodo.includes('vista')) {
+                            valorEntrada = venda.totalPrice || 0;
+                            descricaoEntrada = `Venda Direta: ${venda.customerName || 'Cliente Balcão'}`;
+                        } else {
+                            // Ignora outros métodos como 'Carnê' (já tratado em pagamentosHistorico)
+                            return; 
+                        }
+
+                        extrato.push({
+                            data: venda.date,
+                            descricao: descricaoEntrada,
+                            tipo: 'Entrada',
+                            valor: valorEntrada
+                        });
+                        totalEntradas += valorEntrada;
+                    }
+                });
+                
+                // 3. Saídas: Contas a Pagar (contasAPagar)
+                allContasPagar.forEach(conta => {
+                    if (conta.status === 'Paga' && conta.dataPagamento && 
+                        conta.dataPagamento >= startDate && conta.dataPagamento <= endDate) {
+                        
+                        extrato.push({
+                            data: conta.dataPagamento,
+                            descricao: `Pagamento: ${conta.descricao}`,
+                            tipo: 'Saída',
+                            valor: conta.valor
+                        });
+                        totalSaidas += conta.valor;
+                    }
+                });
+
+                // 4. Ordenar extrato por data
+                extrato.sort((a,b) => a.data - b.data);
+                
+                // 5. Renderizar Tabela
+                finFluxoTableBody.innerHTML = '';
+                if(extrato.length === 0) {
+                    loadingMessageFinFluxo.innerHTML = `<td colspan="4" class="p-4 text-center text-gray-400">Nenhuma movimentação no período.</td>`;
+                    finFluxoTableBody.appendChild(loadingMessageFinFluxo);
+                } else {
+                    extrato.forEach(item => {
+                        const isEntrada = item.tipo === 'Entrada';
+                        const tr = document.createElement('tr');
+                        tr.className = 'hover:bg-gray-700';
+                        tr.innerHTML = `
+                            <td class="p-2 whitespace-nowrap text-sm text-gray-300">${formatDate(item.data, true)}</td>
+                            <td class="p-2 whitespace-nowrap text-sm font-medium text-gray-100">${item.descricao}</td>
+                            <td class="p-2 whitespace-nowrap text-sm ${isEntrada ? 'text-green-400' : 'text-red-400'}">${item.tipo}</td>
+                            <td class="p-2 text-right text-sm font-bold ${isEntrada ? 'text-green-400' : 'text-red-400'}">
+                                ${isEntrada ? '+' : '-'} ${formatCurrency(item.valor)}
+                            </td>
+                        `;
+                        finFluxoTableBody.appendChild(tr);
+                    });
+                }
+                
+                // 6. Atualizar Cards
+                finFluxoEntradas.textContent = formatCurrency(totalEntradas);
+                finFluxoSaidas.textContent = formatCurrency(totalSaidas);
+                finFluxoSaldo.textContent = formatCurrency(totalEntradas - totalSaidas);
+            }
+
+            // ==========================================================
+            // --- LÓGICA DE AUTENTICAÇÃO E SYNC FIREBASE ---
+            // ==========================================================
+            
+            function showAuthMessage(message) {
+                authMessage.textContent = message;
+                authMessage.classList.remove('hidden');
+            }
+            loginForm.addEventListener('submit', async (e) => {
+                e.preventDefault();
+                setSubmitLoading(true, loginBtn, loginBtnText, loginSpinner);
+                authMessage.classList.add('hidden');
+                
+                const email = authEmail.value;
+                const password = authPassword.value;
+                
+                try {
+                    await signInWithEmailAndPassword(auth, email, password);
+                } catch (error) {
+                    console.error("Erro ao fazer login:", error);
+                    showAuthMessage("E-mail ou senha incorretos.");
+                } finally {
+                    setSubmitLoading(false, loginBtn, loginBtnText, loginSpinner);
+                }
+            });
+            
+            logoutBtn.addEventListener('click', async () => {
+                try {
+                    await signOut(auth);
+                } catch (error) {
+                    console.error("Erro ao sair:", error);
+                }
+            });
+            
+            onAuthStateChanged(auth, (user) => {
+                currentUser = user; // Armazena o usuário atual
+                if (user) {
+                    authScreen.classList.add('hidden'); 
+                    appContainer.classList.remove('hidden'); 
+                    userName.textContent = `Olá, ${user.email}`;
+                    
+                    setDefaultDateFilters(); // Define as datas padrão dos filtros
+                    navigateTo('pageDashboard', navDashboard); // Navega para o dashboard ao logar
+
+                    if (!firebaseListenersAttached) {
+                        setupFirebaseListeners();
+                        firebaseListenersAttached = true;
+                    }
+function handleHashChange() {
+                    const hash = window.location.hash;
+                    console.log("Hash detectado:", hash);
+                    
+                    let tabToClick;
+                    if (hash === '#financeiro') {
+                        tabToClick = document.getElementById('tab-financeiro');
+                    } else if (hash === '#relatorios') {
+                        tabToClick = document.getElementById('tab-relatorios');
+                    } else {
+                        // O padrão é #estoque ou qualquer outra coisa
+                        tabToClick = document.getElementById('tab-estoque');
+                    }
+
+                    if (tabToClick) {
+                        tabToClick.click();
+                    }
+                }
+                handleHashChange();
+                window.addEventListener('hashchange', handleHashChange);
+                } else {
+                    authScreen.classList.remove('hidden'); 
+                    appContainer.classList.add('hidden'); 
+                    userName.textContent = '';
+                    loginForm.reset();
+                    
+                    // Limpa dados locais ao deslogar
+                    allProducts = [];
+                    allSales = [];
+                    allVendasCarne = [];
+                    allClients = [];
+                    allParcelas = [];
+                    allPagamentos = [];
+                    allContasPagar = [];
+                    
+                    firebaseListenersAttached = false; 
+                }
+            });
+
+            function setupFirebaseListeners() {
+                // --- Listeners Fases 2 e 3 ---
+                onSnapshot(query(productsCollection), (snapshot) => {
+                    allProducts = [];
+                    snapshot.forEach((doc) => allProducts.push({ id: doc.id, ...doc.data() }));
+                    console.log(`Carregados ${allProducts.length} produtos.`);
+                    renderLowStockTable();
+                    if (tempSelectedProduct) {
+                        const updatedProduct = allProducts.find(p => p.id === tempSelectedProduct.id);
+                        if (updatedProduct) {
+                            tempSelectedProduct = updatedProduct;
+                            selectedProductStock.textContent = updatedProduct.estoqueAtual;
+                        } else {
+                            resetSelectedProduct();
+                            productSearchInput.value = '';
+                        }
+                    }
+                    if (!pageRelatorios.classList.contains('hidden')) renderReports();
+                }, (error) => console.error("Erro ao carregar produtos: ", error));
+
+                onSnapshot(query(salesCollection), (snapshot) => {
+                    allSales = [];
+                    snapshot.forEach((doc) => {
+                        const data = doc.data();
+                        allSales.push({ id: doc.id, ...data, date: data.date?.toDate() });
+                    });
+                    console.log(`Carregadas ${allSales.length} vendas.`);
+                    if (!pageRelatorios.classList.contains('hidden')) renderReports();
+                    if (!pageFinanceiro.classList.contains('hidden')) renderFinanceiro(); // Fase 4
+                }, (error) => console.error("Erro ao carregar vendas: ", error));
+                
+                onSnapshot(query(vendasCarneCollection), (snapshot) => {
+                    allVendasCarne = [];
+                    snapshot.forEach((doc) => {
+                        const data = doc.data();
+                        allVendasCarne.push({ id: doc.id, ...data, dataVenda: data.dataVenda?.toDate() });
+                    });
+                    console.log(`Carregadas ${allVendasCarne.length} vendas carnê.`);
+                    if (!pageRelatorios.classList.contains('hidden')) renderReports();
+                }, (error) => console.error("Erro ao carregar vendas carnê: ", error));
+
+                onSnapshot(query(clientsCollection), (snapshot) => {
+                    allClients = [];
+                    snapshot.forEach((doc) => allClients.push({ id: doc.id, ...doc.data() }));
+                    console.log(`Carregados ${allClients.length} clientes.`);
+                    if (!pageRelatorios.classList.contains('hidden')) renderReports();
+                    if (!pageFinanceiro.classList.contains('hidden')) renderFinanceiro(); // Fase 4
+                }, (error) => console.error("Erro ao carregar clientes: ", error));
+                
+                // --- Novos Listeners (Fase 4) ---
+                onSnapshot(query(parcelasCarneCollection), (snapshot) => {
+                    allParcelas = [];
+                    snapshot.forEach((doc) => {
+                        const data = doc.data();
+                        allParcelas.push({ id: doc.id, ...data, dataVencimento: data.dataVencimento?.toDate() });
+                    });
+                    console.log(`Carregadas ${allParcelas.length} parcelas.`);
+                    if (!pageFinanceiro.classList.contains('hidden')) renderFinanceiro();
+                }, (error) => console.error("Erro ao carregar parcelas: ", error));
+
+                onSnapshot(query(pagamentosHistoricoCollection), (snapshot) => {
+                    allPagamentos = [];
+                    snapshot.forEach((doc) => {
+                        const data = doc.data();
+                        allPagamentos.push({ id: doc.id, ...data, dataPagamento: data.dataPagamento?.toDate() });
+                    });
+                    console.log(`Carregados ${allPagamentos.length} pagamentos.`);
+                    if (!pageFinanceiro.classList.contains('hidden')) renderFinanceiro();
+                }, (error) => console.error("Erro ao carregar pagamentos: ", error));
+                
+                onSnapshot(query(contasAPagarCollection), (snapshot) => {
+                    allContasPagar = [];
+                    snapshot.forEach((doc) => {
+                        const data = doc.data();
+                        allContasPagar.push({ 
+                            id: doc.id, 
+                            ...data, 
+                            dataVencimento: data.dataVencimento?.toDate(),
+                            dataPagamento: data.dataPagamento?.toDate()
+                        });
+                    });
+                    console.log(`Carregadas ${allContasPagar.length} contas a pagar.`);
+                    if (!pageFinanceiro.classList.contains('hidden')) renderFinanceiro();
+                }, (error) => console.error("Erro ao carregar contas a pagar: ", error));
+            }
+        });
+    </script>
+</body>
+</html>
