@@ -4,47 +4,86 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Aura Premium - Sistema Integrado</title>
-    <!-- Carrega o Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
-    <!-- Link para seu novo arquivo de estilos globais -->
     <link rel="stylesheet" href="style.css">
+    <!-- Ícones (Heroicons) -->
+    <script src="https://unpkg.com/heroicons@2.1.3/24/outline/dist/heroicons.js"></script>
 </head>
 <body class="bg-gray-900 text-gray-100 font-poppins flex h-screen overflow-hidden">
 
     <!-- Sidebar (Menu de Navegação) -->
-    <aside class="w-64 bg-gray-800 shadow-md flex flex-col p-4">
+    <aside class="w-64 bg-gray-800 shadow-md flex flex-col p-4 overflow-y-auto">
         <div class="text-2xl font-bold text-amber-500 mb-6">
             Aura Premium
         </div>
         <nav class="flex flex-col space-y-2">
-            <!-- Links de navegação -->
+            
+            <!-- Vendas -->
             <a href="#" id="nav-vendas" class="nav-link nav-active flex items-center p-3 rounded-lg hover:bg-gray-700">
-                <!-- Ícone (exemplo) -->
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 mr-3" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z" /></svg>
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="h-6 w-6 mr-3"><path stroke-linecap="round" stroke-linejoin="round" d="M2.25 3h1.386c.51 0 .955.343 1.087.835l.383 1.437M7.5 14.25a3 3 0 0 0-3 3h15.75m-12.75-3h11.218c1.121-2.3 2.1-4.684 2.924-7.138a60.114 60.114 0 0 0-16.536-1.84M7.5 14.25 5.106 5.272M6 20.25a.75.75 0 1 1-1.5 0 .75.75 0 0 1 1.5 0Zm12.75 0a.75.75 0 1 1-1.5 0 .75.75 0 0 1 1.5 0Z" /></svg>
                 Vendas
             </a>
-            <a href="#" id="nav-carne" class="nav-link flex items-center p-3 rounded-lg hover:bg-gray-700">
-                <!-- Ícone (exemplo) -->
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 mr-3" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 4h2a2 2 0 012 2v14a2 2 0 01-2 2H6a2 2 0 01-2-2V6a2 2 0 012-2h2m4 0V2m0 4v2m0-2h-4m4 0H8m4 0h4M6 14h12M6 18h12" /></svg>
-                Carnês
+            
+            <!-- Clientes -->
+            <a href="#" id="nav-clientes" class="nav-link flex items-center p-3 rounded-lg hover:bg-gray-700">
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="h-6 w-6 mr-3"><path stroke-linecap="round" stroke-linejoin="round" d="M18 18.72a9.094 9.094 0 0 0 3.741-.479 3 3 0 0 0-4.682-2.72m-4.34 2.72-3.741.48a9.095 9.095 0 0 1-3.741-.479 3 3 0 0 1 4.682-2.72m4.34 2.72c.762.1 1.5.227 2.21.382m-2.21-.382a24.31 24.31 0 0 0-4.34 0m4.34 0m-4.34 0a24.269 24.269 0 0 0-4.34 0m4.34 0a9.095 9.095 0 0 1-3.741-.479 3 3 0 0 1 4.682-2.72M12 3a3 3 0 0 0-3 3v.161M7.5 4.841a3 3 0 0 0-3 3V12m6.158-6.158a3 3 0 0 1 3 3v.161m-3-3.161a24.31 24.31 0 0 1 4.34 0m-4.34 0a24.269 24.269 0 0 1 4.34 0m-4.34 0a9.095 9.095 0 0 0 3.741.479 3 3 0 0 0 4.682-2.72m-4.34 2.72a3 3 0 0 1-3-3V4.841m3 3.161c-.762.1-1.5.227-2.21.382m2.21-.382a24.31 24.31 0 0 1-4.34 0m4.34 0m4.34 0a24.269 24.269 0 0 1-4.34 0m4.34 0a9.095 9.095 0 0 1 3.741.479 3 3 0 0 1-4.682-2.72M12 12a3 3 0 0 1 3 3v.161m-3-3.161a3 3 0 0 0-3 3V12m6.158 6.158a3 3 0 0 1-3 3v-.161m3-3.161a24.31 24.31 0 0 0-4.34 0m4.34 0m4.34 0a24.269 24.269 0 0 0-4.34 0m4.34 0a9.095 9.095 0 0 0-3.741-.479 3 3 0 0 0-4.682 2.72" /></svg>
+                Clientes
             </a>
+            
+            <!-- Produtos -->
+            <a href="#" id="nav-produtos" class="nav-link flex items-center p-3 rounded-lg hover:bg-gray-700">
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="h-6 w-6 mr-3"><path stroke-linecap="round" stroke-linejoin="round" d="M21 7.5l-2.25-1.313M21 7.5v10.5M21 7.5l-9-5.25L3 7.5M21 7.5l-9 5.25M3 7.5l2.25-1.313M3 7.5v10.5M3 7.5l9-5.25L21 7.5M12 21v-8.25M12 12.75l-9 5.25M12 12.75l9 5.25" /></svg>
+                Produtos
+            </a>
+
+            <!-- Separador -->
+            <hr class="border-gray-600 my-2">
+
+            <!-- Novo Carnê -->
+            <a href="#" id="nav-carne-novo" class="nav-link flex items-center p-3 rounded-lg hover:bg-gray-700">
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="h-6 w-6 mr-3"><path stroke-linecap="round" stroke-linejoin="round" d="M12 9v6m3-3H9m12 0a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" /></svg>
+                Novo Carnê
+            </a>
+            
+            <!-- Gerenciar Carnês -->
+            <a href="#" id="nav-carne-gerenciar" class="nav-link flex items-center p-3 rounded-lg hover:bg-gray-700">
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="h-6 w-6 mr-3"><path stroke-linecap="round" stroke-linejoin="round" d="M16.862 4.487l1.687-1.688a1.875 1.875 0 1 1 2.652 2.652L10.582 16.07a4.5 4.5 0 0 1-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 0 1 1.13-1.897l8.932-8.931Zm0 0L19.5 7.125M18 14v4.75A2.25 2.25 0 0 1 15.75 21H5.25A2.25 2.25 0 0 1 3 18.75V8.25A2.25 2.25 0 0 1 5.25 6H10" /></svg>
+                Gerenciar Carnês
+            </a>
+            
+            <!-- Análise de Crédito -->
             <a href="#" id="nav-analise" class="nav-link flex items-center p-3 rounded-lg hover:bg-gray-700">
-                <!-- Ícone (exemplo) -->
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 mr-3" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="h-6 w-6 mr-3"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" /></svg>
                 Análise de Crédito
             </a>
-            <a href="#" id="nav-admin" class="nav-link flex items-center p-3 rounded-lg hover:bg-gray-700">
-                <!-- Ícone (exemplo) -->
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 mr-3" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.096 2.572-1.065z" /><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" /></svg>
-                Admin
+
+            <!-- Separador -->
+            <hr class="border-gray-600 my-2">
+
+            <!-- Estoque -->
+            <a href="#" id="nav-estoque" class="nav-link flex items-center p-3 rounded-lg hover:bg-gray-700">
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="h-6 w-6 mr-3"><path stroke-linecap="round" stroke-linejoin="round" d="M20.25 7.5l-.625 10.632a2.25 2.25 0 0 1-2.247 2.118H6.622a2.25 2.25 0 0 1-2.247-2.118L3.75 7.5M10 11.25h4M3.375 7.5h17.25c.621 0 1.125-.504 1.125-1.125v-1.5c0-.621-.504-1.125-1.125-1.125H3.375c-.621 0-1.125.504-1.125 1.125v1.5c0 .621.504 1.125 1.125 1.125Z" /></svg>
+                Estoque
+            </a>
+
+            <!-- Financeiro -->
+            <a href="#" id="nav-financeiro" class="nav-link flex items-center p-3 rounded-lg hover:bg-gray-700">
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="h-6 w-6 mr-3"><path stroke-linecap="round" stroke-linejoin="round" d="M2.25 18.75a60.07 60.07 0 0 1 15.79-6.393m-15.79 6.393A60.07 60.07 0 0 0 3.75 21H9c.75 0 1.42-.4 1.8-1.03l4.398-6.958a1.875 1.875 0 0 0-3.192-1.28L6.077 18.21a.75.75 0 0 0 1.06 1.06L15.375 12l-1.875 2.977A60.07 60.07 0 0 1 3.75 21H2.25Z" /></svg>
+                Financeiro
+            </a>
+
+            <!-- Relatório -->
+            <a href="#" id="nav-relatorio" class="nav-link flex items-center p-3 rounded-lg hover:bg-gray-700">
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="h-6 w-6 mr-3"><path stroke-linecap="round" stroke-linejoin="round" d="M3.75 3v11.25A2.25 2.25 0 0 0 6 16.5h12A2.25 2.25 0 0 0 20.25 14.25V3M3.75 21h16.5M3.75 3h16.5" /></svg>
+                Relatórios
             </a>
         </nav>
     </aside>
 
     <!-- Área de Conteúdo Principal -->
     <main class="flex-1 bg-gray-900 overflow-hidden">
-        <!-- O Iframe carregará suas páginas existentes -->
-        <iframe id="content-frame" src="vendas.html" class="w-full h-full border-none"></iframe>
+        <!-- O Iframe agora aponta para o novo módulo de vendas -->
+        <iframe id="content-frame" src="modules/vendas/vendas.html" class="w-full h-full border-none"></iframe>
     </main>
 
     <!-- Script principal para navegação -->
