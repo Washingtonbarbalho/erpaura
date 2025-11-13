@@ -1,37 +1,55 @@
 document.addEventListener('DOMContentLoaded', () => {
     const links = document.querySelectorAll('.nav-link');
     const iframe = document.getElementById('content-frame');
+    const loader = document.getElementById('content-frame-loader');
 
-    // Mapeia o ID do link para o arquivo HTML correspondente
+    // Mapeamento simplificado para os 4 botões
     const pages = {
         'nav-vendas': 'vendas.html',
         'nav-carne': 'carne.html',
         'nav-analise': 'analise.html',
-        'nav-admin': 'admin.html'
+        'nav-admin': 'admin.html',
     };
+
+    // Listener para esconder o loader quando o iframe terminar de carregar
+    iframe.addEventListener('load', () => {
+        loader.classList.add('hidden');
+    });
 
     links.forEach(link => {
         link.addEventListener('click', (e) => {
             e.preventDefault();
 
-            // Remove a classe ativa de todos os links
+            // 1. Atualiza o estado ativo do menu
             links.forEach(l => l.classList.remove('nav-active'));
-
-            // Adiciona a classe ativa ao link clicado
             link.classList.add('nav-active');
 
-            // Obtém o nome da página alvo
-            const pageFile = pages[link.id];
-            
-            // Altera o 'src' do iframe para carregar a nova página
-            if (pageFile && iframe.src.endsWith(pageFile) === false) {
-                iframe.src = pageFile;
+            // 2. Pega o arquivo de destino
+            const newFile = pages[link.id];
+            if (!newFile) return; // Se o link não for mapeado
+
+            // 3. Pega o arquivo atual
+            const currentFile = iframe.src.split('/').pop().split('#')[0];
+
+            // 4. Compara
+            if (currentFile !== newFile) {
+                // Se for um arquivo diferente, mostra o loader e carrega
+                loader.classList.remove('hidden');
+                iframe.src = newFile;
+            } else {
+                // Se for o mesmo arquivo, apenas recarrega (sem loader, pois é rápido)
+                // Isso garante que o usuário volte para a aba padrão
+                iframe.src = newFile;
             }
         });
     });
 
-    // Garante que o link 'vendas' esteja ativo no carregamento inicial
-    document.getElementById('nav-vendas').classList.add('nav-active');
-    // Carrega a página inicial (vendas.html)
-    iframe.src = 'vendas.html';
+    // Configuração inicial
+    const initialLink = document.getElementById('nav-vendas');
+    if (initialLink) {
+        initialLink.classList.add('nav-active');
+        // Mostra o loader no carregamento inicial
+        loader.classList.remove('hidden');
+        iframe.src = pages[initialLink.id];
+    }
 });
