@@ -2,7 +2,7 @@
 <html lang="pt-BR">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Aura Premium - Sistema Administrativo</title>
     <!-- Carrega o Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
@@ -244,13 +244,11 @@
             </div>
         </header>
 
-        <!-- Navegação Principal (Fase 1.3) -->
+        <!-- Navegação Principal -->
         <nav class="bg-gray-800 border-b-2 border-amber-500">
             <div class="container mx-auto px-4 md:px-8 flex space-x-4">
-                <button id="navDashboard" class="main-nav-tab py-3 px-5 text-sm font-medium text-gray-300 hover:text-amber-400 nav-active">
-                    Dashboard
-                </button>
-                <button id="navEstoque" class="main-nav-tab py-3 px-5 text-sm font-medium text-gray-300 hover:text-amber-400">
+                <!-- Dashboard Removido -->
+                <button id="navEstoque" class="main-nav-tab py-3 px-5 text-sm font-medium text-gray-300 hover:text-amber-400 nav-active">
                     Estoque
                 </button>
                 <button id="navFinanceiro" class="main-nav-tab py-3 px-5 text-sm font-medium text-gray-300 hover:text-amber-400">
@@ -264,32 +262,9 @@
 
         <main class="container mx-auto p-4 md:p-8">
             <!-- ============================= -->
-            <!--     PÁGINA 1: DASHBOARD (Fase 1) -->
+            <!--     PÁGINA 1: ESTOQUE (Nova Página Inicial)  -->
             <!-- ============================= -->
-            <div id="pageDashboard" class="app-page">
-                <h2 class="text-2xl font-bold text-gray-100 mb-6">Dashboard</h2>
-                <div class="bg-gray-800 p-6 rounded-lg shadow-md border border-gray-700">
-                    <h3 class="text-xl font-semibold text-amber-400 mb-2">Bem-vindo ao Painel Administrativo</h3>
-                    <p class="text-gray-300">
-                        Use o menu acima para navegar entre os módulos de Estoque, Financeiro e Relatórios.
-                    </p>
-                    <div class="mt-6 grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <div class="p-4 bg-gray-700 rounded-lg">
-                            <h4 class="font-semibold text-lg text-gray-200">Financeiro</h4>
-                            <p class="text-gray-400 text-sm">Acesse o módulo financeiro para gerenciar contas a pagar, receber e ver o fluxo de caixa.</p>
-                        </div>
-                         <div class="p-4 bg-gray-700 rounded-lg">
-                            <h4 class="font-semibold text-lg text-gray-200">Relatórios</h4>
-                            <p class="text-gray-400 text-sm">Acesse o módulo de relatórios para ver o desempenho das vendas.</p>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- ============================= -->
-            <!--     PÁGINA 2: ESTOQUE (Fase 2 Refatorada)  -->
-            <!-- ============================= -->
-            <div id="pageEstoque" class="app-page hidden">
+            <div id="pageEstoque" class="app-page"> <!-- Removida a classe hidden aqui -->
                 <div class="flex justify-between items-center mb-6">
                     <h2 class="text-2xl font-bold text-gray-100">Controle de Estoque</h2>
                     <button id="openStockAdjustmentModalBtn" class="bg-amber-500 text-black px-5 py-2 rounded-lg shadow-md hover:bg-amber-600 font-semibold">
@@ -318,18 +293,24 @@
                     </div>
                 </div>
             </div>
-
+            
+            <!-- Dashboard Removido -->
+            
             <!-- ================================== -->
-            <!--     PÁGINA 3: FINANCEIRO (Fase 4)    -->
+            <!--     PÁGINA 2: FINANCEIRO (Fase 4)    -->
             <!-- ================================== -->
             <div id="pageFinanceiro" class="app-page hidden">
                 <h2 class="text-2xl font-bold text-gray-100 mb-6">Financeiro</h2>
                 
                 <!-- Abas do Módulo Financeiro -->
                 <div class="mb-6 border-b border-gray-700">
-                    <nav class="flex -mb-px space-x-6">
-                        <button id="finTabReceber" class="finance-tab-btn whitespace-nowrap py-3 px-1 border-b-2 text-sm font-medium finance-tab-active">
+                    <nav class="flex -mb-px space-x-6 overflow-x-auto"> <!-- Adicionado overflow-x-auto -->
+                        <button id="finTabReceberCarne" class="finance-tab-btn whitespace-nowrap py-3 px-1 border-b-2 text-sm font-medium finance-tab-active">
                             Contas a Receber (Carnês)
+                        </button>
+                        <!-- NOVA ABA: Outras Contas a Receber -->
+                        <button id="finTabReceberManual" class="finance-tab-btn whitespace-nowrap py-3 px-1 border-b-2 text-sm font-medium finance-tab">
+                            Outras Entradas a Receber
                         </button>
                         <button id="finTabPagar" class="finance-tab-btn whitespace-nowrap py-3 px-1 border-b-2 text-sm font-medium finance-tab">
                             Contas a Pagar
@@ -341,21 +322,21 @@
                 </div>
 
                 <!-- Aba 1: Contas a Receber (Carnês) (Fase 4.1) -->
-                <div id="finPageReceber" class="finance-page">
+                <div id="finPageReceberCarne" class="finance-page">
                     <!-- Cards de Resumo -->
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
                         <div class="bg-gray-800 p-6 rounded-lg shadow-md border border-gray-700">
-                            <h2 class="text-lg font-semibold text-gray-400 mb-2">Total a Receber (Pendente)</h2> 
-                            <p id="finTotalReceber" class="text-3xl font-bold text-green-400">R$ 0,00</p>
+                            <h2 class="text-lg font-semibold text-gray-400 mb-2">Total Carnês Pendente</h2> 
+                            <p id="finTotalReceberCarne" class="text-3xl font-bold text-green-400">R$ 0,00</p>
                         </div>
                         <div class="bg-gray-800 p-6 rounded-lg shadow-md border border-gray-700">
-                            <h2 class="text-lg font-semibold text-gray-400 mb-2">Total Vencido</h2> 
-                            <p id="finTotalVencido" class="text-3xl font-bold text-red-500">R$ 0,00</p>
+                            <h2 class="text-lg font-semibold text-gray-400 mb-2">Total Carnês Vencido</h2> 
+                            <p id="finTotalVencidoCarne" class="text-3xl font-bold text-red-500">R$ 0,00</p>
                         </div>
                     </div>
                     <!-- Tabela de Contas a Receber -->
                     <div class="bg-gray-800 p-6 rounded-lg shadow-md border border-gray-700">
-                        <h3 class="text-xl font-semibold text-blue-400 mb-4">Parcelas Pendentes</h3>
+                        <h3 class="text-xl font-semibold text-blue-400 mb-4">Parcelas de Carnê Pendentes</h3>
                         <div class="mb-4">
                             <label for="finSearchReceber" class="block text-sm font-medium text-gray-300 mb-1">Buscar Cliente (Nome ou CPF)</label>
                             <input type="search" id="finSearchReceber" class="form-input" placeholder="Buscar por Nome ou CPF...">
@@ -370,8 +351,8 @@
                                         <th class="p-2 text-center text-sm font-semibold text-amber-400 uppercase">Status</th>
                                     </tr>
                                 </thead>
-                                <tbody id="finReceberTableBody" class="divide-y divide-gray-700">
-                                    <tr id="loadingMessageFinReceber">
+                                <tbody id="finReceberCarneTableBody" class="divide-y divide-gray-700">
+                                    <tr id="loadingMessageFinReceberCarne">
                                         <td colspan="4" class="p-4 text-center text-gray-400">Carregando...</td>
                                     </tr>
                                 </tbody>
@@ -379,8 +360,48 @@
                         </div>
                     </div>
                 </div>
+                
+                <!-- NOVO: Aba 2: Contas a Receber (Manual) -->
+                <div id="finPageReceberManual" class="finance-page hidden">
+                    <div class="flex justify-between items-center mb-6">
+                        <h3 class="text-xl font-semibold text-blue-400">Contas a Receber (Entradas Manuais)</h3>
+                        <!-- NOVO BOTÃO -->
+                        <button id="openContasReceberManualModalBtn" class="bg-amber-500 text-black px-5 py-2 rounded-lg shadow-md hover:bg-amber-600 font-semibold">
+                            + Nova Entrada a Receber
+                        </button>
+                    </div>
+                    <!-- Tabela de Contas a Receber Manual -->
+                    <div class="bg-gray-800 p-6 rounded-lg shadow-md border border-gray-700">
+                        <div class="mb-4">
+                            <label for="finFiltroReceberManual" class="block text-sm font-medium text-gray-300 mb-1">Filtrar por Status</label>
+                            <select id="finFiltroReceberManual" class="form-select">
+                                <option value="Pendente">Pendentes</option>
+                                <option value="Recebida">Recebidas</option>
+                                <option value="Todas">Todas</option>
+                            </select>
+                        </div>
+                        <div class="overflow-x-auto max-h-[60vh] overflow-y-auto">
+                            <table class="w-full">
+                                <thead class="bg-gray-700 sticky top-0">
+                                    <tr>
+                                        <th class="p-2 text-left text-sm font-semibold text-amber-400 uppercase">Descrição</th>
+                                        <th class="p-2 text-left text-sm font-semibold text-amber-400 uppercase">Vencimento</th>
+                                        <th class="p-2 text-right text-sm font-semibold text-amber-400 uppercase">Valor</th>
+                                        <th class="p-2 text-center text-sm font-semibold text-amber-400 uppercase">Status</th>
+                                        <th class="p-2 text-center text-sm font-semibold text-amber-400 uppercase">Ações</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="finReceberManualTableBody" class="divide-y divide-gray-700">
+                                    <tr id="loadingMessageFinReceberManual">
+                                        <td colspan="5" class="p-4 text-center text-gray-400">Carregando...</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
 
-                <!-- Aba 2: Contas a Pagar (Fase 4.2) -->
+                <!-- Aba 3: Contas a Pagar (Antiga Aba 2) -->
                 <div id="finPagePagar" class="finance-page hidden">
                     <div class="flex justify-between items-center mb-6">
                         <h3 class="text-xl font-semibold text-blue-400">Gerenciamento de Contas a Pagar</h3>
@@ -419,7 +440,7 @@
                     </div>
                 </div>
 
-                <!-- Aba 3: Fluxo de Caixa (Extrato) (Fase 4.3) -->
+                <!-- Aba 4: Fluxo de Caixa (Extrato) (Antiga Aba 3) -->
                 <div id="finPageFluxo" class="finance-page hidden">
                     <!-- Filtros de Data -->
                     <div class="bg-gray-800 p-4 rounded-lg shadow-md mb-6 border border-gray-700">
@@ -479,7 +500,7 @@
             </div>
 
             <!-- =================================== -->
-            <!--     PÁGINA 4: RELATÓRIOS (Fase 3)    -->
+            <!--     PÁGINA 3: RELATÓRIOS (Antiga Página 4)    -->
             <!-- =================================== -->
             <div id="pageRelatorios" class="app-page hidden">
                 <h2 class="text-2xl font-bold text-gray-100 mb-6">Relatórios</h2>
@@ -682,6 +703,50 @@
             </form>
         </div>
     </div>
+    
+    <!-- NOVO MODAL: Contas a Receber (Manual) -->
+    <div id="modalContasReceberManual" class="fixed inset-0 bg-black bg-opacity-75 flex items-start justify-center p-4 hidden z-50 overflow-y-auto">
+        <div class="bg-gray-800 p-6 rounded-lg shadow-xl w-full max-w-lg my-8 mt-16 border border-gray-700">
+            <!-- Cabeçalho -->
+            <div class="flex justify-between items-center mb-6">
+                <h2 id="contasReceberManualModalTitle" class="text-2xl font-bold text-gray-100">Adicionar Entrada a Receber</h2>
+                <button id="closeContasReceberManualModalBtn" class="text-gray-400 hover:text-white text-3xl leading-none">&times;</button>
+            </div>
+            
+            <!-- Formulário -->
+            <form id="contasReceberManualForm" class="space-y-4 max-h-[70vh] overflow-y-auto pr-2">
+                <div>
+                    <label for="entradaDescricao" class="block text-sm font-medium text-gray-300 mb-1">Descrição</label>
+                    <input type="text" id="entradaDescricao" class="form-input" placeholder="Ex: Devolução de adiantamento, Venda Externa" required>
+                </div>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                        <label for="entradaValor" class="block text-sm font-medium text-gray-300 mb-1">Valor (R$)</label>
+                        <input type="number" id="entradaValor" class="form-input" min="0.01" step="0.01" placeholder="0,00" required>
+                    </div>
+                     <div>
+                        <label for="entradaVencimento" class="block text-sm font-medium text-gray-300 mb-1">Data Vencimento/Previsão</label>
+                        <input type="date" id="entradaVencimento" class="form-input" required>
+                    </div>
+                </div>
+                <div>
+                    <label for="entradaStatus" class="block text-sm font-medium text-gray-300 mb-1">Status Inicial</label>
+                    <select id="entradaStatus" class="form-select">
+                        <option value="Pendente">Pendente</option>
+                        <option value="Recebida">Recebida (já entrou no caixa)</option>
+                    </select>
+                </div>
+
+                <!-- Botão de Submit -->
+                <div class="flex justify-end pt-4 mt-4 border-t border-gray-700">
+                    <button id="submitContasReceberManualBtn" type="submit" class="w-full bg-amber-500 text-black px-5 py-3 rounded-lg shadow-md hover:bg-amber-600 transition duration-300 ease-in-out flex items-center justify-center font-semibold">
+                        <span id="submitContasReceberManualBtnText">Salvar Entrada</span>
+                        <div id="submitContasReceberManualSpinner" class="spinner hidden"></div>
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
 
 
     <!-- ================================== -->
@@ -715,29 +780,30 @@
             // --- REFERÊNCIAS DE COLEÇÃO (EXISTENTES) ---
             const productsCollection = collection(db, "produtos");
             const salesCollection = collection(db, "vendas");
-            const vendasCarneCollection = collection(db, "vendasCarne");
+            const vendasCarneCollection = collection(db, "vendasCarne"); // Vendas a prazo
             const clientsCollection = collection(db, "clientes");
-            // (Novas coleções para Fase 4)
             const parcelasCarneCollection = collection(db, "parcelasCarne");
             const pagamentosHistoricoCollection = collection(db, "pagamentosHistorico");
-
-
-            // --- REFERÊNCIAS DE COLEÇÃO (NOVAS) ---
             const movimentacoesEstoqueCollection = collection(db, "movimentacoesEstoque");
             const contasAPagarCollection = collection(db, "contasAPagar");
 
             
+            // --- REFERÊNCIAS DE COLEÇÃO (NOVA) ---
+            const contasAReceberManualCollection = collection(db, "contasAReceberManual");
+
+
             // --- Estado Global da Aplicação ---
             let allProducts = [];
             let allSales = [];
             let allVendasCarne = [];
             let allClients = [];
-            let allParcelas = []; // Fase 4
-            let allPagamentos = []; // Fase 4
-            let allContasPagar = []; // Fase 4
+            let allParcelas = []; 
+            let allPagamentos = []; 
+            let allContasPagar = []; 
+            let allContasReceberManual = []; 
             
             let firebaseListenersAttached = false; 
-            let currentUser = null; // Armazena o usuário logado
+            let currentUser = null; 
             
             // --- Estado do Formulário (Estoque) ---
             let tempSelectedProduct = null; 
@@ -758,80 +824,53 @@
             const appContainer = document.getElementById('appContainer');
 
             // --- Seletores (Navegação) ---
-            const navDashboard = document.getElementById('navDashboard');
+            // const navDashboard = document.getElementById('navDashboard'); // Removido
             const navEstoque = document.getElementById('navEstoque');
             const navFinanceiro = document.getElementById('navFinanceiro');
             const navRelatorios = document.getElementById('navRelatorios');
-            const allNavTabs = [navDashboard, navEstoque, navFinanceiro, navRelatorios];
+            const allNavTabs = [navEstoque, navFinanceiro, navRelatorios]; // ATUALIZADO
             
             // --- Seletores (Páginas) ---
-            const pageDashboard = document.getElementById('pageDashboard');
+            // const pageDashboard = document.getElementById('pageDashboard'); // Removido
             const pageEstoque = document.getElementById('pageEstoque');
             const pageFinanceiro = document.getElementById('pageFinanceiro');
             const pageRelatorios = document.getElementById('pageRelatorios');
-            const allPages = [pageDashboard, pageEstoque, pageFinanceiro, pageRelatorios];
-
-            // --- Seletores (Fase 2: Estoque - Página) ---
-            const openStockAdjustmentModalBtn = document.getElementById('openStockAdjustmentModalBtn');
-            const lowStockTableBody = document.getElementById('lowStockTableBody');
-            const loadingMessageEstoqueBaixo = document.getElementById('loadingMessageEstoqueBaixo');
-            
-            // --- Seletores (Fase 2: Estoque - Modal) ---
-            const modalAjusteEstoque = document.getElementById('modalAjusteEstoque');
-            const closeStockAdjustmentModalBtn = document.getElementById('closeStockAdjustmentModalBtn');
-            const stockAdjustmentForm = document.getElementById('stockAdjustmentForm');
-            const productSearchInput = document.getElementById('productSearchInput');
-            const productResults = document.getElementById('productResults');
-            const selectedProductDisplay = document.getElementById('selectedProductDisplay');
-            const selectedProductName = document.getElementById('selectedProductName');
-            const selectedProductStock = document.getElementById('selectedProductStock');
-            const adjustmentTypeSelect = document.getElementById('adjustmentTypeSelect');
-            const adjustmentTypeValue = document.getElementById('adjustmentTypeValue');
-            const adjustmentTypeDisplay = document.getElementById('adjustmentTypeDisplay');
-            const adjustmentTypeOptions = document.getElementById('adjustmentTypeOptions');
-            const adjustmentQuantity = document.getElementById('adjustmentQuantity');
-            const adjustmentReason = document.getElementById('adjustmentReason');
-            const submitAdjustmentBtn = document.getElementById('submitAdjustmentBtn');
-            const submitAdjustmentBtnText = document.getElementById('submitAdjustmentBtnText');
-            const submitAdjustmentSpinner = document.getElementById('submitAdjustmentSpinner');
-
-            // --- Seletores (Fase 3: Relatórios) ---
-            const filtroDataInicio = document.getElementById('filtroDataInicio');
-            const filtroDataFim = document.getElementById('filtroDataFim');
-            const filterDateBtn = document.getElementById('filterDateBtn');
-            const reportTotalFaturado = document.getElementById('reportTotalFaturado');
-            const reportTotalLucro = document.getElementById('reportTotalLucro');
-            const reportTotalVendas = document.getElementById('reportTotalVendas');
-            const topProductsTableBody = document.getElementById('topProductsTableBody');
-            const loadingMessageTopProducts = document.getElementById('loadingMessageTopProducts');
-            const searchRelatorioClientes = document.getElementById('searchRelatorioClientes');
-            const topClientsTableBody = document.getElementById('topClientsTableBody');
-            const loadingMessageTopClients = document.getElementById('loadingMessageTopClients');
+            const allPages = [pageEstoque, pageFinanceiro, pageRelatorios]; // ATUALIZADO
 
             // --- Seletores (Fase 4: Financeiro) ---
-            const finTabReceber = document.getElementById('finTabReceber');
+            // Abas
+            const finTabReceberCarne = document.getElementById('finTabReceberCarne');
+            const finTabReceberManual = document.getElementById('finTabReceberManual'); 
             const finTabPagar = document.getElementById('finTabPagar');
             const finTabFluxo = document.getElementById('finTabFluxo');
-            const allFinanceTabs = [finTabReceber, finTabPagar, finTabFluxo];
-            const finPageReceber = document.getElementById('finPageReceber');
+            const allFinanceTabs = [finTabReceberCarne, finTabReceberManual, finTabPagar, finTabFluxo]; 
+            // Páginas
+            const finPageReceberCarne = document.getElementById('finPageReceberCarne');
+            const finPageReceberManual = document.getElementById('finPageReceberManual'); 
             const finPagePagar = document.getElementById('finPagePagar');
             const finPageFluxo = document.getElementById('finPageFluxo');
-            const allFinancePages = [finPageReceber, finPagePagar, finPageFluxo];
+            const allFinancePages = [finPageReceberCarne, finPageReceberManual, finPagePagar, finPageFluxo]; 
             
-            // Aba 1: Contas a Receber
-            const finTotalReceber = document.getElementById('finTotalReceber');
-            const finTotalVencido = document.getElementById('finTotalVencido');
+            // Aba 1: Contas a Receber (Carnês)
+            const finTotalReceberCarne = document.getElementById('finTotalReceberCarne');
+            const finTotalVencidoCarne = document.getElementById('finTotalVencidoCarne');
             const finSearchReceber = document.getElementById('finSearchReceber');
-            const finReceberTableBody = document.getElementById('finReceberTableBody');
-            const loadingMessageFinReceber = document.getElementById('loadingMessageFinReceber');
+            const finReceberCarneTableBody = document.getElementById('finReceberCarneTableBody');
+            const loadingMessageFinReceberCarne = document.getElementById('loadingMessageFinReceberCarne');
             
-            // Aba 2: Contas a Pagar
+            // NOVO: Aba 2: Contas a Receber (Manual)
+            const openContasReceberManualModalBtn = document.getElementById('openContasReceberManualModalBtn');
+            const finFiltroReceberManual = document.getElementById('finFiltroReceberManual');
+            const finReceberManualTableBody = document.getElementById('finReceberManualTableBody');
+            const loadingMessageFinReceberManual = document.getElementById('loadingMessageFinReceberManual');
+
+            // Aba 3: Contas a Pagar
             const openContasPagarModalBtn = document.getElementById('openContasPagarModalBtn');
             const finFiltroPagar = document.getElementById('finFiltroPagar');
             const finPagarTableBody = document.getElementById('finPagarTableBody');
             const loadingMessageFinPagar = document.getElementById('loadingMessageFinPagar');
             
-            // Aba 3: Fluxo de Caixa
+            // Aba 4: Fluxo de Caixa
             const finFluxoDataInicio = document.getElementById('finFluxoDataInicio');
             const finFluxoDataFim = document.getElementById('finFluxoDataFim');
             const finFluxoFilterBtn = document.getElementById('finFluxoFilterBtn');
@@ -841,7 +880,7 @@
             const finFluxoTableBody = document.getElementById('finFluxoTableBody');
             const loadingMessageFinFluxo = document.getElementById('loadingMessageFinFluxo');
             
-            // Modal Contas a Pagar (Fase 4)
+            // Modal Contas a Pagar
             const modalContasPagar = document.getElementById('modalContasPagar');
             const contasPagarModalTitle = document.getElementById('contasPagarModalTitle');
             const closeContasPagarModalBtn = document.getElementById('closeContasPagarModalBtn');
@@ -854,6 +893,19 @@
             const submitContasPagarBtnText = document.getElementById('submitContasPagarBtnText');
             const submitContasPagarSpinner = document.getElementById('submitContasPagarSpinner');
 
+            // NOVO: Modal Contas a Receber Manual
+            const modalContasReceberManual = document.getElementById('modalContasReceberManual');
+            const contasReceberManualModalTitle = document.getElementById('contasReceberManualModalTitle');
+            const closeContasReceberManualModalBtn = document.getElementById('closeContasReceberManualModalBtn');
+            const contasReceberManualForm = document.getElementById('contasReceberManualForm');
+            const entradaDescricao = document.getElementById('entradaDescricao');
+            const entradaValor = document.getElementById('entradaValor');
+            const entradaVencimento = document.getElementById('entradaVencimento');
+            const entradaStatus = document.getElementById('entradaStatus');
+            const submitContasReceberManualBtn = document.getElementById('submitContasReceberManualBtn');
+            const submitContasReceberManualBtnText = document.getElementById('submitContasReceberManualBtnText');
+            const submitContasReceberManualSpinner = document.getElementById('submitContasReceberManualSpinner');
+
 
             // --- Seletores (Modais Genéricos) ---
             const infoModal = document.getElementById('infoModal');
@@ -861,6 +913,29 @@
             const infoModalText = document.getElementById('infoModalText');
             const closeInfoModalBtn = document.getElementById('closeInfoModalBtn');
             
+            // --- Seletores (Estoque/Modal) ---
+            const selectedProductName = document.getElementById('selectedProductName');
+            const selectedProductStock = document.getElementById('selectedProductStock');
+            const selectedProductDisplay = document.getElementById('selectedProductDisplay');
+            const adjustmentTypeValue = document.getElementById('adjustmentTypeValue');
+            const adjustmentTypeDisplay = document.getElementById('adjustmentTypeDisplay');
+            const adjustmentTypeOptions = document.getElementById('adjustmentTypeOptions');
+            const adjustmentQuantity = document.getElementById('adjustmentQuantity');
+            const adjustmentReason = document.getElementById('adjustmentReason');
+            const submitAdjustmentBtn = document.getElementById('submitAdjustmentBtn');
+            const submitAdjustmentBtnText = document.getElementById('submitAdjustmentBtnText');
+            const submitAdjustmentSpinner = document.getElementById('submitAdjustmentSpinner');
+
+            // --- Seletores (Relatórios) ---
+            const filtroDataInicio = document.getElementById('filtroDataInicio');
+            const filtroDataFim = document.getElementById('filtroDataFim');
+            const reportTotalFaturado = document.getElementById('reportTotalFaturado');
+            const reportTotalLucro = document.getElementById('reportTotalLucro');
+            const reportTotalVendas = document.getElementById('reportTotalVendas');
+            const topProductsTableBody = document.getElementById('topProductsTableBody');
+            const searchRelatorioClientes = document.getElementById('searchRelatorioClientes');
+            const topClientsTableBody = document.getElementById('topClientsTableBody');
+
             // ==========================================================
             // --- INICIALIZAÇÃO E UTILITÁRIOS ---
             // ==========================================================
@@ -889,7 +964,7 @@
                 triggerBtn.addEventListener('click', (e) => {
                     e.stopPropagation();
                     const wasOpen = !optionsContainer.classList.contains('hidden');
-                    closeAllSelects(); // Fecha todos os outros
+                    closeAllSelects(); // Fechar todos os outros
                     if (!wasOpen) {
                         optionsContainer.classList.remove('hidden'); // Abre o atual
                     }
@@ -902,7 +977,11 @@
             document.addEventListener('click', closeAllSelects);
             
             // Inicializa os selects customizados da Fase 2
-            initCustomSelect(adjustmentTypeSelect, adjustmentTypeOptions, adjustmentTypeValue, adjustmentTypeDisplay);
+            // Checa se os elementos existem antes de chamar
+            const adjustmentTypeSelectElement = document.getElementById('adjustmentTypeSelect');
+            if (adjustmentTypeSelectElement) {
+                initCustomSelect(adjustmentTypeSelectElement, adjustmentTypeOptions, adjustmentTypeValue, adjustmentTypeDisplay);
+            }
             
             // --- Funções de Formatação ---
             function formatCurrency(value) {
@@ -948,10 +1027,10 @@
                 const lastDayStr = lastDay.toISOString().split('T')[0];
                 
                 // Formato AAAA-MM-DD
-                filtroDataInicio.value = firstDayStr;
-                filtroDataFim.value = lastDayStr;
-                finFluxoDataInicio.value = firstDayStr;
-                finFluxoDataFim.value = lastDayStr;
+                if (filtroDataInicio) filtroDataInicio.value = firstDayStr;
+                if (filtroDataFim) filtroDataFim.value = lastDayStr;
+                if (finFluxoDataInicio) finFluxoDataInicio.value = firstDayStr;
+                if (finFluxoDataFim) finFluxoDataFim.value = lastDayStr;
             }
 
             // --- Funções de Modal Genéricas ---
@@ -996,8 +1075,9 @@
                 // Gatilhos específicos de renderização ao navegar
                 if (pageId === 'pageRelatorios') renderReports();
                 if (pageId === 'pageFinanceiro') renderFinanceiro();
+                if (pageId === 'pageEstoque') renderLowStockTable(); // Opcional, mas garante atualização
             }
-            navDashboard.addEventListener('click', () => navigateTo('pageDashboard', navDashboard));
+            // Navegação Atualizada
             navEstoque.addEventListener('click', () => navigateTo('pageEstoque', navEstoque));
             navFinanceiro.addEventListener('click', () => navigateTo('pageFinanceiro', navFinanceiro));
             navRelatorios.addEventListener('click', () => navigateTo('pageRelatorios', navRelatorios));
@@ -1007,6 +1087,8 @@
             // ==========================================================
             
             // Abre o modal
+            const openStockAdjustmentModalBtn = document.getElementById('openStockAdjustmentModalBtn');
+            const lowStockTableBody = document.getElementById('lowStockTableBody');
             openStockAdjustmentModalBtn.addEventListener('click', () => {
                 // Limpa o formulário antes de abrir
                 stockAdjustmentForm.reset();
@@ -1019,11 +1101,15 @@
             });
             
             // Fecha o modal
+            const modalAjusteEstoque = document.getElementById('modalAjusteEstoque');
+            const closeStockAdjustmentModalBtn = document.getElementById('closeStockAdjustmentModalBtn');
             closeStockAdjustmentModalBtn.addEventListener('click', () => {
                 hideModal(modalAjusteEstoque, stockAdjustmentForm);
             });
             
             // --- Busca de Produto (dentro do modal) ---
+            const productSearchInput = document.getElementById('productSearchInput');
+            const productResults = document.getElementById('productResults');
             productSearchInput.addEventListener('input', (e) => {
                 const query = e.target.value.toLowerCase();
                 if (query.length < 1) {
@@ -1079,8 +1165,7 @@
                 const lowStockProducts = allProducts.filter(p => p.estoqueAtual <= p.estoqueMinimo);
                 
                 if (lowStockProducts.length === 0) {
-                    loadingMessageEstoqueBaixo.innerHTML = '<td colspan="3" class="p-4 text-center text-gray-400">Nenhum produto com estoque baixo.</td>';
-                    lowStockTableBody.appendChild(loadingMessageEstoqueBaixo);
+                    lowStockTableBody.innerHTML = '<td colspan="3" class="p-4 text-center text-gray-400">Nenhum produto com estoque baixo.</td>';
                     return;
                 }
                 
@@ -1099,6 +1184,7 @@
             }
 
             // --- Submit do Formulário de Ajuste (no modal) ---
+            const stockAdjustmentForm = document.getElementById('stockAdjustmentForm');
             stockAdjustmentForm.addEventListener('submit', handleStockAdjustmentSubmit);
 
             async function handleStockAdjustmentSubmit(e) {
@@ -1169,6 +1255,7 @@
             // --- FASE 3: LÓGICA DE RELATÓRIOS ---
             // ==========================================================
             
+            const filterDateBtn = document.getElementById('filterDateBtn');
             filterDateBtn.addEventListener('click', renderReports);
             searchRelatorioClientes.addEventListener('input', renderReports);
             
@@ -1178,7 +1265,10 @@
                 const endDate = filtroDataFim.value ? new Date(filtroDataFim.value + "T23:59:59") : null;
                 
                 if (!startDate || !endDate) {
-                    showInfoModal("Datas Inválidas", "Por favor, selecione data de início e fim.");
+                    // Não mostra erro se as páginas não estiverem visíveis
+                    if (!pageRelatorios.classList.contains('hidden')) {
+                        showInfoModal("Datas Inválidas", "Por favor, selecione data de início e fim.");
+                    }
                     return;
                 }
                 
@@ -1188,54 +1278,73 @@
                 }
 
                 // 2. Filtrar dados (Vendas Simples e Vendas Carnê)
-                const vendasFiltradas = allSales.filter(v => 
+                const vendasDiretasFiltradas = allSales.filter(v => 
                     v.date && v.date >= startDate && v.date <= endDate && v.status !== 'cancelada'
                 );
+                
                 const vendasCarneFiltradas = allVendasCarne.filter(v => 
-                    v.dataVenda && v.dataVenda >= startDate && v.dataVenda <= endDate
+                    v.dataVenda && v.dataVenda >= startDate && v.dataVenda <= endDate && v.status !== 'cancelada'
                 );
+                
+                // Unificar as vendas em uma única lista para processamento
+                const todasVendasFiltradas = [
+                    ...vendasDiretasFiltradas.map(v => ({
+                        type: 'direct',
+                        date: v.date,
+                        totalPrice: v.totalPrice,
+                        valorLiquido: v.valorLiquido || v.totalPrice, // Se não for cartão, é o preço total
+                        paymentMethod: v.paymentMethod,
+                        customerId: v.customerId,
+                        customerName: v.customerName,
+                        itens: v.itens
+                    })),
+                    ...vendasCarneFiltradas.map(v => ({
+                        type: 'carne',
+                        date: v.dataVenda,
+                        totalPrice: v.valorTotal, // valorTotal é o preço total da venda no carnê
+                        valorLiquido: v.valorTotal, // No carnê, o valor líquido total é o total (taxas são consideradas em outros lugares ou não aplicadas aqui)
+                        paymentMethod: 'Carnê',
+                        customerId: v.clienteId,
+                        customerName: v.clienteNome,
+                        itens: v.itens
+                    }))
+                ];
+
 
                 // 3. Processar dados para os relatórios
                 let totalFaturado = 0;
                 let totalCusto = 0;
                 let totalVendas = 0;
-                let totalRecebidoLiquido = 0; // NOVO: Para calcular o lucro real
-                const productSales = {}; // { productId: { nome, qtd, total } }
-                const clientSales = {}; // { clienteId: { nome, total } }
+                let totalRecebidoLiquido = 0; 
+                const productSales = {}; 
+                const clientSales = {}; 
 
-                // Processa Vendas Simples (vendas)
-                vendasFiltradas.forEach(venda => {
-                    totalFaturado += venda.totalPrice || 0; // Mantém o faturamento bruto
+                // Processa TODAS as Vendas
+                todasVendasFiltradas.forEach(venda => {
+                    totalFaturado += venda.totalPrice || 0; 
                     totalVendas++;
                     
-                    // LÓGICA DE LUCRO (LÍQUIDO)
+                    // LÓGICA DE LUCRO (LÍQUIDO) - Faturado Bruto é o totalPrice. Lucro/Recebido usa valorLiquido
                     const metodo = (venda.paymentMethod || "").toLowerCase();
-                    if (metodo.includes('crédito') || metodo.includes('débito')) {
-                        totalRecebidoLiquido += venda.valorLiquido || 0;
+                    if (venda.type === 'direct' && (metodo.includes('crédito') || metodo.includes('débito'))) {
+                        totalRecebidoLiquido += venda.valorLiquido || 0; // Valor com desconto de taxa
                     } else {
-                        // Pix, À vista, etc.
-                        totalRecebidoLiquido += venda.totalPrice || 0;
+                        totalRecebidoLiquido += venda.totalPrice || 0; // Pix, À vista, Carnê (o valor total é considerado o valor líquido da venda, pois o recebimento é acompanhado no Fluxo)
                     }
                     
-                    // === CORREÇÃO DEFINITIVA (Linhas Adicionadas) ===
-                    // Definir as variáveis 'clienteId' e 'clienteNome'
-                    // extraindo-as do objeto 'venda' atual (venda simples).
                     const clienteId = venda.customerId;
                     const clienteNome = venda.customerName;
-                    // ===============================================
 
                     if (clienteId && clienteNome) {
                         if (!clientSales[clienteId]) {
                             clientSales[clienteId] = { nome: clienteNome, total: 0 };
                         }
-                        // CORREÇÃO DEFINITIVA:
-                        // Usar 'venda.totalPrice' para o relatório de cliente de Vendas Simples.
-                        // O erro 'valorComJuros is not defined' acontecia aqui.
-                        clientSales[clienteId].total += venda.totalPrice || 0;
+                        clientSales[clienteId].total += venda.totalPrice || 0; // Usa o preço total da venda
                     }
 
                     (venda.itens || []).forEach(item => {
                         const product = allProducts.find(p => p.id === item.productId);
+                        // O custo deve ser calculado com base no custo do produto e na quantidade vendida
                         const custo = (product?.precoCusto || 0) * item.quantity;
                         totalCusto += custo;
 
@@ -1249,7 +1358,7 @@
 
                 // 4. Renderizar Cards de Resumo
                 reportTotalFaturado.textContent = formatCurrency(totalFaturado);
-                reportTotalLucro.textContent = formatCurrency(totalRecebidoLiquido - totalCusto); // MUDANÇA AQUI
+                reportTotalLucro.textContent = formatCurrency(totalRecebidoLiquido - totalCusto); 
                 reportTotalVendas.textContent = totalVendas;
 
                 // 5. Renderizar Tabela de Produtos Mais Vendidos
@@ -1257,8 +1366,7 @@
                 const sortedProducts = Object.values(productSales).sort((a, b) => b.qtd - a.qtd);
                 
                 if (sortedProducts.length === 0) {
-                    loadingMessageTopProducts.innerHTML = '<td colspan="3" class="p-4 text-center text-gray-400">Nenhum produto vendido no período.</td>';
-                    topProductsTableBody.appendChild(loadingMessageTopProducts);
+                    topProductsTableBody.innerHTML = '<td colspan="3" class="p-4 text-center text-gray-400">Nenhum produto vendido no período.</td>';
                 } else {
                     sortedProducts.forEach(prod => {
                         const tr = document.createElement('tr');
@@ -1280,7 +1388,7 @@
                 if (searchQuery) {
                     const queryCPF = searchQuery.replace(/\D/g, '');
                     sortedClients = sortedClients.filter(cli => {
-                        const clienteCompleto = allClients.find(c => c.nome === cli.nome); // Busca o CPF
+                        const clienteCompleto = allClients.find(c => c.nome === cli.nome); 
                         const nomeMatch = cli.nome.toLowerCase().includes(searchQuery);
                         const cpfMatch = clienteCompleto?.cpf && queryCPF.length > 0 ? clienteCompleto.cpf.replace(/\D/g, '').includes(queryCPF) : false;
                         return nomeMatch || cpfMatch;
@@ -1288,8 +1396,7 @@
                 }
                 
                 if (sortedClients.length === 0) {
-                    loadingMessageTopClients.innerHTML = '<td colspan="2" class="p-4 text-center text-gray-400">Nenhum cliente encontrado.</td>';
-                    topClientsTableBody.appendChild(loadingMessageTopClients);
+                    topClientsTableBody.innerHTML = '<td colspan="2" class="p-4 text-center text-gray-400">Nenhum cliente encontrado.</td>';
                 } else {
                     sortedClients.forEach(cli => {
                         const tr = document.createElement('tr');
@@ -1314,9 +1421,12 @@
                     
                     e.currentTarget.classList.replace('finance-tab', 'finance-tab-active');
                     
-                    if (e.currentTarget.id === 'finTabReceber') {
-                        finPageReceber.classList.remove('hidden');
-                        renderContasAReceber();
+                    if (e.currentTarget.id === 'finTabReceberCarne') {
+                        finPageReceberCarne.classList.remove('hidden');
+                        renderContasAReceberCarne();
+                    } else if (e.currentTarget.id === 'finTabReceberManual') { 
+                        finPageReceberManual.classList.remove('hidden');
+                        renderContasAReceberManual();
                     } else if (e.currentTarget.id === 'finTabPagar') {
                         finPagePagar.classList.remove('hidden');
                         renderContasAPagar();
@@ -1330,15 +1440,16 @@
             // --- Renderização Principal (Financeiro) ---
             function renderFinanceiro() {
                 // Renderiza a aba que estiver ativa
-                if (!finPageReceber.classList.contains('hidden')) renderContasAReceber();
+                if (!finPageReceberCarne.classList.contains('hidden')) renderContasAReceberCarne();
+                if (!finPageReceberManual.classList.contains('hidden')) renderContasAReceberManual(); 
                 if (!finPagePagar.classList.contains('hidden')) renderContasAPagar();
                 if (!finPageFluxo.classList.contains('hidden')) renderFluxoDeCaixa();
             }
             
-            // --- Aba 1: Contas a Receber (Fase 4.1) ---
-            finSearchReceber.addEventListener('input', renderContasAReceber);
+            // --- Aba 1: Contas a Receber (Carnês) (Antiga renderContasAReceber) ---
+            finSearchReceber.addEventListener('input', renderContasAReceberCarne);
             
-            function renderContasAReceber() {
+            function renderContasAReceberCarne() {
                 let totalReceber = 0;
                 let totalVencido = 0;
                 const hoje = new Date();
@@ -1357,11 +1468,10 @@
                     });
                 }
                 
-                finReceberTableBody.innerHTML = '';
+                finReceberCarneTableBody.innerHTML = '';
                 
                 if (parcelasPendentes.length === 0) {
-                    loadingMessageFinReceber.innerHTML = '<td colspan="4" class="p-4 text-center text-gray-400">Nenhuma parcela pendente encontrada.</td>';
-                    finReceberTableBody.appendChild(loadingMessageFinReceber);
+                    finReceberCarneTableBody.innerHTML = '<td colspan="4" class="p-4 text-center text-gray-400">Nenhuma parcela pendente encontrada.</td>';
                 } else {
                     parcelasPendentes.sort((a,b) => a.dataVencimento - b.dataVencimento);
                     
@@ -1383,16 +1493,127 @@
                                 }
                             </td>
                         `;
-                        finReceberTableBody.appendChild(tr);
+                        finReceberCarneTableBody.appendChild(tr);
                     });
                 }
                 
                 // Atualiza Cards
-                finTotalReceber.textContent = formatCurrency(totalReceber);
-                finTotalVencido.textContent = formatCurrency(totalVencido);
+                finTotalReceberCarne.textContent = formatCurrency(totalReceber);
+                finTotalVencidoCarne.textContent = formatCurrency(totalVencido);
             }
+
+            // --- NOVO: Aba 2: Contas a Receber (Manual) ---
+            finFiltroReceberManual.addEventListener('change', renderContasAReceberManual);
             
-            // --- Aba 2: Contas a Pagar (Fase 4.2) ---
+            // Abre Modal de Nova Entrada
+            openContasReceberManualModalBtn.addEventListener('click', () => {
+                contasReceberManualModalTitle.textContent = "Adicionar Entrada a Receber";
+                contasReceberManualForm.reset();
+                showModal(modalContasReceberManual);
+            });
+            // Fecha Modal de Nova Entrada
+            closeContasReceberManualModalBtn.addEventListener('click', () => hideModal(modalContasReceberManual));
+            
+            // Submit do Modal de Nova Entrada
+            contasReceberManualForm.addEventListener('submit', async (e) => {
+                e.preventDefault();
+                setSubmitLoading(true, submitContasReceberManualBtn, submitContasReceberManualBtnText, submitContasReceberManualSpinner);
+                
+                const data = {
+                    descricao: entradaDescricao.value,
+                    valor: parseFloat(entradaValor.value),
+                    dataVencimento: new Date(entradaVencimento.value + "T00:00:00"),
+                    status: entradaStatus.value,
+                    dataRegistro: serverTimestamp(),
+                    usuarioEmail: currentUser?.email || 'admin@admin.com'
+                };
+                
+                if(data.status === 'Recebida') {
+                    data.dataRecebimento = serverTimestamp(); // Registra data do recebimento
+                }
+
+                try {
+                    await addDoc(contasAReceberManualCollection, data);
+                    showInfoModal("Sucesso!", "Entrada a receber registrada.");
+                    hideModal(modalContasReceberManual, contasReceberManualForm);
+                } catch (error) {
+                    console.error("Erro ao salvar conta a receber manual: ", error);
+                    showInfoModal("Erro", `Não foi possível salvar a entrada: ${error.message}`);
+                } finally {
+                    setSubmitLoading(false, submitContasReceberManualBtn, submitContasReceberManualBtnText, submitContasReceberManualSpinner);
+                }
+            });
+
+            // Renderiza Tabela de Contas a Receber Manual
+            function renderContasAReceberManual() {
+                const filtro = finFiltroReceberManual.value;
+                
+                let contasFiltradas = allContasReceberManual;
+                if(filtro !== 'Todas') {
+                    contasFiltradas = allContasReceberManual.filter(c => c.status === filtro);
+                }
+                
+                contasFiltradas.sort((a, b) => a.dataVencimento - b.dataVencimento);
+                
+                finReceberManualTableBody.innerHTML = '';
+                if(contasFiltradas.length === 0) {
+                    finReceberManualTableBody.innerHTML = `<td colspan="5" class="p-4 text-center text-gray-400">Nenhuma entrada manual encontrada.</td>`;
+                } else {
+                    const hoje = new Date();
+                    contasFiltradas.forEach(conta => {
+                        const vencido = conta.status === 'Pendente' && conta.dataVencimento < hoje;
+                        
+                        const tr = document.createElement('tr');
+                        tr.className = 'hover:bg-gray-700';
+                        tr.innerHTML = `
+                            <td class="p-2 whitespace-nowrap text-sm font-medium text-gray-100">${conta.descricao}</td>
+                            <td class="p-2 whitespace-nowrap text-sm ${vencido ? 'text-red-400' : 'text-gray-300'}">${formatDate(conta.dataVencimento)}</td>
+                            <td class="p-2 text-right text-sm font-bold text-gray-100">${formatCurrency(conta.valor)}</td>
+                            <td class="p-2 text-center text-sm">
+                                ${conta.status === 'Pendente' ? 
+                                    (vencido ? '<span class="px-2 py-1 text-xs font-semibold rounded-full bg-red-900 text-red-100">Vencido</span>' : '<span class="px-2 py-1 text-xs font-semibold rounded-full bg-yellow-800 text-yellow-100">Pendente</span>') : 
+                                    '<span class="px-2 py-1 text-xs font-semibold rounded-full bg-green-800 text-green-100">Recebida</span>'
+                                }
+                            </td>
+                            <td class="p-2 text-center text-sm">
+                                ${conta.status === 'Pendente' ? 
+                                    `<button class="mark-as-received-btn text-green-400 hover:text-green-300 font-semibold" data-id="${conta.id}">Marcar como Recebida</button>` : 
+                                    `<span class="text-gray-500 text-xs">Recebido em ${formatDate(conta.dataRecebimento)}</span>`
+                                }
+                            </td>
+                        `;
+                        finReceberManualTableBody.appendChild(tr);
+                    });
+                }
+                
+                // Adiciona listeners aos botões
+                document.querySelectorAll('.mark-as-received-btn').forEach(btn => {
+                    btn.addEventListener('click', handleMarkAsReceived);
+                });
+            }
+
+            async function handleMarkAsReceived(e) {
+                const id = e.target.dataset.id;
+                if (!id) return;
+                
+                e.target.disabled = true;
+                e.target.textContent = 'Salvando...';
+                
+                try {
+                    const contaRef = doc(db, 'contasAReceberManual', id);
+                    await updateDoc(contaRef, {
+                        status: 'Recebida',
+                        dataRecebimento: serverTimestamp()
+                    });
+                    showInfoModal("Sucesso", "Entrada marcada como recebida.");
+                } catch (error) {
+                    console.error("Erro ao marcar como recebida: ", error);
+                    showInfoModal("Erro", "Não foi possível atualizar a entrada.");
+                }
+            }
+
+
+            // --- Aba 3: Contas a Pagar (Antiga Aba 2) ---
             finFiltroPagar.addEventListener('change', renderContasAPagar);
             openContasPagarModalBtn.addEventListener('click', () => {
                 contasPagarModalTitle.textContent = "Adicionar Conta a Pagar";
@@ -1443,8 +1664,7 @@
                 
                 finPagarTableBody.innerHTML = '';
                 if(contasFiltradas.length === 0) {
-                    loadingMessageFinPagar.innerHTML = `<td colspan="5" class="p-4 text-center text-gray-400">Nenhuma conta encontrada.</td>`;
-                    finPagarTableBody.appendChild(loadingMessageFinPagar);
+                    finPagarTableBody.innerHTML = `<td colspan="5" class="p-4 text-center text-gray-400">Nenhuma conta encontrada.</td>`;
                 } else {
                     contasFiltradas.forEach(conta => {
                         const tr = document.createElement('tr');
@@ -1497,7 +1717,7 @@
                 }
             }
 
-            // --- Aba 3: Fluxo de Caixa (Fase 4.3) ---
+            // --- Aba 4: Fluxo de Caixa (Extrato) (Antiga Aba 3) ---
             finFluxoFilterBtn.addEventListener('click', renderFluxoDeCaixa);
             
             function renderFluxoDeCaixa() {
@@ -1505,7 +1725,10 @@
                 const endDate = finFluxoDataFim.value ? new Date(finFluxoDataFim.value + "T23:59:59") : null;
                 
                 if (!startDate || !endDate) {
-                    showInfoModal("Datas Inválidas", "Por favor, selecione data de início e fim.");
+                    // Não mostra erro se as páginas não estiverem visíveis
+                     if (!finPageFluxo.classList.contains('hidden')) {
+                        showInfoModal("Datas Inválidas", "Por favor, selecione data de início e fim.");
+                     }
                     return;
                 }
                 
@@ -1556,7 +1779,22 @@
                     }
                 });
                 
-                // 3. Saídas: Contas a Pagar (contasAPagar)
+                // 3. Entradas: Contas a Receber Manuais (NOVO)
+                allContasReceberManual.forEach(conta => {
+                    if (conta.status === 'Recebida' && conta.dataRecebimento &&
+                        conta.dataRecebimento >= startDate && conta.dataRecebimento <= endDate) {
+                        
+                        extrato.push({
+                            data: conta.dataRecebimento,
+                            descricao: `Entrada Manual: ${conta.descricao}`,
+                            tipo: 'Entrada',
+                            valor: conta.valor
+                        });
+                        totalEntradas += conta.valor;
+                    }
+                });
+                
+                // 4. Saídas: Contas a Pagar (contasAPagar)
                 allContasPagar.forEach(conta => {
                     if (conta.status === 'Paga' && conta.dataPagamento && 
                         conta.dataPagamento >= startDate && conta.dataPagamento <= endDate) {
@@ -1571,14 +1809,13 @@
                     }
                 });
 
-                // 4. Ordenar extrato por data
+                // 5. Ordenar extrato por data
                 extrato.sort((a,b) => a.data - b.data);
                 
-                // 5. Renderizar Tabela
+                // 6. Renderizar Tabela
                 finFluxoTableBody.innerHTML = '';
                 if(extrato.length === 0) {
-                    loadingMessageFinFluxo.innerHTML = `<td colspan="4" class="p-4 text-center text-gray-400">Nenhuma movimentação no período.</td>`;
-                    finFluxoTableBody.appendChild(loadingMessageFinFluxo);
+                    finFluxoTableBody.innerHTML = `<td colspan="4" class="p-4 text-center text-gray-400">Nenhuma movimentação no período.</td>`;
                 } else {
                     extrato.forEach(item => {
                         const isEntrada = item.tipo === 'Entrada';
@@ -1596,7 +1833,7 @@
                     });
                 }
                 
-                // 6. Atualizar Cards
+                // 7. Atualizar Cards
                 finFluxoEntradas.textContent = formatCurrency(totalEntradas);
                 finFluxoSaidas.textContent = formatCurrency(totalSaidas);
                 finFluxoSaldo.textContent = formatCurrency(totalEntradas - totalSaidas);
@@ -1644,7 +1881,7 @@
                     userName.textContent = `Olá, ${user.email}`;
                     
                     setDefaultDateFilters(); // Define as datas padrão dos filtros
-                    navigateTo('pageDashboard', navDashboard); // Navega para o dashboard ao logar
+                    navigateTo('pageEstoque', navEstoque); // MUDANÇA: Navega para o Estoque ao logar
 
                     if (!firebaseListenersAttached) {
                         setupFirebaseListeners();
@@ -1664,6 +1901,7 @@
                     allParcelas = [];
                     allPagamentos = [];
                     allContasPagar = [];
+                    allContasReceberManual = []; 
                     
                     firebaseListenersAttached = false; 
                 }
@@ -1675,7 +1913,7 @@
                     allProducts = [];
                     snapshot.forEach((doc) => allProducts.push({ id: doc.id, ...doc.data() }));
                     console.log(`Carregados ${allProducts.length} produtos.`);
-                    renderLowStockTable();
+                    if (!pageEstoque.classList.contains('hidden')) renderLowStockTable();
                     if (tempSelectedProduct) {
                         const updatedProduct = allProducts.find(p => p.id === tempSelectedProduct.id);
                         if (updatedProduct) {
@@ -1697,7 +1935,7 @@
                     });
                     console.log(`Carregadas ${allSales.length} vendas.`);
                     if (!pageRelatorios.classList.contains('hidden')) renderReports();
-                    if (!pageFinanceiro.classList.contains('hidden')) renderFinanceiro(); // Fase 4
+                    if (!pageFinanceiro.classList.contains('hidden')) renderFinanceiro();
                 }, (error) => console.error("Erro ao carregar vendas: ", error));
                 
                 onSnapshot(query(vendasCarneCollection), (snapshot) => {
@@ -1715,10 +1953,10 @@
                     snapshot.forEach((doc) => allClients.push({ id: doc.id, ...doc.data() }));
                     console.log(`Carregados ${allClients.length} clientes.`);
                     if (!pageRelatorios.classList.contains('hidden')) renderReports();
-                    if (!pageFinanceiro.classList.contains('hidden')) renderFinanceiro(); // Fase 4
+                    if (!pageFinanceiro.classList.contains('hidden')) renderFinanceiro();
                 }, (error) => console.error("Erro ao carregar clientes: ", error));
                 
-                // --- Novos Listeners (Fase 4) ---
+                // --- Listeners Financeiro ---
                 onSnapshot(query(parcelasCarneCollection), (snapshot) => {
                     allParcelas = [];
                     snapshot.forEach((doc) => {
@@ -1753,6 +1991,22 @@
                     console.log(`Carregadas ${allContasPagar.length} contas a pagar.`);
                     if (!pageFinanceiro.classList.contains('hidden')) renderFinanceiro();
                 }, (error) => console.error("Erro ao carregar contas a pagar: ", error));
+                
+                // --- NOVO LISTENER: Contas a Receber Manuais ---
+                onSnapshot(query(contasAReceberManualCollection), (snapshot) => {
+                    allContasReceberManual = [];
+                    snapshot.forEach((doc) => {
+                        const data = doc.data();
+                        allContasReceberManual.push({ 
+                            id: doc.id, 
+                            ...data, 
+                            dataVencimento: data.dataVencimento?.toDate(),
+                            dataRecebimento: data.dataRecebimento?.toDate()
+                        });
+                    });
+                    console.log(`Carregadas ${allContasReceberManual.length} contas a receber manuais.`);
+                    if (!pageFinanceiro.classList.contains('hidden')) renderFinanceiro();
+                }, (error) => console.error("Erro ao carregar contas a receber manuais: ", error));
             }
         });
     </script>
